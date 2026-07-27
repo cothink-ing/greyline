@@ -4,6 +4,17 @@ All notable changes to greyline are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.5.5] — 2026-07-27
+
+### Fixed
+- **Home timezone-column highlight now follows the geographic zone, not the DST-shifted one.**
+  On the vector map the home column was filled from the home city's *current* UTC offset, so
+  in any DST-observing region it jumped one column east/west for half the year (London
+  highlighted UTC+1 during BST, New York UTC−4 during EDT, Sydney UTC+11 during AEDT). The map's
+  zone polygons are keyed by *standard* offset, so the highlight now subtracts the DST component
+  (`utcoffset() − dst()`) to match — hemisphere-correct, no lookup table. The city clocks and the
+  raster-style band were already correct and are unchanged. (#14)
+
 ## [0.5.4] — 2026-07-24
 
 ### Fixed

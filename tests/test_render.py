@@ -22,6 +22,35 @@ def test_render_returns_rgb_at_size(style):
     assert img.mode == "RGB"
 
 
+@pytest.mark.parametrize(
+    "tz, lon, month, expected",
+    [
+        # DST-observing zones must highlight the *standard* (geographic) column all year,
+        # not the DST-shifted one — regression for issue #14.
+        ("Europe/London", -0.13, 1, 0.0),    # GMT (winter)
+        ("Europe/London", -0.13, 7, 0.0),    # BST → must still be 0, not +1
+        ("America/New_York", -74.0, 1, -5.0), # EST
+        ("America/New_York", -74.0, 7, -5.0), # EDT → must still be -5, not -4
+        # Southern hemisphere: DST is in Jan, so the naive min-of-two heuristic would fail.
+        ("Australia/Sydney", 151.2, 1, 10.0), # AEDT → must be +10, not +11
+        ("Australia/Sydney", 151.2, 7, 10.0), # AEST
+    ],
+)
+def test_home_column_uses_standard_offset(monkeypatch, tz, lon, month, expected):
+    captured = {}
+    real_build_base = render.vectormap.build_base
+
+    def spy(*args, **kwargs):
+        captured["home_offset"] = kwargs.get("home_offset")
+        return real_build_base(*args, **kwargs)
+
+    monkeypatch.setattr(render.vectormap, "build_base", spy)
+    cities = [{"name": "Home", "lat": 0.0, "lon": lon, "tz": tz, "home": True}]
+    dt = datetime(2026, month, 15, 12, tzinfo=timezone.utc)
+    render.render(cities, dt=dt, out_size=(320, 200), map_style="vector")
+    assert captured["home_offset"] == expected
+
+
 def test_unknown_theme_falls_back():
     img = render.render(CITIES, dt=DT, out_size=(320, 200), theme="does-not-exist")
     assert img.size == (320, 200)

@@ -6,7 +6,7 @@ composited map to the target output size; then draw the city clocks at NATIVE ou
 resolution so text stays crisp on HiDPI panels.
 """
 import os
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 from PIL import Image, ImageChops, ImageDraw, ImageEnhance, ImageFont, ImageOps
@@ -398,13 +398,18 @@ def render(
     home_rgb = _hex(home_color) or tuple(th["home"])  # accent colour for the home city
     out_w, out_h = out_size or (geo.REF_W, geo.REF_H)
 
-    # Home city + its current UTC offset (used to highlight its timezone column).
+    # Home city + its *standard* (geographic) UTC offset, used to highlight its timezone
+    # column. The map's zone polygons are keyed by standard offset (London is always the
+    # zone-0 band), so we subtract the DST component out — otherwise the highlight jumps
+    # one column east/west for half the year in any DST-observing region (issue #14).
     home = next((c for c in cities if c.get("home")), None)
     home_offset = None
     if home and column_highlight:
-        off = dt.astimezone(ZoneInfo(home["tz"])).utcoffset()
+        local = dt.astimezone(ZoneInfo(home["tz"]))
+        off = local.utcoffset()
         if off is not None:
-            home_offset = off.total_seconds() / 3600.0
+            std = off - (local.dst() or timedelta(0))
+            home_offset = std.total_seconds() / 3600.0
 
     # Build the map base + a projection (lon/lat -> output px) for the chosen style.
     if map_style == "vector":
