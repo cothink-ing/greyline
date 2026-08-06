@@ -19,3 +19,8 @@ worldtime/assets/thinkpad_logo.png
 
 # local copy of geodata for the demo (the Pages workflow copies it at deploy)
 web/data/
+
+# Ephemeral scratch. Disposable by definition — nothing committed may cite a
+# tmp/ path, and nothing in here survives a clean checkout.
+tmp/
+.scratch/
