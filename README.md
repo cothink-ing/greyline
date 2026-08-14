@@ -46,8 +46,9 @@ a minute and hands it to your existing wallpaper mechanism, then exits.
 - Day/night terminator that's seasonally correct, with discrete civil / nautical / astronomical
   twilight bands.
 - **Vector map** from public-domain Natural Earth data: crisp at any resolution, fully
-  themeable (`dark`, `blue`, or custom), with honest zig-zag timezone boundaries, a green GMT
-  column, and a red International Date Line.
+  themeable (`modus`, `blue`, `catppuccin`, `gruvbox`, `rosepine`, `tokyonight`, or your own
+  TOML theme), with honest zig-zag timezone boundaries, a green GMT column, and a red
+  International Date Line.
 - Any resolution, multi-monitor, HiDPI. Each output rendered at native pixels.
 - **Swappable corner logo:** ships with Tux; point `logo_path` at your own PNG.
 - Works on any desktop, with native backends for `sway`, `swww`, `hyprpaper`, `x11`
@@ -116,7 +117,7 @@ services.greyline = {
   backend = "sway";              # auto | sway | swww | hyprpaper | x11 | command
   fontFamily = "Aporetic Sans";  # resolved via fontconfig
   settings = {
-    theme = "dark";
+    theme = "modus";
     format = "24h";
     twilight = { bands = true; darkness = "subtle"; };
     home = { tz = "auto"; column_highlight = true; };  # "auto" = system tz
@@ -226,12 +227,50 @@ template. Keys:
 | `backend` | `auto` / `sway` / `swww` / `hyprpaper` / `x11` / `command` |
 | `command`, `resolution` | for the `command` backend (see below) |
 | `map_style` | `vector` (default) / `raster` (bring your own art) |
-| `theme`, `format` | `dark`/`blue` · `24h`/`12h` |
+| `theme`, `format` | a built-in or custom theme name (see [Themes](#themes)) · `24h`/`12h` |
 | `font_family`, `font_scale` | label font (family name or file path) · text-size multiplier |
 | `logo`, `logo_path`, `logo_invert`, `logo_scale`, `logo_max_height` | corner logo (default: Tux); `logo_max_height` caps height as a fraction of screen height |
 | `[twilight]` | `bands`, `darkness` (`subtle`/`medium`/`dramatic`) |
 | `[home]` | `tz` (`auto` or IANA), `column_highlight`, `color` |
+| `[colors]` | per-key overrides of the selected theme (see [Themes](#themes)) |
 | `[[city]]` | `name`, `lat`, `lon`, `tz`, optional `label_side` |
+
+### Themes
+
+Themes are TOML files, not code. Built-ins (in
+[`worldtime/themes/`](worldtime/themes/)):
+
+| Name | Palette |
+|---|---|
+| `modus` | the greyline dark theme (Modus-Vivendi-flavoured); `dark` is a permanent alias |
+| `blue` | faithful to the classic IBM/Lenovo blue world-time map |
+| `catppuccin` | [Catppuccin Mocha](https://catppuccin.com/) |
+| `gruvbox` | [Gruvbox](https://github.com/morhetz/gruvbox) dark (hard) |
+| `rosepine` | [Rosé Pine](https://rosepinetheme.com/) |
+| `tokyonight` | [Tokyo Night](https://github.com/tokyo-night) |
+
+The four ports are derived from the corresponding
+[tinted-theming base16 schemes](https://github.com/tinted-theming/schemes).
+
+**Custom themes.** Drop a TOML file in `~/.config/greyline/themes/` and select it by
+filename: `~/.config/greyline/themes/mytheme.toml` → `greyline config set theme mytheme`.
+Copy a packaged theme as a starting point — `modus.toml` documents every key. Colours are
+`"#rrggbb"` or `"#rrggbbaa"` (trailing alpha). A user file may be partial: a file with a
+built-in's name overrides that theme per key, and missing keys of a new theme fall back to
+`modus`.
+
+**One-off tweaks.** Override single colours of the selected theme from config.toml, no
+theme file needed:
+
+```toml
+theme = "gruvbox"
+
+[colors]
+home = "#d3869b"      # any theme key
+night_alpha = 20
+```
+
+Precedence: theme file < `[colors]` < `home.color`.
 
 ### Desktop environments (GNOME / KDE / XFCE)
 

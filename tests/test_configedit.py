@@ -51,8 +51,8 @@ def test_set_key_rejects_bad_timezone(cfg):
 def test_unset_key_reverts_to_default(cfg):
     configedit.set_key(cfg, "theme", "blue")
     assert configedit.unset_key(cfg, "theme") is True
-    # default-config still supplies theme=dark via the merge
-    assert config.load(cfg)["theme"] == "dark"
+    # default-config still supplies theme=modus via the merge
+    assert config.load(cfg)["theme"] == "modus"
     assert configedit.unset_key(cfg, "theme") is False  # already gone
 
 
@@ -75,6 +75,33 @@ def test_set_color_key_stays_a_hex_string(cfg):
 def test_set_color_key_rejects_non_color(cfg):
     with pytest.raises(ValueError):
         configedit.set_key(cfg, "home.color", "chartreuse")
+
+
+def test_set_theme_accepts_builtins_and_alias(cfg):
+    for name in ("catppuccin", "gruvbox", "rosepine", "tokyonight", "modus", "dark"):
+        assert configedit.set_key(cfg, "theme", name) == name
+
+
+def test_set_theme_accepts_user_theme_file(cfg, tmp_path, monkeypatch):
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    d = tmp_path / "greyline" / "themes"
+    d.mkdir(parents=True)
+    (d / "mytheme.toml").write_text('home = "#fabd2f"\n')
+    assert configedit.set_key(cfg, "theme", "mytheme") == "mytheme"
+
+
+def test_colors_table_keys_validate_as_colors(cfg):
+    # [colors] overrides stay strings and validate as hex (incl. 8-digit alpha)...
+    configedit.set_key(cfg, "colors.home", "990000")
+    configedit.set_key(cfg, "colors.gmt", "#11223344")
+    c = config.load(cfg)
+    assert c["colors"]["home"] == "990000"
+    assert c["colors"]["gmt"] == "#11223344"
+    with pytest.raises(ValueError):
+        configedit.set_key(cfg, "colors.ocean", "chartreuse")
+    # ...except night_alpha, which is an int.
+    configedit.set_key(cfg, "colors.night_alpha", "20")
+    assert config.load(cfg)["colors"]["night_alpha"] == 20
 
 
 def test_add_and_remove_city(cfg):

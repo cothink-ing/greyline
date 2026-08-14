@@ -13,21 +13,26 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import tomlkit
 
-from . import config
+from . import config, themes
 
 # Known enum/value constraints, checked before writing so `set` can't produce a
-# config that renders wrong. Keys are dotted paths.
+# config that renders wrong. Keys are dotted paths. (`theme` is validated
+# dynamically against the available theme files — see _validate.)
 _ENUMS = {
-    "theme": {"dark", "blue"},
     "format": {"24h", "12h"},
     "map_style": {"vector", "raster"},
     "backend": {"auto", "sway", "swww", "hyprpaper", "x11", "windows", "macos", "command"},
     "twilight.darkness": {"subtle", "medium", "dramatic"},
 }
 
-# Hex-colour keys — kept as strings (never numerically coerced, so "990000" stays a
-# colour, not the int 990000) and validated as #rrggbb / #rgb.
-_COLOR_KEYS = {"home.color", "logo_color"}
+
+def _is_color_key(dotted):
+    """Hex-colour keys — kept as strings (never numerically coerced, so "990000"
+    stays a colour, not the int 990000) and validated as #rrggbb(aa) / #rgb.
+    Covers the whole [colors] theme-override table except its one int key."""
+    if dotted in ("home.color", "logo_color"):
+        return True
+    return dotted.startswith("colors.") and dotted != "colors.night_alpha"
 
 
 def ensure_config(path=None):
@@ -76,7 +81,7 @@ def _coerce(value):
 
 def _is_hex_color(value):
     s = value.lstrip("#") if isinstance(value, str) else ""
-    if len(s) not in (3, 6):
+    if len(s) not in (3, 6, 8):
         return False
     try:
         int(s, 16)
@@ -89,12 +94,16 @@ def _validate(dotted, value):
     if dotted in _ENUMS and value not in _ENUMS[dotted]:
         allowed = ", ".join(sorted(_ENUMS[dotted]))
         raise ValueError(f"{dotted}: {value!r} is not one of: {allowed}")
+    if dotted == "theme":
+        allowed = set(themes.available_themes()) | set(themes.ALIASES)
+        if value not in allowed:
+            raise ValueError(f"theme: {value!r} is not one of: {', '.join(sorted(allowed))}")
     if dotted == "home.tz" and value != "auto":
         try:
             ZoneInfo(value)
         except (ZoneInfoNotFoundError, ValueError):
             raise ValueError(f"home.tz: {value!r} is not a valid IANA timezone")
-    if dotted in _COLOR_KEYS and not _is_hex_color(value):
+    if _is_color_key(dotted) and not _is_hex_color(value):
         raise ValueError(f"{dotted}: {value!r} is not a hex colour (e.g. #e64553)")
 
 
@@ -103,7 +112,7 @@ def _validate(dotted, value):
 def set_key(path, dotted, raw_value):
     """Set a (possibly nested) dotted key, e.g. 'twilight.darkness' -> 'medium'."""
     # Colour keys stay strings — "990000" is a hex colour, not the integer 990000.
-    value = raw_value if dotted in _COLOR_KEYS else _coerce(raw_value)
+    value = raw_value if _is_color_key(dotted) else _coerce(raw_value)
     _validate(dotted, value)
     doc = _load(path)
     parts = dotted.split(".")

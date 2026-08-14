@@ -11,7 +11,8 @@ from zoneinfo import ZoneInfo
 
 from PIL import Image, ImageChops, ImageDraw, ImageEnhance, ImageFont, ImageOps
 
-from . import geo, sun, vectormap
+from . import geo, sun, themes, vectormap
+from .themes import _hex  # re-exported here for back-compat (moved to themes.py)
 
 ASSET_DIR = os.path.join(os.path.dirname(__file__), "assets")
 BASE_1400 = os.path.join(ASSET_DIR, "world.time.1400x1050.png")
@@ -25,48 +26,11 @@ TWILIGHT_ELEVATIONS = (0.0, -6.0, -12.0, -18.0)
 # Per-layer overlay alpha by darkness preset (4 stacked layers at full night).
 DARKNESS_ALPHA = {"subtle": 28, "medium": 40, "dramatic": 55}
 
-THEMES = {
-    "blue": {
-        "night": (6, 12, 34),          # deep navy overlay (faithful to the classic blue map)
-        "text": (226, 232, 255),
-        "text_stroke": (4, 8, 26, 220),
-        "dot": (210, 220, 255),
-        "dot_outline": (4, 8, 26, 200),
-        "home": (255, 70, 70),         # accent: home dot + label
-        "home_stroke": (40, 0, 0, 220),
-        "column": (255, 255, 255, 26),  # home timezone-column highlight
-        # Vector-map palette (Phase B): ocean / land / borders / timezone grid.
-        "ocean": (61, 97, 210),         # #3d61d2 — the classic blue
-        "land": (42, 71, 160),
-        "border": (120, 150, 230),
-        "grid": (255, 255, 255, 38),
-        "grid_label": (200, 210, 255),
-        "idl": (224, 60, 60),           # red International Date Line (faithful to the art)
-        "gmt": (90, 220, 130, 64),      # green UTC+0 timezone-column fill
-        "day_wash": (255, 255, 255, 10),  # per-band day-side brighten (stacked x4)
-    },
-    # Dark variant (Modus-Vivendi-flavoured) — intended for the vector map (Phase B).
-    "dark": {
-        "night": (2, 4, 8),
-        "text": (220, 224, 235),
-        "text_stroke": (0, 0, 0, 220),
-        "dot": (170, 185, 220),
-        "dot_outline": (0, 0, 0, 210),
-        "home": (255, 209, 64),
-        "home_stroke": (30, 24, 0, 220),
-        "column": (255, 255, 255, 20),
-        "ocean": (11, 14, 20),          # #0b0e14
-        "land": (30, 34, 43),
-        "border": (74, 82, 100),
-        "grid": (255, 255, 255, 48),
-        "grid_label": (130, 138, 158),
-        "idl": (208, 72, 72),           # red International Date Line (muted for the dark map)
-        "gmt": (88, 184, 128, 52),      # green UTC+0 timezone-column fill
-        "day_wash": (140, 165, 220, 18),  # per-band day-side brighten (stacked x4)
-        "night_alpha": 12,                # gentle night darkening → low contrast, brighter darks
-        "logo": (224, 228, 238),          # target colour when logo_invert is set (dark wordmark → light)
-    },
-}
+# Built-in palette snapshot (parsed from worldtime/themes/*.toml). render() goes
+# through themes.load_theme() so user themes and [colors] overrides work; this dict
+# stays for tests and the web-demo port. "dark" is the pre-0.6 name for modus.
+THEMES = themes.builtin_themes()
+THEMES["dark"] = THEMES["modus"]
 
 # Font candidates (Aporetic preferred per the repo; DejaVu as the portable fallback).
 # The Windows (segoe/arial) and macOS (Helvetica/SFNS) names are found by Pillow's
@@ -83,25 +47,6 @@ FONT_BOLD_CANDIDATES = [
     "segoeuib.ttf", "arialbd.ttf",       # Windows
     "Helvetica.ttc", "SFNS.ttf", "Arial Bold.ttf",  # macOS
 ]
-
-
-def _hex(s):
-    """Parse '#rrggbb' / 'rrggbb' / '#rgb' shorthand to an (r, g, b) tuple.
-
-    Returns None for anything unparseable (empty, non-string, bad length/digits) so a
-    stray config value falls back to the theme default instead of crashing the render.
-    """
-    if not isinstance(s, str):
-        return None
-    s = s.strip().lstrip("#")
-    if len(s) == 3:  # #rgb shorthand -> #rrggbb
-        s = "".join(c * 2 for c in s)
-    if len(s) != 6:
-        return None
-    try:
-        return tuple(int(s[i:i + 2], 16) for i in (0, 2, 4))
-    except ValueError:
-        return None
 
 
 def _load_font(size, candidates, explicit=None):
@@ -369,7 +314,8 @@ def render(
     *,
     dt=None,
     out_size=None,
-    theme="dark",
+    theme="modus",
+    theme_overrides=None,
     fmt="24h",
     twilight_bands=True,
     darkness="subtle",
@@ -391,7 +337,7 @@ def render(
     base_path=BASE_1400,
     crop_anchor=(0.5, 1.0),
 ):
-    th = THEMES.get(theme, THEMES["dark"])
+    th = themes.load_theme(theme, overrides=theme_overrides)
     logo_path = logo_path or LOGO_PNG
     dt = dt or datetime.now(timezone.utc)
     alpha = th.get("night_alpha", DARKNESS_ALPHA.get(darkness, DARKNESS_ALPHA["subtle"]))

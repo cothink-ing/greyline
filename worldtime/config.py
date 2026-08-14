@@ -88,7 +88,8 @@ def render_kwargs(cfg):
     tw = cfg.get("twilight", {})
     home = cfg.get("home", {})
     return {
-        "theme": cfg.get("theme", "dark"),
+        "theme": cfg.get("theme", "modus"),
+        "theme_overrides": cfg.get("colors") or None,  # [colors] table: per-key theme tweaks
         "fmt": cfg.get("format", "24h"),
         "twilight_bands": bool(tw.get("bands", True)),
         "darkness": tw.get("darkness", "subtle"),

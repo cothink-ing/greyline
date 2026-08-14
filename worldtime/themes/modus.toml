@@ -1,0 +1,30 @@
+# Modus — the greyline dark theme (Modus-Vivendi-flavoured). Formerly "dark",
+# which remains a permanent alias. This file is the schema exemplar: colours are
+# "#rrggbb" or "#rrggbbaa" (last two digits = alpha), night_alpha is an int.
+name = "Modus"
+
+# Map surfaces
+ocean = "#0b0e14"
+land = "#1e222b"
+border = "#4a5264"
+grid = "#ffffff30"          # timezone boundary lines
+grid_label = "#828a9e"      # bottom-edge UTC-offset labels
+gmt = "#58b88034"           # green UTC+0 timezone-column fill
+idl = "#d04848"             # red International Date Line (muted for the dark map)
+column = "#ffffff14"        # home timezone-column highlight
+
+# Day/night overlay
+night = "#020408"
+day_wash = "#8ca5dc12"      # per-band day-side brighten (stacked x4)
+night_alpha = 12            # gentle night darkening -> low contrast, brighter darks
+
+# Clocks
+text = "#dce0eb"
+text_stroke = "#000000dc"
+dot = "#aab9dc"
+dot_outline = "#000000d2"
+home = "#ffd140"            # accent: home dot + label
+home_stroke = "#1e1800dc"
+
+# Optional extras
+logo = "#e0e4ee"            # target colour when logo_invert is set (dark wordmark -> light)

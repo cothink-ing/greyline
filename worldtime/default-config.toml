@@ -13,7 +13,8 @@ backend = "auto"            # auto | sway | swww | hyprpaper | x11 (feh/xwallpap
 #   command = 'xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image -s {path}'               # XFCE
 # resolution = "2560x1440"   # optional; size of the single rendered image (else largest xrandr output, else 1920x1080)
 map_style = "vector"        # vector (scalable, themeable) | raster (needs your own map art, see NOTICE)
-theme = "dark"              # dark | blue
+theme = "modus"             # modus | blue | catppuccin | gruvbox | rosepine | tokyonight,
+                            # or your own from ~/.config/greyline/themes/ ("dark" = modus)
 format = "24h"              # 24h | 12h
 # font_family = "Aporetic Sans"  # label font: a fontconfig family name or a font-file path (default: Aporetic Sans, then system fonts)
 # font_scale = 1.0           # scale all label text (e.g. 1.25 = 25% larger, 0.8 = smaller)
@@ -23,6 +24,12 @@ logo = true                 # draw the bottom-left corner logo (bundled default:
 # logo_scale = 1.0           # size the corner logo (e.g. 0.5 = half; square logos like Tux read large)
 # logo_max_height = 0.0      # cap logo height to this fraction of screen height (0 = no cap; e.g. 0.15 for tall logos)
 bar_height = 0              # px reserved at the bottom for a status bar (lifts the logo)
+
+# Override any colour of the selected theme without writing a theme file. Keys and
+# format as in the packaged worldtime/themes/*.toml ("#rrggbb" or "#rrggbbaa").
+# [colors]
+# home = "#fabd2f"
+# night_alpha = 20
 
 [twilight]
 bands = true               # discrete civil/nautical/astronomical bands

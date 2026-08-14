@@ -31,6 +31,17 @@ def test_user_config_overrides_and_replaces_cities(tmp_path):
     assert [c["name"] for c in home] == ["London"]
 
 
+def test_render_kwargs_carries_colors_overrides(tmp_path):
+    user = tmp_path / "config.toml"
+    user.write_text('[colors]\nhome = "#fabd2f"\nnight_alpha = 20\n')
+    rkw = config.render_kwargs(config.load(path=str(user)))
+    assert rkw["theme_overrides"] == {"home": "#fabd2f", "night_alpha": 20}
+    # And None when the table is absent, so render() sees "no overrides".
+    assert config.render_kwargs(config.load(path="/nonexistent/config.toml"))[
+        "theme_overrides"
+    ] is None
+
+
 def test_render_kwargs_shape():
     cfg = config.load(path="/nonexistent/config.toml")
     rkw = config.render_kwargs(cfg)

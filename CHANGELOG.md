@@ -4,6 +4,29 @@ All notable changes to greyline are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.6.0] — 2026-08-14
+
+### Added
+- **Themes are now data, not code.** The palettes moved from a Python dict into TOML files
+  (`worldtime/themes/*.toml`), and users can add their own: drop a file in
+  `~/.config/greyline/themes/` and select it by filename with `theme = "mytheme"`. A user
+  file with a built-in's name overrides that theme per key; missing keys of a new theme
+  fall back to `modus`. Colours are `"#rrggbb"` or `"#rrggbbaa"` (trailing alpha), and a
+  broken or partial theme file never crashes the minutely render — invalid values fall
+  back per key, like `home.color` always has.
+- **Four new built-in themes.** `catppuccin` (Mocha), `gruvbox` (dark, hard), `rosepine`
+  and `tokyonight`, each derived from the corresponding
+  [tinted-theming base16 scheme](https://github.com/tinted-theming/schemes), joining
+  `modus` and `blue`. The web demo mirrors all six.
+- **`[colors]` override table.** Tweak single colours of the selected theme straight from
+  config.toml (e.g. `home = "#d3869b"`, `night_alpha = 20`) without writing a theme file.
+  Precedence: theme file < `[colors]` < `home.color`.
+
+### Changed
+- **`dark` is now `modus`** (after Modus Vivendi, the palette it always was). The old name
+  remains a permanent alias, so existing configs keep working unchanged; a user theme file
+  literally named `dark.toml` shadows the alias.
+
 ## [0.5.5] — 2026-07-27
 
 ### Fixed

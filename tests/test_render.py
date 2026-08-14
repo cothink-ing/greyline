@@ -61,8 +61,11 @@ def test_hex_parsing_and_bad_values():
     assert render._hex("990000") == (153, 0, 0)  # no leading '#'
     assert render._hex("#fff") == (255, 255, 255)  # #rgb shorthand
     assert render._hex("000000") == (0, 0, 0)  # black is a real colour, not "unset"
+    # 8 digits carry a trailing alpha (theme-file format).
+    assert render._hex("#58b88034") == (88, 184, 128, 52)
+    assert render._hex("11223344") == (17, 34, 51, 68)
     # Unparseable values return None (theme default) instead of raising.
-    for bad in (None, 990000, "", "#ggg", "#12345", "notacolor"):
+    for bad in (None, 990000, "", "#ggg", "#12345", "#1234567", "notacolor"):
         assert render._hex(bad) is None
 
 

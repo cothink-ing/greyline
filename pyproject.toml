@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "greyline"
-version = "0.5.5"
+version = "0.6.0"
 description = "A live, multi-timezone world-time desktop wallpaper for Wayland/X11."
 readme = "README.md"
 requires-python = ">=3.11"          # tomllib + zoneinfo (stdlib)
@@ -52,4 +52,4 @@ packages = ["worldtime", "worldtime.backends"]
 
 [tool.setuptools.package-data]
 # Explicit list (not assets/*.png) so locally-present IBM/Lenovo artwork is never packaged.
-worldtime = ["assets/tux.png", "default-config.toml", "geodata/*.geojson"]
+worldtime = ["assets/tux.png", "default-config.toml", "geodata/*.geojson", "themes/*.toml"]

@@ -1,0 +1,24 @@
+# Blue — faithful to the classic IBM/Lenovo blue world-time map.
+name = "Blue"
+
+# Map surfaces
+ocean = "#3d61d2"           # the classic blue
+land = "#2a47a0"
+border = "#7896e6"
+grid = "#ffffff26"
+grid_label = "#c8d2ff"
+gmt = "#5adc8240"
+idl = "#e03c3c"             # red International Date Line (faithful to the art)
+column = "#ffffff1a"
+
+# Day/night overlay (no night_alpha: the darkness preset applies)
+night = "#060c22"           # deep navy overlay
+day_wash = "#ffffff0a"
+
+# Clocks
+text = "#e2e8ff"
+text_stroke = "#04081adc"
+dot = "#d2dcff"
+dot_outline = "#04081ac8"
+home = "#ff4646"
+home_stroke = "#280000dc"

@@ -9,7 +9,7 @@ const canvas = document.getElementById("wt");
 const ctx = canvas.getContext("2d");
 const viewerTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
 
-const state = { theme: "dark", fmt: "24h", bands: true, darkness: "subtle" };
+const state = { theme: "modus", fmt: "24h", bands: true, darkness: "subtle" };
 let geo = null, proj = null, base = null, baseKey = "", W = 0, H = 0, dpr = 1;
 
 function resize() {
