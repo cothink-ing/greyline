@@ -5,8 +5,9 @@ day/night + twilight overlays and the home timezone-column highlight; cover-crop
 composited map to the target output size; then draw the city clocks at NATIVE output
 resolution so text stays crisp on HiDPI panels.
 """
+
 import os
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from zoneinfo import ZoneInfo
 
 from PIL import Image, ImageChops, ImageDraw, ImageEnhance, ImageFont, ImageOps
@@ -36,16 +37,27 @@ THEMES["dark"] = THEMES["modus"]
 # The Windows (segoe/arial) and macOS (Helvetica/SFNS) names are found by Pillow's
 # own OS-font-dir search; if none resolve, _load_font falls back to load_default().
 FONT_CANDIDATES = [
-    "Aporetic Sans", "AporeticSans", "Aporetic-Sans",
-    "DejaVuSans.ttf", "DejaVu Sans",
-    "segoeui.ttf", "arial.ttf",          # Windows
-    "Helvetica.ttc", "SFNS.ttf", "Arial.ttf",  # macOS
+    "Aporetic Sans",
+    "AporeticSans",
+    "Aporetic-Sans",
+    "DejaVuSans.ttf",
+    "DejaVu Sans",
+    "segoeui.ttf",
+    "arial.ttf",  # Windows
+    "Helvetica.ttc",
+    "SFNS.ttf",
+    "Arial.ttf",  # macOS
 ]
 FONT_BOLD_CANDIDATES = [
-    "Aporetic Sans Bold", "AporeticSans-Bold",
-    "DejaVuSans-Bold.ttf", "DejaVu Sans Bold",
-    "segoeuib.ttf", "arialbd.ttf",       # Windows
-    "Helvetica.ttc", "SFNS.ttf", "Arial Bold.ttf",  # macOS
+    "Aporetic Sans Bold",
+    "AporeticSans-Bold",
+    "DejaVuSans-Bold.ttf",
+    "DejaVu Sans Bold",
+    "segoeuib.ttf",
+    "arialbd.ttf",  # Windows
+    "Helvetica.ttc",
+    "SFNS.ttf",
+    "Arial Bold.ttf",  # macOS
 ]
 
 
@@ -55,7 +67,7 @@ def _load_font(size, candidates, explicit=None):
             continue
         try:
             return ImageFont.truetype(name, size)
-        except (OSError, IOError):
+        except OSError:
             continue
     return ImageFont.load_default(size)
 
@@ -106,7 +118,7 @@ def _raster_projection(out_w, out_h, anchor):
 # 1:1 equirectangular. Centred west of Greenwich so the seam falls in the empty Bering/
 # Pacific and the Americas (incl. Alaska) sit comfortably inside the left edge.
 VECTOR_LON_CENTER = 12.0
-VECTOR_LAT_CENTER = 0.0  # equator-centred → poles at the top/bottom edges (pole-to-pole on a 16:10 panel)
+VECTOR_LAT_CENTER = 0.0  # equator-centred → pole-to-pole on a 16:10 panel
 
 
 def _vector_projection(out_w, out_h):
@@ -114,8 +126,10 @@ def _vector_projection(out_w, out_h):
     ppd_lat = ppd_lon * (abs(geo.BY) / abs(geo.AX))
     cx, cy = out_w / 2.0, out_h / 2.0
     return Projection(
-        to_px=lambda lon, lat: (cx + (lon - VECTOR_LON_CENTER) * ppd_lon,
-                                cy + (VECTOR_LAT_CENTER - lat) * ppd_lat),
+        to_px=lambda lon, lat: (
+            cx + (lon - VECTOR_LON_CENTER) * ppd_lon,
+            cy + (VECTOR_LAT_CENTER - lat) * ppd_lat,
+        ),
         x_to_lon=lambda x: VECTOR_LON_CENTER + (x - cx) / ppd_lon,
         lat_to_y=lambda lat: cy + (VECTOR_LAT_CENTER - lat) * ppd_lat,
         scale=out_w / geo.REF_W,
@@ -205,13 +219,21 @@ def _recolor_dark(img, light_rgb, thresh=70):
 def _mono_logo(img, rgb):
     """Recolour the whole logo to a single colour (a flat silhouette), keeping its alpha
     (anti-aliased edges preserved). Used for an all-white logo, etc."""
-    out = Image.new("RGBA", img.size, tuple(rgb) + (255,))
+    out = Image.new("RGBA", img.size, (*tuple(rgb), 255))
     out.putalpha(img.getchannel("A"))
     return out
 
 
-def _draw_logo(canvas, theme, logo_path, bar_height=0, logo_color=None, logo_invert=False,
-               logo_scale=1.0, logo_max_height=0.0):
+def _draw_logo(
+    canvas,
+    theme,
+    logo_path,
+    bar_height=0,
+    logo_color=None,
+    logo_invert=False,
+    logo_scale=1.0,
+    logo_max_height=0.0,
+):
     """Composite the logo, pinned to the bottom-left CORNER of the wallpaper (anchored to
     the canvas, independent of the map framing). Returns its bbox or None.
 
@@ -236,7 +258,7 @@ def _draw_logo(canvas, theme, logo_path, bar_height=0, logo_color=None, logo_inv
     if logo_max_height and target_h > canvas.height * logo_max_height:
         target_h = round(canvas.height * logo_max_height)
         target_w = max(1, round(target_h * logo.width / logo.height))
-    logo = logo.resize((target_w, target_h), Image.LANCZOS)
+    logo = logo.resize((target_w, target_h), Image.Resampling.LANCZOS)
     mono = _hex(logo_color)
     if mono:
         logo = _mono_logo(logo, mono)
@@ -246,8 +268,6 @@ def _draw_logo(canvas, theme, logo_path, bar_height=0, logo_color=None, logo_inv
     x, y = pad, canvas.height - target_h - pad - bar_height
     canvas.alpha_composite(logo, (x, y))
     return (x, y, x + target_w, y + target_h)
-
-
 
 
 def _rect_overlap(a, b):
@@ -278,15 +298,20 @@ def _place_labels(items, obstacles, bounds, scale):
             "below-left": (px - g - w, py + g),
         }
         pref = it.get("side")
-        sides = ([pref] + [s for s in default_sides if s != pref]
-                 if pref in anchors else default_sides)
+        sides = (
+            [pref] + [s for s in default_sides if s != pref] if pref in anchors else default_sides
+        )
         candidates = [anchors[s] for s in sides]
         best, best_pen = None, None
         for bx, by in candidates:
             box = (bx, by, bx + w, by + h)
             pen = sum(_rect_overlap(box, o) for o in placed)
-            off = (max(0, bounds[0] - bx) + max(0, (bx + w) - bounds[2])
-                   + max(0, bounds[1] - by) + max(0, (by + h) - bounds[3]))
+            off = (
+                max(0, bounds[0] - bx)
+                + max(0, (bx + w) - bounds[2])
+                + max(0, bounds[1] - by)
+                + max(0, (by + h) - bounds[3])
+            )
             pen += off * (w + h) * 3  # heavily penalise going off-screen
             if best_pen is None or pen < best_pen:
                 best, best_pen = box, pen
@@ -339,7 +364,7 @@ def render(
 ):
     th = themes.load_theme(theme, overrides=theme_overrides)
     logo_path = logo_path or LOGO_PNG
-    dt = dt or datetime.now(timezone.utc)
+    dt = dt or datetime.now(UTC)
     alpha = th.get("night_alpha", DARKNESS_ALPHA.get(darkness, DARKNESS_ALPHA["subtle"]))
     home_rgb = _hex(home_color) or tuple(th["home"])  # accent colour for the home city
     out_w, out_h = out_size or (geo.REF_W, geo.REF_H)
@@ -375,7 +400,7 @@ def render(
         if not os.path.isfile(base_path):
             raise FileNotFoundError(
                 f"raster map artwork not found at {base_path}. The IBM/Lenovo 'World Time' "
-                "art is not bundled (see NOTICE); use map_style=\"vector\" or supply your own "
+                'art is not bundled (see NOTICE); use map_style="vector" or supply your own '
                 "1400x1050 map via base_path."
             )
         base = Image.open(base_path).convert("RGBA")  # the 1400x1050 calibration frame
@@ -385,7 +410,9 @@ def render(
             gray = ImageEnhance.Contrast(gray).enhance(1.5)
             gray = ImageEnhance.Brightness(gray).enhance(0.7)
             base = gray.convert("RGBA")
-        scaled = base.resize((round(geo.REF_W * sc), round(geo.REF_H * sc)), Image.LANCZOS)
+        scaled = base.resize(
+            (round(geo.REF_W * sc), round(geo.REF_H * sc)), Image.Resampling.LANCZOS
+        )
         canvas = scaled.crop((round(cx), round(cy), round(cx) + out_w, round(cy) + out_h))
 
     # Home timezone-column highlight for the RASTER style (a straight band, one hour of
@@ -407,8 +434,9 @@ def render(
     # Logo first — its box becomes an obstacle so no label hides behind it.
     obstacles = []
     if logo:
-        b = _draw_logo(canvas, th, logo_path, bar_height, logo_color, logo_invert,
-                       logo_scale, logo_max_height)
+        b = _draw_logo(
+            canvas, th, logo_path, bar_height, logo_color, logo_invert, logo_scale, logo_max_height
+        )
         if b:
             obstacles.append(b)
 
@@ -429,19 +457,30 @@ def render(
         f = font_home if is_home else font
         text = "\n".join(_label_lines(c, dt, fmt))
         bb = draw.multiline_textbbox((0, 0), text, font=f, spacing=2, anchor="la")
-        items.append({
-            "c": c, "is_home": is_home, "f": f, "text": text, "px": px, "py": py,
-            "ox": bb[0], "oy": bb[1], "w": bb[2] - bb[0], "h": bb[3] - bb[1],
-            "dotr": round((6 if is_home else 4) * scale),
-            "side": c.get("label_side"),  # optional placement preference
-        })
+        items.append(
+            {
+                "c": c,
+                "is_home": is_home,
+                "f": f,
+                "text": text,
+                "px": px,
+                "py": py,
+                "ox": bb[0],
+                "oy": bb[1],
+                "w": bb[2] - bb[0],
+                "h": bb[3] - bb[1],
+                "dotr": round((6 if is_home else 4) * scale),
+                "side": c.get("label_side"),  # optional placement preference
+            }
+        )
 
     # Place labels avoiding dots, the logo box, the screen edges and each other.
-    dot_boxes = [(it["px"] - it["dotr"], it["py"] - it["dotr"],
-                  it["px"] + it["dotr"], it["py"] + it["dotr"]) for it in items]
+    dot_boxes = [
+        (it["px"] - it["dotr"], it["py"] - it["dotr"], it["px"] + it["dotr"], it["py"] + it["dotr"])
+        for it in items
+    ]
     m = round(10 * scale)
-    _place_labels(items, obstacles + dot_boxes,
-                  (m, m, out_w - m, out_h - m - bar_height), scale)
+    _place_labels(items, obstacles + dot_boxes, (m, m, out_w - m, out_h - m - bar_height), scale)
 
     # Semi-transparent rounded backplate behind each label, for legibility over the map.
     # Black on a dark map; light themes set `label_bg` so the plate doesn't fight the
@@ -455,8 +494,11 @@ def render(
         pd = ImageDraw.Draw(plate)
         for it in items:
             bx0, by0, bx1, by1 = it["box"]
-            pd.rounded_rectangle([bx0 - pad_x, by0 - pad_y, bx1 + pad_x, by1 + pad_y],
-                                 radius=rad, fill=(*plate_rgb, label_bg_alpha))
+            pd.rounded_rectangle(
+                [bx0 - pad_x, by0 - pad_y, bx1 + pad_x, by1 + pad_y],
+                radius=rad,
+                fill=(*plate_rgb, label_bg_alpha),
+            )
         canvas = Image.alpha_composite(canvas, plate)
         draw = ImageDraw.Draw(canvas)  # rebind to the composited canvas
 
@@ -468,12 +510,21 @@ def render(
         stroke = th["home_stroke"] if is_home else th["text_stroke"]
         r = it["dotr"]
         px, py = it["px"], it["py"]
-        draw.ellipse([px - r, py - r, px + r, py + r], fill=dot,
-                     outline=th["dot_outline"], width=max(1, round(scale)))
+        draw.ellipse(
+            [px - r, py - r, px + r, py + r],
+            fill=dot,
+            outline=th["dot_outline"],
+            width=max(1, round(scale)),
+        )
         draw.multiline_text(
-            (it["box"][0] - it["ox"], it["box"][1] - it["oy"]), it["text"],
-            font=it["f"], fill=txt, spacing=2, anchor="la",
-            stroke_width=max(1, round(scale)), stroke_fill=stroke,
+            (it["box"][0] - it["ox"], it["box"][1] - it["oy"]),
+            it["text"],
+            font=it["f"],
+            fill=txt,
+            spacing=2,
+            anchor="la",
+            stroke_width=max(1, round(scale)),
+            stroke_fill=stroke,
         )
 
     return canvas.convert("RGB")

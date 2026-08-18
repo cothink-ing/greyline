@@ -4,6 +4,7 @@ old "git clone the repo to grab the units, install, daemon-reload, enable" dance
 The unit text is generated here (one source of truth); the files under systemd/ in
 the repo remain only as reference for people who prefer to install them by hand.
 """
+
 import os
 import shutil
 import subprocess
@@ -11,7 +12,8 @@ import sys
 
 UNIT_DIR = os.path.join(
     os.environ.get("XDG_CONFIG_HOME") or os.path.expanduser("~/.config"),
-    "systemd", "user",
+    "systemd",
+    "user",
 )
 
 
@@ -53,7 +55,8 @@ def systemd_user_available():
         return False
     r = subprocess.run(
         ["systemctl", "--user", "is-system-running"],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
     # "running"/"degraded" => usable; "offline"/no bus => rc != 0 with an error.
     return r.returncode == 0 or r.stdout.strip() in {"running", "degraded", "starting"}
@@ -90,6 +93,4 @@ def disable():
 
 
 def status():
-    subprocess.run(
-        ["systemctl", "--user", "list-timers", "greyline.timer", "--no-pager"]
-    )
+    subprocess.run(["systemctl", "--user", "list-timers", "greyline.timer", "--no-pager"])

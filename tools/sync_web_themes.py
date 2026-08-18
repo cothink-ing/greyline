@@ -10,10 +10,12 @@ stopped being an option, so it is generated:
 tests/test_web_themes.py fails if the checked-in file doesn't match, so the demo
 can't silently fall behind a theme change.
 """
+
 import json
 import os
 import sys
 import tomllib
+from pathlib import Path
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
@@ -60,8 +62,9 @@ def render_js():
     lines.append("};")
     lines.append("")
     lines.append("// Display names and the order the demo's theme picker lists them in.")
-    lines.append("export const THEME_LABELS = " + json.dumps(labels, ensure_ascii=False,
-                                                             indent=2) + ";")
+    lines.append(
+        "export const THEME_LABELS = " + json.dumps(labels, ensure_ascii=False, indent=2) + ";"
+    )
     lines.append("export const THEME_ORDER = " + json.dumps(order, indent=2) + ";")
     lines.append("")
     lines.append("// Names greyline has shipped in the past, kept working forever.")
@@ -73,7 +76,7 @@ def render_js():
 def main():
     js = render_js()
     if "--check" in sys.argv:
-        current = open(OUT, encoding="utf-8").read() if os.path.exists(OUT) else ""
+        current = Path(OUT).read_text(encoding="utf-8") if os.path.exists(OUT) else ""
         if current != js:
             print("web/themes.js is stale — run tools/sync_web_themes.py", file=sys.stderr)
             return 1

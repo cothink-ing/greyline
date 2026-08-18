@@ -380,6 +380,9 @@ Issues, desktop-compatibility recipes, and pull requests are all welcome.
   [Open an issue](https://github.com/cothinking-dev/greyline/issues/new/choose); there's a
   dedicated **desktop-compatibility report** template for GNOME/KDE/XFCE.
 - Run the tests with `nix flake check`, or `pytest` in the dev shell.
+- Lint/format with [ruff](https://docs.astral.sh/ruff/) and type-check with mypy (both in
+  the dev shell, configured in `pyproject.toml`): `ruff check .`, `ruff format .`, `mypy`.
+  `nix flake check` runs all of them, so CI enforces what the dev shell provides.
 
 ## Credits
 

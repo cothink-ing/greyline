@@ -15,6 +15,7 @@ Timezone boundaries come from `ne_10m_time_zones` (honest, jogging around countr
 straight in open ocean). The UTC+0 zone is filled green (the GMT column) and the
 International Date Line (`ne_10m_geographic_lines`) is drawn red on top.
 """
+
 import functools
 import json
 import os
@@ -78,7 +79,7 @@ def _named_lines(filename, name_substr):
     """
     with open(os.path.join(GEO_DIR, filename), encoding="utf-8") as f:
         gj = json.load(f)
-    segs = []
+    segs: list[list[list[float]]] = []  # GeoJSON coords: each segment is [[lon, lat], ...]
     for feat in gj["features"]:
         if name_substr not in (feat["properties"].get("name") or ""):
             continue
@@ -99,7 +100,7 @@ def build_base(out_w, out_h, theme, font, to_px, ss=2, home_offset=None):
     real polygon with the `column` colour (None disables).
     """
     W, H = out_w * ss, out_h * ss
-    img = Image.new("RGBA", (W, H), tuple(theme["ocean"]) + (255,))
+    img = Image.new("RGBA", (W, H), (*tuple(theme["ocean"]), 255))
     d = ImageDraw.Draw(img)
 
     def px(lon, lat):
@@ -125,18 +126,18 @@ def build_base(out_w, out_h, theme, font, to_px, ss=2, home_offset=None):
 
     # Land fill (Antarctica included — the equator-centred frame puts its −90 data edge at
     # the very bottom, so it reads as the south pole rather than an ugly mid-map cut-off).
-    land = tuple(theme["land"]) + (255,)
+    land = (*tuple(theme["land"]), 255)
     for ring in _outer_rings("ne_110m_land.geojson"):
         for c in wrap_copies([px(lon, lat) for lon, lat in ring]):
             d.polygon(c, fill=land)
 
     # Country borders (thin strokes).
-    border = tuple(theme["border"]) + (255,)
+    border = (*tuple(theme["border"]), 255)
     bw = max(1, round(ss))
     for ring in _outer_rings("ne_110m_admin_0_countries.geojson"):
         pts = [px(lon, lat) for lon, lat in ring]
         for c in wrap_copies(pts):
-            d.line(c + [c[0]], fill=border, width=bw)
+            d.line([*c, c[0]], fill=border, width=bw)
 
     zones = _zone_features("ne_10m_time_zones.geojson")
 
@@ -180,7 +181,7 @@ def build_base(out_w, out_h, theme, font, to_px, ss=2, home_offset=None):
                 seam = abs(lon0) >= SEAM_LON and abs(lon1) >= SEAM_LON
                 drawn.append(not (cap or seam))
             for c in wrap_copies(base):
-                run = []  # batch consecutive kept segments into one polyline
+                run: list[tuple[float, float]] = []  # batch kept segments into one polyline
                 for i in range(n):
                     if drawn[i]:
                         if not run:
@@ -194,14 +195,14 @@ def build_base(out_w, out_h, theme, font, to_px, ss=2, home_offset=None):
     composite(grid_layer)
 
     # International Date Line — red, on top, wrapped so the +180/−180 pieces join up.
-    idl = tuple(theme["idl"]) + (255,)
+    idl = (*tuple(theme["idl"]), 255)
     iw = max(2, round(2 * ss))
     for seg in _named_lines("ne_10m_geographic_lines.geojson", "Date Line"):
         pts = [px(lon, lat) for lon, lat in seg]
         for c in wrap_copies(pts):
             d.line(c, fill=idl, width=iw)
 
-    img = img.resize((out_w, out_h), Image.LANCZOS)
+    img = img.resize((out_w, out_h), Image.Resampling.LANCZOS)
 
     # Per-column UTC-offset labels at the bottom, drawn at native res for crisp text.
     # Placed on the nominal hour meridian (open ocean there, so they sit on the grid);

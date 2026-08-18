@@ -5,6 +5,7 @@ Themes are data, not code — worldtime/themes/*.toml ships the built-ins, and
 override built-ins per key. Each file maps semantic keys to hex colours
 ("#rrggbb" or "#rrggbbaa"); see themes/modus.toml for the reference schema.
 """
+
 import os
 import tomllib
 
@@ -28,11 +29,26 @@ DEFAULT_THEME = "modus"
 
 # Every key render/vectormap index unconditionally. Built-in themes carry all of
 # them; partial user themes are merged over a complete base so lookups never fail.
-COLOR_KEYS = frozenset({
-    "night", "day_wash", "text", "text_stroke", "dot", "dot_outline",
-    "home", "home_stroke", "column", "ocean", "land", "border",
-    "grid", "grid_label", "idl", "gmt",
-})
+COLOR_KEYS = frozenset(
+    {
+        "night",
+        "day_wash",
+        "text",
+        "text_stroke",
+        "dot",
+        "dot_outline",
+        "home",
+        "home_stroke",
+        "column",
+        "ocean",
+        "land",
+        "border",
+        "grid",
+        "grid_label",
+        "idl",
+        "gmt",
+    }
+)
 # Optional per-theme extras — never inherited across themes (blue deliberately has
 # no night_alpha/logo and must not gain modus's through the fallback merge).
 # label_bg tints the plate behind each clock label; unset means black, which is
@@ -54,7 +70,7 @@ def _hex(s):
     if len(s) not in (6, 8):
         return None
     try:
-        return tuple(int(s[i:i + 2], 16) for i in range(0, len(s), 2))
+        return tuple(int(s[i : i + 2], 16) for i in range(0, len(s), 2))
     except ValueError:
         return None
 

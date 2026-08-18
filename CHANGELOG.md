@@ -4,6 +4,23 @@ All notable changes to greyline are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.1] — 2026-08-18
+
+### Added
+- **Static analysis in the toolchain and CI.** [ruff](https://docs.astral.sh/ruff/)
+  (lint + format, line length 100) and mypy (`check_untyped_defs` — bodies are checked
+  without requiring annotations everywhere), both configured in `pyproject.toml`. New
+  `nix flake check` derivations (`checks.lint`, `checks.types`) enforce them in CI; the
+  dev shell now carries ruff/mypy/pytest, and a `dev` extra
+  (`pip install -e ".[dev]"`) covers non-nix setups.
+
+### Changed
+- The whole codebase is `ruff format`-ed and lint-clean. Mostly mechanical (import
+  sorting, `datetime.UTC`, f-strings over `%`-formatting), plus a few real cleanups:
+  `Image.LANCZOS` → `Image.Resampling.LANCZOS` (deprecated since Pillow 10), and CLI
+  validation errors now `raise ... from None` so users see the clean message instead of
+  a chained traceback.
+
 ## [0.7.0] — 2026-08-18
 
 ### Added
@@ -229,6 +246,16 @@ All notable changes to greyline are documented here. The format is based on
 - Backends: `sway`, `swww`, `hyprpaper`, `x11` (feh/xwallpaper), auto-detected.
 - Nix flake + home-manager module; systemd user timer for once-a-minute rendering.
 
+[0.7.1]: https://github.com/cothinking-dev/greyline/releases/tag/v0.7.1
+[0.7.0]: https://github.com/cothinking-dev/greyline/releases/tag/v0.7.0
+[0.6.0]: https://github.com/cothinking-dev/greyline/releases/tag/v0.6.0
+[0.5.5]: https://github.com/cothinking-dev/greyline/releases/tag/v0.5.5
+[0.5.4]: https://github.com/cothinking-dev/greyline/releases/tag/v0.5.4
+[0.5.3]: https://github.com/cothinking-dev/greyline/releases/tag/v0.5.3
+[0.5.2]: https://github.com/cothinking-dev/greyline/releases/tag/v0.5.2
+[0.5.1]: https://github.com/cothinking-dev/greyline/releases/tag/v0.5.1
+[0.5.0]: https://github.com/cothinking-dev/greyline/releases/tag/v0.5.0
+[0.4.2]: https://github.com/cothinking-dev/greyline/releases/tag/v0.4.2
 [0.4.1]: https://github.com/cothinking-dev/greyline/releases/tag/v0.4.1
 [0.4.0]: https://github.com/cothinking-dev/greyline/releases/tag/v0.4.0
 [0.3.0]: https://github.com/cothinking-dev/greyline/releases/tag/v0.3.0

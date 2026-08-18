@@ -7,6 +7,7 @@ If $SWAYSOCK is not in the environment (e.g. a systemd user service that did not
 inherit it), the socket is auto-discovered under $XDG_RUNTIME_DIR — so no extra env
 wiring is required.
 """
+
 import glob
 import json
 import os
@@ -32,9 +33,7 @@ def _run(args):
     sock = _swaysock()
     if sock:
         env["SWAYSOCK"] = sock
-    return subprocess.run(
-        ["swaymsg", *args], capture_output=True, text=True, check=True, env=env
-    )
+    return subprocess.run(["swaymsg", *args], capture_output=True, text=True, check=True, env=env)
 
 
 def outputs():

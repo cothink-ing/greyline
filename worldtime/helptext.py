@@ -7,6 +7,7 @@ themes/*.toml, the desktop recipes from recipes.RECIPES, the config-key referenc
 from the packaged default-config.toml. A reference page that drifts from the code
 is worse than no page at all.
 """
+
 import os
 import textwrap
 
@@ -106,22 +107,29 @@ _BACKENDS = {
 def _wrap(text, indent="  ", width=88):
     # Theme names and alias arrows are hyphenated; wrapping inside one turns
     # "github-dark" into two half-names on separate lines.
-    return textwrap.fill(text, width=width, initial_indent=indent,
-                         subsequent_indent=indent, break_on_hyphens=False,
-                         break_long_words=False)
+    return textwrap.fill(
+        text,
+        width=width,
+        initial_indent=indent,
+        subsequent_indent=indent,
+        break_on_hyphens=False,
+        break_long_words=False,
+    )
 
 
 def _topics_page():
-    return "\n".join([
-        "Reference topics — `greyline help <topic>`:",
-        "",
-        "  keys       every config key, its allowed values and default",
-        "  themes     available colour themes and how to write your own",
-        "  backends   wallpaper backends and how one gets picked",
-        "  desktops   GNOME / KDE / XFCE setup (the `command` backend)",
-        "",
-        "For a command instead, use `greyline help <command>`, e.g. `greyline help city add`.",
-    ])
+    return "\n".join(
+        [
+            "Reference topics — `greyline help <topic>`:",
+            "",
+            "  keys       every config key, its allowed values and default",
+            "  themes     available colour themes and how to write your own",
+            "  backends   wallpaper backends and how one gets picked",
+            "  desktops   GNOME / KDE / XFCE setup (the `command` backend)",
+            "",
+            "For a command instead, use `greyline help <command>`, e.g. `greyline help city add`.",
+        ]
+    )
 
 
 def _keys_page():
@@ -133,18 +141,20 @@ def _keys_page():
     belong in the page."""
     with open(config.DEFAULT_CONFIG, encoding="utf-8") as f:
         head = f.read().partition("\n[[city]]")[0].rstrip()
-    return "\n".join([
-        "Config keys — shown as the packaged defaults, documented in place.",
-        "",
-        f"Your config: {config.user_config_path()}",
-        "Set them with `greyline config set <key> <value>` (values are validated),",
-        "or edit the file directly. Nested keys are dotted: twilight.darkness, home.tz,",
-        "colors.home.",
-        "",
-        head,
-        "",
-        "…then the [[city]] entries — manage those with `greyline city add|remove|list`.",
-    ])
+    return "\n".join(
+        [
+            "Config keys — shown as the packaged defaults, documented in place.",
+            "",
+            f"Your config: {config.user_config_path()}",
+            "Set them with `greyline config set <key> <value>` (values are validated),",
+            "or edit the file directly. Nested keys are dotted: twilight.darkness, home.tz,",
+            "colors.home.",
+            "",
+            head,
+            "",
+            "…then the [[city]] entries — manage those with `greyline city add|remove|list`.",
+        ]
+    )
 
 
 def _themes_page():
@@ -153,7 +163,8 @@ def _themes_page():
     the ones whose file you might be looking for."""
     available = themes.available_themes()
     builtin_dir = os.path.realpath(themes.BUILTIN_DIR)
-    builtin, user = [], []
+    builtin: list[str] = []
+    user: list[str] = []
     for name, path in sorted(available.items()):
         target = builtin if os.path.realpath(os.path.dirname(path)) == builtin_dir else user
         target.append(name)
@@ -195,7 +206,7 @@ def _backends_page():
     lines = [
         "Backends — how the rendered PNG reaches your desktop.",
         "",
-        "`backend = \"auto\"` (the default) tries these in order and takes the first that",
+        '`backend = "auto"` (the default) tries these in order and takes the first that',
         "is usable here:",
         "",
     ]
@@ -210,7 +221,7 @@ def _backends_page():
     ]
     try:
         detected = backends.detect()
-    except Exception:  # noqa: BLE001 — help must never fail on a probe
+    except Exception:
         detected = None
     lines.append(f"Detected here: {detected or '(none — set one manually)'}")
     lines += [

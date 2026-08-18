@@ -17,7 +17,7 @@
         pkgs:
         pkgs.python3Packages.buildPythonApplication {
           pname = "greyline";
-          version = "0.7.0";
+          version = "0.7.1";
           pyproject = true;
           src = ./.;
           build-system = [ pkgs.python3Packages.setuptools ];
@@ -78,10 +78,51 @@
         {
           default = pkgs.mkShell {
             packages = [
-              (pkgs.python3.withPackages (ps: [ ps.pillow ps.tomlkit ]))
+              (pkgs.python3.withPackages (ps: [
+                ps.pillow
+                ps.tomlkit
+                ps.pytest
+                ps.mypy
+              ]))
+              pkgs.ruff
               pkgs.fontconfig
             ];
           };
+        }
+      );
+
+      # Static analysis, run by `nix flake check` (and therefore CI).
+      # Config lives in pyproject.toml ([tool.ruff] / [tool.mypy]).
+      checks = forAll (
+        s:
+        let
+          pkgs = pkgsFor s;
+        in
+        {
+          lint = pkgs.runCommand "ruff-lint" { nativeBuildInputs = [ pkgs.ruff ]; } ''
+            cd ${self}
+            ruff check --no-cache .
+            ruff format --check --no-cache .
+            touch $out
+          '';
+          types =
+            pkgs.runCommand "mypy"
+              {
+                nativeBuildInputs = [
+                  (pkgs.python3.withPackages (ps: [
+                    ps.mypy
+                    ps.pillow
+                    ps.tomlkit
+                    ps.pytest
+                  ]))
+                ];
+              }
+              ''
+                cd ${self}
+                export MYPY_CACHE_DIR="$TMPDIR/mypy-cache"
+                mypy
+                touch $out
+              '';
         }
       );
 

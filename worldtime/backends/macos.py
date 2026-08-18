@@ -12,6 +12,8 @@ Single combined desktop for now (per-space / per-display targeting is deferred).
 Status: written without a Mac to test on. See the README's
 "Windows & macOS (beta, untested)" section.
 """
+
+import contextlib
 import glob
 import os
 import subprocess
@@ -43,10 +45,8 @@ def _rotate(png_path):
     d = os.path.dirname(png_path) or "."
     # Prune previous rotations so the runtime dir does not grow without bound.
     for old in glob.glob(os.path.join(d, f"{_ROTATE_PREFIX}*.png")):
-        try:
+        with contextlib.suppress(OSError):
             os.remove(old)
-        except OSError:
-            pass
     fd, new = tempfile.mkstemp(dir=d, prefix=_ROTATE_PREFIX, suffix=".png")
     with os.fdopen(fd, "wb") as dst, open(png_path, "rb") as src:
         dst.write(src.read())
@@ -56,8 +56,6 @@ def _rotate(png_path):
 def apply(name, png_path):
     target = _rotate(png_path)
     script = (
-        'tell application "System Events" to set picture of every desktop '
-        f'to POSIX file "{target}"'
+        f'tell application "System Events" to set picture of every desktop to POSIX file "{target}"'
     )
-    subprocess.run(["osascript", "-e", script],
-                   capture_output=True, text=True, check=True)
+    subprocess.run(["osascript", "-e", script], capture_output=True, text=True, check=True)

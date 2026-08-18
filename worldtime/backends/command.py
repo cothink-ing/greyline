@@ -19,6 +19,7 @@ or the ``GREYLINE_COMMAND`` / ``GREYLINE_RESOLUTION`` environment variables (whi
 desktop, since a single command typically sets every monitor at once; use
 ``{output}`` in your command if it can target individual outputs.
 """
+
 import os
 import subprocess
 

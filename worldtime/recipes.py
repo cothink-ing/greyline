@@ -35,6 +35,7 @@ def detect_desktop(environ=None):
     "KDE", "X-Cinnamon"), so match each token case-insensitively.
     """
     import os
+
     env = environ if environ is not None else os.environ
     tokens = env.get("XDG_CURRENT_DESKTOP", "").lower().split(":")
     for key in RECIPES:

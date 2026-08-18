@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "greyline"
-version = "0.7.0"
+version = "0.7.1"
 description = "A live, multi-timezone world-time desktop wallpaper for Wayland/X11."
 readme = "README.md"
 requires-python = ">=3.11"          # tomllib + zoneinfo (stdlib)
@@ -42,10 +42,42 @@ Issues = "https://github.com/cothinking-dev/greyline/issues"
 
 [project.optional-dependencies]
 test = ["pytest"]
+dev = ["greyline[test]", "ruff", "mypy"]
 
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+# reference/ is one-off calibration scratch; dist/ is build output; web/ is the JS demo port.
+extend-exclude = ["reference", "dist", "web"]
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "UP",  # pyupgrade
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "SIM", # flake8-simplify
+    "RUF", # ruff-specific
+]
+# U+2212 MINUS SIGN is used deliberately in prose comments (e.g. "−90", "+180/−180").
+allowed-confusables = ["−"]
+
+[tool.mypy]
+python_version = "3.11"
+files = ["worldtime", "tests", "tools"]
+# The codebase is largely unannotated; still type-check function bodies.
+check_untyped_defs = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+warn_unreachable = true
+no_implicit_optional = true
 
 [tool.setuptools]
 packages = ["worldtime", "worldtime.backends"]

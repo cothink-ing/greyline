@@ -14,8 +14,9 @@ Solving elevation = 0 for the boundary latitude at a given longitude gives:
 This is seasonally accurate (declination changes the tilt), unlike the original
 wallpaper's single sliding shadow image.
 """
+
 import math
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 
 def subsolar_point(dt_utc: datetime) -> tuple[float, float]:
@@ -25,8 +26,8 @@ def subsolar_point(dt_utc: datetime) -> tuple[float, float]:
     noon. Uses the NOAA approximation (good to a fraction of a degree).
     """
     if dt_utc.tzinfo is None:
-        dt_utc = dt_utc.replace(tzinfo=timezone.utc)
-    dt_utc = dt_utc.astimezone(timezone.utc)
+        dt_utc = dt_utc.replace(tzinfo=UTC)
+    dt_utc = dt_utc.astimezone(UTC)
 
     # Day of year (1-based) and fractional hour.
     doy = dt_utc.timetuple().tm_yday
@@ -64,9 +65,7 @@ def subsolar_point(dt_utc: datetime) -> tuple[float, float]:
     return sublat, sublon
 
 
-def boundary_lat(
-    lon: float, sublat: float, sublon: float, elevation: float = 0.0
-) -> float:
+def boundary_lat(lon: float, sublat: float, sublon: float, elevation: float = 0.0) -> float:
     """Latitude (deg) where the solar elevation equals `elevation`, clamped [-90, 90].
 
     Solving  sin(elev) = sin(lat)*sin(dec) + cos(lat)*cos(dec)*cos(H)  for lat:

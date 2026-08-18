@@ -7,6 +7,7 @@ Each backend module exposes:
 
 Auto-detection order favours the most specific compositor IPC first.
 """
+
 import importlib
 
 # Checked in order by detect(). The windows/macos backends are platform-gated

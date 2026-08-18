@@ -1,5 +1,7 @@
 """CLI config editing: round-trip, comment preservation, validation, city ops."""
+
 import shutil
+from pathlib import Path
 
 import pytest
 
@@ -15,10 +17,10 @@ def cfg(tmp_path):
 
 
 def test_set_key_preserves_comments_and_other_keys(cfg):
-    before = open(cfg).read()
+    before = Path(cfg).read_text()
     assert "#" in before  # the default template is heavily commented
     configedit.set_key(cfg, "theme", "blue")
-    after = open(cfg).read()
+    after = Path(cfg).read_text()
     assert "# Default configuration for greyline." in after  # comments intact
     reparsed = config.load(cfg)
     assert reparsed["theme"] == "blue"
@@ -106,11 +108,12 @@ def test_colors_table_keys_validate_as_colors(cfg):
 
 def test_add_and_remove_city(cfg):
     n0 = len(configedit.list_cities(cfg))
-    configedit.add_city(cfg, "Testville", 1.5, 2.5, "Asia/Kuala_Lumpur",
-                        home=True, label_side="left")
+    configedit.add_city(
+        cfg, "Testville", 1.5, 2.5, "Asia/Kuala_Lumpur", home=True, label_side="left"
+    )
     cities = configedit.list_cities(cfg)
     assert len(cities) == n0 + 1
-    added = [c for c in cities if c["name"] == "Testville"][0]
+    added = next(c for c in cities if c["name"] == "Testville")
     assert added["lat"] == 1.5 and added["tz"] == "Asia/Kuala_Lumpur"
     assert added["label_side"] == "left"
     assert config.load(cfg)["home"]["tz"] == "Asia/Kuala_Lumpur"  # --home applied

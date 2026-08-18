@@ -1,13 +1,12 @@
 """CLI plumbing: DE recipe detection, systemd unit generation, init, watch loop."""
-import shutil
 
 import pytest
 
 from worldtime import __main__ as cli
 from worldtime import config, recipes, service
 
-
 # --- argument parsing ---
+
 
 def test_parse_res_valid():
     assert cli._parse_res("2560x1440") == (2560, 1440)
@@ -23,6 +22,7 @@ def test_parse_res_malformed_exits_cleanly():
 
 # --- recipes ---
 
+
 def test_detect_desktop_matches_case_insensitively():
     assert recipes.detect_desktop({"XDG_CURRENT_DESKTOP": "ubuntu:GNOME"}) == "gnome"
     assert recipes.detect_desktop({"XDG_CURRENT_DESKTOP": "KDE"}) == "kde"
@@ -36,6 +36,7 @@ def test_all_recipes_have_path_placeholder():
 
 
 # --- systemd unit generation ---
+
 
 def test_service_unit_execstart_and_timer(monkeypatch):
     monkeypatch.setattr(service, "greyline_bin", lambda: "/opt/bin/greyline")
@@ -58,6 +59,7 @@ def test_install_and_enable_dry_run_lists_actions_without_writing(monkeypatch, t
 
 # --- command-backend ping-pong buffers (#11) ---
 
+
 def test_output_path_stable_for_native_backends(tmp_path):
     # Native backends read file contents live, so they keep one stable filename.
     assert cli._output_path(str(tmp_path), "eDP-1", rotate=False) == str(tmp_path / "eDP-1.png")
@@ -65,16 +67,19 @@ def test_output_path_stable_for_native_backends(tmp_path):
 
 def test_output_path_pingpongs_between_two_buffers(tmp_path):
     import os
+
     rt = str(tmp_path)
     pa, pb = tmp_path / "screen-a.png", tmp_path / "screen-b.png"
 
     # Tick 1: neither buffer exists -> pick -a.
     assert cli._output_path(rt, "screen", rotate=True) == str(pa)
-    pa.write_bytes(b"1"); os.utime(pa, (1000, 1000))
+    pa.write_bytes(b"1")
+    os.utime(pa, (1000, 1000))
 
     # Tick 2: -a is newest -> hand the DE the *other* path (-b) so it refreshes.
     assert cli._output_path(rt, "screen", rotate=True) == str(pb)
-    pb.write_bytes(b"2"); os.utime(pb, (2000, 2000))
+    pb.write_bytes(b"2")
+    os.utime(pb, (2000, 2000))
 
     # Tick 3: -a is now older -> swap back. Bounded to 2 files: no accumulation.
     assert cli._output_path(rt, "screen", rotate=True) == str(pa)
@@ -82,6 +87,7 @@ def test_output_path_pingpongs_between_two_buffers(tmp_path):
 
 
 # --- init ---
+
 
 def test_init_writes_config_and_detected_backend(monkeypatch, tmp_path):
     cfg_path = tmp_path / "config.toml"
@@ -141,11 +147,14 @@ def test_init_dry_run_writes_nothing(monkeypatch, tmp_path):
 
 # --- watch ---
 
+
 def test_render_flags_work_before_and_after_subcommand():
     # Regression: argparse parent/subparser default-clobber must not drop --backend.
     parse = cli.build_parser().parse_args
-    for argv in (["watch", "--backend", "command", "--command", "cp {path} x"],
-                 ["--backend", "command", "--command", "cp {path} x", "watch"]):
+    for argv in (
+        ["watch", "--backend", "command", "--command", "cp {path} x"],
+        ["--backend", "command", "--command", "cp {path} x", "watch"],
+    ):
         a = parse(argv)
         assert a.backend == "command" and a.command == "cp {path} x"
     assert parse(["watch"]).backend is None  # unset stays None
@@ -168,6 +177,7 @@ def test_watch_loops_run_apply_until_interrupted(monkeypatch):
 
 
 # --- help ---
+
 
 def test_help_command_prints_that_commands_help(capsys):
     # `greyline help city add` must reach the nested subparser, not the root parser.
@@ -200,6 +210,7 @@ def test_help_topics_render_from_live_data(capsys):
 
 def test_help_topic_list_matches_the_topics_epilog_advertises():
     from worldtime import helptext
+
     for name in helptext.topic_names():
         assert name in helptext.HELP_EPILOG
         assert helptext.render_topic(name)

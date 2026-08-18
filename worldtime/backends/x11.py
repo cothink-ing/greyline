@@ -3,6 +3,7 @@
 X11 has one root window, so per-output rendering isn't separable here; we report
 the connected outputs for sizing but set them together via feh's per-output flags.
 """
+
 import shutil
 import subprocess
 
@@ -15,6 +16,7 @@ def _tool():
 
 def available():
     import os
+
     return bool(os.environ.get("DISPLAY")) and _tool() is not None
 
 
@@ -28,8 +30,8 @@ def outputs():
 def apply(name, png_path):
     tool = _tool()
     if tool and tool.endswith("feh"):
-        subprocess.run([tool, "--bg-fill", png_path],
-                       capture_output=True, text=True, check=True)
+        subprocess.run([tool, "--bg-fill", png_path], capture_output=True, text=True, check=True)
     elif tool:  # xwallpaper
-        subprocess.run([tool, "--output", name, "--zoom", png_path],
-                       capture_output=True, text=True, check=True)
+        subprocess.run(
+            [tool, "--output", name, "--zoom", png_path], capture_output=True, text=True, check=True
+        )

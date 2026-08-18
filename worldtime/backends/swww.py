@@ -8,6 +8,7 @@ Some nixpkgs revisions ship the binaries as `awww`/`awww-daemon` instead of
 `swww`/`swww-daemon` (same 0.12 CLI). Both names are accepted, as is a `$SWWW`
 environment override.
 """
+
 import os
 import re
 import shutil
@@ -37,12 +38,14 @@ def outputs():
         if not m:
             continue
         s = re.search(r"scale:\s*([\d.]+)", line)
-        result.append({
-            "name": m.group(1),
-            "width": int(m.group(2)),
-            "height": int(m.group(3)),
-            "scale": float(s.group(1)) if s else 1.0,
-        })
+        result.append(
+            {
+                "name": m.group(1),
+                "width": int(m.group(2)),
+                "height": int(m.group(3)),
+                "scale": float(s.group(1)) if s else 1.0,
+            }
+        )
     return result
 
 
@@ -50,5 +53,7 @@ def apply(name, png_path):
     cli = _client()
     subprocess.run(
         [cli, "img", "--outputs", name, "--transition-type", "none", png_path],
-        capture_output=True, text=True, check=True,
+        capture_output=True,
+        text=True,
+        check=True,
     )

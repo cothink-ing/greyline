@@ -1,4 +1,5 @@
 """Config merge, home-city flagging, and render kwarg mapping."""
+
 from worldtime import config
 
 
@@ -37,9 +38,10 @@ def test_render_kwargs_carries_colors_overrides(tmp_path):
     rkw = config.render_kwargs(config.load(path=str(user)))
     assert rkw["theme_overrides"] == {"home": "#fabd2f", "night_alpha": 20}
     # And None when the table is absent, so render() sees "no overrides".
-    assert config.render_kwargs(config.load(path="/nonexistent/config.toml"))[
-        "theme_overrides"
-    ] is None
+    assert (
+        config.render_kwargs(config.load(path="/nonexistent/config.toml"))["theme_overrides"]
+        is None
+    )
 
 
 def test_render_kwargs_shape():

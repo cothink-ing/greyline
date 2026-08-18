@@ -8,6 +8,7 @@ watch/enable/disable/status/doctor/help) manage setup and configuration.
 Help text lives in helptext.py: descriptions and example epilogs for each parser,
 plus the `greyline help <topic>` reference pages.
 """
+
 import argparse
 import os
 import shutil
@@ -23,9 +24,7 @@ def _resolve_font(family, bold=False):
     if not shutil.which("fc-match"):
         return None
     query = f"{family}:bold" if bold else family
-    out = subprocess.run(
-        ["fc-match", "-f", "%{file}", query], capture_output=True, text=True
-    )
+    out = subprocess.run(["fc-match", "-f", "%{file}", query], capture_output=True, text=True)
     return out.stdout.strip() or None
 
 
@@ -61,7 +60,7 @@ def _parse_res(s):
         w, h = s.lower().split("x")
         return int(w), int(h)
     except ValueError:
-        raise SystemExit(f"invalid --res {s!r}; expected WxH, e.g. 2560x1440")
+        raise SystemExit(f"invalid --res {s!r}; expected WxH, e.g. 2560x1440") from None
 
 
 def run_apply(args):
@@ -84,8 +83,7 @@ def run_apply(args):
     # Single-image mode (testing / non-backend use).
     if args.out:
         res = _parse_res(args.res) if args.res else (1920, 1200)
-        img = render.render(cities, out_size=res, font_path=font,
-                            font_bold_path=font_bold, **rkw)
+        img = render.render(cities, out_size=res, font_path=font, font_bold_path=font_bold, **rkw)
         img.save(args.out)
         print(f"wrote {args.out} {img.size}")
         return 0
@@ -96,8 +94,10 @@ def run_apply(args):
         # (keeps the backend contract's apply(name, path) signature unchanged).
         command = args.command or cfg.get("command")
         if not command:
-            print("backend 'command' requires a command "
-                  "(set `command` in config or pass --command)", file=sys.stderr)
+            print(
+                "backend 'command' requires a command (set `command` in config or pass --command)",
+                file=sys.stderr,
+            )
             return 1
         os.environ["GREYLINE_COMMAND"] = command
         resolution = args.res or cfg.get("resolution")
@@ -126,18 +126,24 @@ def run_apply(args):
         # Render + apply each output independently: a single failing monitor
         # (e.g. unplugged mid-run) must not blank the others.
         try:
-            img = render.render(cities, out_size=(o["width"], o["height"]),
-                                font_path=font, font_bold_path=font_bold, **rkw)
+            img = render.render(
+                cities,
+                out_size=(o["width"], o["height"]),
+                font_path=font,
+                font_bold_path=font_bold,
+                **rkw,
+            )
             path = _output_path(rt, o["name"], rotate)
             img.save(path)
             mod.apply(o["name"], path)
-        except Exception as e:  # noqa: BLE001 — keep going for the remaining outputs
+        except Exception as e:
             failures += 1
             print(f"output {o['name']}: {e}", file=sys.stderr)
     return 1 if failures == len(outs) else 0
 
 
 # --- subcommands ---
+
 
 def cmd_init(args):
     """Detect the desktop, write a starter config + backend, and schedule updates."""
@@ -177,6 +183,7 @@ def cmd_init(args):
         return 0
 
     from . import configedit
+
     path = configedit.ensure_config(cfg_path)
     if backend:
         configedit.set_key(path, "backend", backend)
@@ -192,8 +199,9 @@ def cmd_init(args):
         print("  no systemd --user — add this to your session/WM autostart:")
         print(f"    {service.greyline_bin()} watch")
     if not backend:
-        print("  ! no wallpaper backend detected — set one with: "
-              "greyline config set backend <name>")
+        print(
+            "  ! no wallpaper backend detected — set one with: greyline config set backend <name>"
+        )
         print("    GNOME/KDE/XFCE: see the README 'Desktop environments' section.")
     print("Next: pick your cities with `greyline city add …`; check with `greyline doctor`.")
     return 0
@@ -202,8 +210,8 @@ def cmd_init(args):
 def cmd_watch(args):
     """Render+apply in a foreground loop — works on any init system / WM."""
     import time
-    print(f"greyline watch: rendering every {args.interval}s (Ctrl-C to stop)",
-          file=sys.stderr)
+
+    print(f"greyline watch: rendering every {args.interval}s (Ctrl-C to stop)", file=sys.stderr)
     try:
         while True:
             run_apply(args)
@@ -228,9 +236,12 @@ def cmd_help(args):
             continue
         page = helptext.render_topic(token) if i == 0 else None
         if page is None:
-            what = " ".join(args.topic[:i + 1])
-            print(f"no help for {what!r}. Try `greyline help` for the command list, "
-                  f"or `greyline help topics`.", file=sys.stderr)
+            what = " ".join(args.topic[: i + 1])
+            print(
+                f"no help for {what!r}. Try `greyline help` for the command list, "
+                f"or `greyline help topics`.",
+                file=sys.stderr,
+            )
             return 1
         print(page)
         return 0
@@ -254,6 +265,7 @@ def cmd_config(args):
     path = args.config or config.user_config_path()
     if args.config_cmd == "get":
         from . import configedit
+
         if args.key:
             val = configedit.get_key(path, args.key)
             if val is None:
@@ -269,6 +281,7 @@ def cmd_config(args):
         return 0
 
     from . import configedit
+
     path = configedit.ensure_config(path)
     if args.config_cmd == "set":
         try:
@@ -288,6 +301,7 @@ def cmd_city(args):
         _print_help_for("city")
         return 1
     from . import configedit
+
     path = args.config or config.user_config_path()
     if args.city_cmd == "list":
         cities = configedit.list_cities(path)
@@ -296,14 +310,21 @@ def cmd_city(args):
             return 0
         for c in cities:
             home = "  (home)" if c.get("home") else ""
-            print(f"  {c['name']:<20} {c.get('tz','')}{home}")
+            print(f"  {c['name']:<20} {c.get('tz', '')}{home}")
         return 0
 
     path = configedit.ensure_config(path)
     if args.city_cmd == "add":
         try:
-            configedit.add_city(path, args.name, args.lat, args.lon, args.tz,
-                                home=args.home, label_side=args.label_side)
+            configedit.add_city(
+                path,
+                args.name,
+                args.lat,
+                args.lon,
+                args.tz,
+                home=args.home,
+                label_side=args.label_side,
+            )
         except ValueError as e:
             print(f"error: {e}", file=sys.stderr)
             return 1
@@ -316,8 +337,10 @@ def cmd_city(args):
 
 def cmd_enable(args):
     if not service.systemd_user_available():
-        print("systemd --user not available; use `greyline watch` in your autostart "
-              "instead.", file=sys.stderr)
+        print(
+            "systemd --user not available; use `greyline watch` in your autostart instead.",
+            file=sys.stderr,
+        )
         return 1
     service.install_and_enable(interval=args.interval)
     print("enabled greyline.timer (systemd user)")
@@ -342,8 +365,10 @@ def cmd_status(args):
 
 
 def cmd_doctor(args):
-    print(f"session: XDG_CURRENT_DESKTOP={os.environ.get('XDG_CURRENT_DESKTOP', '')!r} "
-          f"XDG_SESSION_TYPE={os.environ.get('XDG_SESSION_TYPE', '')!r}")
+    print(
+        f"session: XDG_CURRENT_DESKTOP={os.environ.get('XDG_CURRENT_DESKTOP', '')!r} "
+        f"XDG_SESSION_TYPE={os.environ.get('XDG_SESSION_TYPE', '')!r}"
+    )
     cfg = config.load(args.config)
     backend_name = args.backend or cfg.get("backend", "auto")
     if backend_name == "command" and (args.command or cfg.get("command")):
@@ -355,9 +380,14 @@ def cmd_doctor(args):
             print(f"  {o['name']}: {o['width']}x{o['height']} scale={o['scale']}")
     except RuntimeError as e:
         print(f"backend: ERROR — {e}")
-    print("systemd --user: " +
-          ("available" if service.systemd_user_available()
-           else "not available (use `greyline watch`)"))
+    print(
+        "systemd --user: "
+        + (
+            "available"
+            if service.systemd_user_available()
+            else "not available (use `greyline watch`)"
+        )
+    )
     return 0
 
 
@@ -373,8 +403,12 @@ def _add(sub, name, help, description=None, epilog=None, parents=()):
     """add_parser with the two things argparse won't do for us: fall back to the
     short help as the long description, and keep epilog examples unwrapped."""
     return sub.add_parser(
-        name, help=help, description=description or help, epilog=epilog,
-        parents=list(parents), formatter_class=argparse.RawDescriptionHelpFormatter,
+        name,
+        help=help,
+        description=description or help,
+        epilog=epilog,
+        parents=list(parents),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
 
 
@@ -385,16 +419,19 @@ def build_parser():
     # watch` work. Sharing via SUPPRESS-only on the subparsers avoids argparse's
     # parent/subparser default-clobber (a subcommand flag omits itself unless given).
     render_opts = argparse.ArgumentParser(add_help=False)
-    render_opts.add_argument("--config", default=argparse.SUPPRESS,
-                             help="path to config.toml (default: XDG location)")
-    render_opts.add_argument("--backend", default=argparse.SUPPRESS,
-                             help="override the configured backend for this run")
-    render_opts.add_argument("--command", default=argparse.SUPPRESS,
-                             help="shell command for --backend command")
-    render_opts.add_argument("--res", default=argparse.SUPPRESS,
-                             help="force resolution WxH")
-    render_opts.add_argument("--font-family", default=argparse.SUPPRESS,
-                             help="override the label font")
+    render_opts.add_argument(
+        "--config", default=argparse.SUPPRESS, help="path to config.toml (default: XDG location)"
+    )
+    render_opts.add_argument(
+        "--backend", default=argparse.SUPPRESS, help="override the configured backend for this run"
+    )
+    render_opts.add_argument(
+        "--command", default=argparse.SUPPRESS, help="shell command for --backend command"
+    )
+    render_opts.add_argument("--res", default=argparse.SUPPRESS, help="force resolution WxH")
+    render_opts.add_argument(
+        "--font-family", default=argparse.SUPPRESS, help="override the label font"
+    )
 
     p = argparse.ArgumentParser(
         prog="greyline",
@@ -403,92 +440,143 @@ def build_parser():
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     p.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
-    p.add_argument("--config", default=None,
-                   help="path to config.toml (default: XDG location)")
-    p.add_argument("--backend", default=None,
-                   help="override backend: sway|swww|hyprpaper|x11|windows|macos|command"
-                        " (see `greyline help backends`)")
-    p.add_argument("--command", default=None,
-                   help="for --backend command: shell command run per output with "
-                        "{path} (and {output}) substituted")
-    p.add_argument("--out", default=None,
-                   help="write a single PNG here instead of applying")
+    p.add_argument("--config", default=None, help="path to config.toml (default: XDG location)")
+    p.add_argument(
+        "--backend",
+        default=None,
+        help="override backend: sway|swww|hyprpaper|x11|windows|macos|command"
+        " (see `greyline help backends`)",
+    )
+    p.add_argument(
+        "--command",
+        default=None,
+        help="for --backend command: shell command run per output with "
+        "{path} (and {output}) substituted",
+    )
+    p.add_argument("--out", default=None, help="write a single PNG here instead of applying")
     p.add_argument("--res", default=None, help="force resolution WxH (for --out)")
-    p.add_argument("--font-family", default=None,
-                   help="label font family or font-file path (overrides config "
-                        "`font_family`; resolved via fontconfig)")
-    p.add_argument("--list-outputs", action="store_true",
-                   help="print detected outputs and exit")
+    p.add_argument(
+        "--font-family",
+        default=None,
+        help="label font family or font-file path (overrides config "
+        "`font_family`; resolved via fontconfig)",
+    )
+    p.add_argument("--list-outputs", action="store_true", help="print detected outputs and exit")
 
     sub = p.add_subparsers(dest="cmd", metavar="<command>")
-    p.gl_subcommands = sub.choices
+    p.gl_subcommands = sub.choices  # type: ignore[attr-defined]  # dynamic, read via getattr
 
-    sp = _add(sub, "init", "detect desktop, write config, schedule updates",
-              helptext.INIT_DESCRIPTION, helptext.INIT_EPILOG)
-    sp.add_argument("--interval", default="*:*:00",
-                    help="systemd OnCalendar expression (default: each minute)")
-    sp.add_argument("--dry-run", action="store_true",
-                    help="print what would happen; change nothing")
+    sp = _add(
+        sub,
+        "init",
+        "detect desktop, write config, schedule updates",
+        helptext.INIT_DESCRIPTION,
+        helptext.INIT_EPILOG,
+    )
+    sp.add_argument(
+        "--interval", default="*:*:00", help="systemd OnCalendar expression (default: each minute)"
+    )
+    sp.add_argument(
+        "--dry-run", action="store_true", help="print what would happen; change nothing"
+    )
 
-    sp = _add(sub, "watch", "render+apply in a loop (any init system / WM)",
-              helptext.WATCH_DESCRIPTION, parents=[render_opts])
-    sp.add_argument("--interval", type=int, default=60,
-                    help="seconds between renders (default: 60)")
+    sp = _add(
+        sub,
+        "watch",
+        "render+apply in a loop (any init system / WM)",
+        helptext.WATCH_DESCRIPTION,
+        parents=[render_opts],
+    )
+    sp.add_argument(
+        "--interval", type=int, default=60, help="seconds between renders (default: 60)"
+    )
 
-    cp = _add(sub, "config", "get/set/unset config keys",
-              helptext.CONFIG_DESCRIPTION, helptext.CONFIG_EPILOG)
+    cp = _add(
+        sub,
+        "config",
+        "get/set/unset config keys",
+        helptext.CONFIG_DESCRIPTION,
+        helptext.CONFIG_EPILOG,
+    )
     cs = cp.add_subparsers(dest="config_cmd", metavar="<subcommand>")
     cp.gl_subcommands = cs.choices
     g = _add(cs, "get", "print a dotted key, or the whole config")
-    g.add_argument("key", nargs="?", help="dotted key, e.g. twilight.darkness "
-                                          "(omit for the whole file)")
+    g.add_argument(
+        "key", nargs="?", help="dotted key, e.g. twilight.darkness (omit for the whole file)"
+    )
     s_ = _add(cs, "set", "set a dotted key, e.g. twilight.darkness medium")
     s_.add_argument("key", help="dotted key, e.g. theme or twilight.darkness")
     s_.add_argument("value", help="new value; validated against the key's allowed values")
     u = _add(cs, "unset", "remove a key (revert to default)")
     u.add_argument("key", help="dotted key to remove")
 
-    cip = _add(sub, "city", "list/add/remove cities",
-               helptext.CITY_DESCRIPTION, helptext.CITY_EPILOG)
+    cip = _add(
+        sub, "city", "list/add/remove cities", helptext.CITY_DESCRIPTION, helptext.CITY_EPILOG
+    )
     ci = cip.add_subparsers(dest="city_cmd", metavar="<subcommand>")
     cip.gl_subcommands = ci.choices
     _add(ci, "list", "list configured cities")
     a = _add(ci, "add", "add a city")
-    a.add_argument("name", help="label drawn on the map, e.g. \"Kuala Lumpur\"")
+    a.add_argument("name", help='label drawn on the map, e.g. "Kuala Lumpur"')
     a.add_argument("lat", type=float, help="latitude, +N/-S (e.g. 35.68)")
     a.add_argument("lon", type=float, help="longitude, +E/-W (e.g. 139.69)")
     a.add_argument("tz", help="IANA timezone, e.g. Asia/Tokyo")
     a.add_argument("--home", action="store_true", help="make this the home city")
-    a.add_argument("--label-side", choices=["left", "right", "above", "below"],
-                   help="nudge the label to one side of the dot")
+    a.add_argument(
+        "--label-side",
+        choices=["left", "right", "above", "below"],
+        help="nudge the label to one side of the dot",
+    )
     rm = _add(ci, "remove", "remove a city by name")
     rm.add_argument("name", help="city name, case-insensitive")
 
     ep = _add(sub, "enable", "install + enable the systemd user timer")
-    ep.add_argument("--interval", default="*:*:00",
-                    help="systemd OnCalendar expression (default: each minute)")
+    ep.add_argument(
+        "--interval", default="*:*:00", help="systemd OnCalendar expression (default: each minute)"
+    )
     _add(sub, "disable", "disable the systemd user timer")
     _add(sub, "status", "show the timer status")
-    _add(sub, "doctor", "diagnose backend / session / timer",
-         helptext.DOCTOR_DESCRIPTION, parents=[render_opts])
+    _add(
+        sub,
+        "doctor",
+        "diagnose backend / session / timer",
+        helptext.DOCTOR_DESCRIPTION,
+        parents=[render_opts],
+    )
 
-    hp = _add(sub, "help", "show help for a command or reference topic",
-              "Show a command's help, or a reference page.", helptext.HELP_EPILOG)
-    hp.add_argument("topic", nargs="*", metavar="TOPIC",
-                    help="a command (e.g. `city add`) or a topic (e.g. themes)")
+    hp = _add(
+        sub,
+        "help",
+        "show help for a command or reference topic",
+        "Show a command's help, or a reference page.",
+        helptext.HELP_EPILOG,
+    )
+    hp.add_argument(
+        "topic",
+        nargs="*",
+        metavar="TOPIC",
+        help="a command (e.g. `city add`) or a topic (e.g. themes)",
+    )
     return p
 
 
 _DISPATCH = {
-    "init": cmd_init, "watch": cmd_watch, "config": cmd_config, "city": cmd_city,
-    "enable": cmd_enable, "disable": cmd_disable, "status": cmd_status,
-    "doctor": cmd_doctor, "help": cmd_help,
+    "init": cmd_init,
+    "watch": cmd_watch,
+    "config": cmd_config,
+    "city": cmd_city,
+    "enable": cmd_enable,
+    "disable": cmd_disable,
+    "status": cmd_status,
+    "doctor": cmd_doctor,
+    "help": cmd_help,
 }
 
 
 def main(argv=None):
     args = build_parser().parse_args(argv)
-    handler = _DISPATCH.get(getattr(args, "cmd", None))
+    cmd = getattr(args, "cmd", None)
+    handler = _DISPATCH.get(cmd) if cmd else None
     if handler:
         return handler(args)
     return run_apply(args)  # bare invocation / --out / --list-outputs

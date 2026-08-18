@@ -40,6 +40,7 @@ show a terminator at all. Everything else follows: strokes are halos *behind* te
 so they take the background's polarity, and grid/column tints flip white-on-dark to
 black-on-light.
 """
+
 import argparse
 import colorsys
 import os
@@ -49,15 +50,39 @@ import sys
 # Bundled set: the families a desktop-theme user is most likely to already run,
 # with every variant of the four greyline ships opinionated support for.
 CURATED = [
-    "gruvbox-dark-hard", "gruvbox-dark-medium", "gruvbox-dark-soft",
-    "gruvbox-light-hard", "gruvbox-light-medium", "gruvbox-light-soft",
-    "everforest-dark-hard", "everforest-dark-medium", "everforest-dark-soft",
-    "everforest-light-hard", "everforest-light-medium", "everforest-light-soft",
-    "rose-pine", "rose-pine-moon", "rose-pine-dawn",
-    "tokyo-night-dark", "tokyo-night-storm", "tokyo-night-moon", "tokyo-night-light",
-    "catppuccin-mocha", "catppuccin-macchiato", "catppuccin-frappe", "catppuccin-latte",
-    "nord", "dracula", "solarized-dark", "solarized-light",
-    "onedark", "one-light", "kanagawa", "monokai", "github-dark", "github",
+    "gruvbox-dark-hard",
+    "gruvbox-dark-medium",
+    "gruvbox-dark-soft",
+    "gruvbox-light-hard",
+    "gruvbox-light-medium",
+    "gruvbox-light-soft",
+    "everforest-dark-hard",
+    "everforest-dark-medium",
+    "everforest-dark-soft",
+    "everforest-light-hard",
+    "everforest-light-medium",
+    "everforest-light-soft",
+    "rose-pine",
+    "rose-pine-moon",
+    "rose-pine-dawn",
+    "tokyo-night-dark",
+    "tokyo-night-storm",
+    "tokyo-night-moon",
+    "tokyo-night-light",
+    "catppuccin-mocha",
+    "catppuccin-macchiato",
+    "catppuccin-frappe",
+    "catppuccin-latte",
+    "nord",
+    "dracula",
+    "solarized-dark",
+    "solarized-light",
+    "onedark",
+    "one-light",
+    "kanagawa",
+    "monokai",
+    "github-dark",
+    "github",
 ]
 
 # Slot picks the hue rule gets wrong for a specific scheme, either because the
@@ -66,29 +91,39 @@ CURATED = [
 # the slot the scheme itself calls red/green doesn't read as one by hue: monokai's
 # "red" is magenta, and kanagawa's green is so muted its vivid orange outranks it.
 _OVERRIDE = {
-    "tokyo-night-dark": {"home": "base0D"}, "tokyo-night-storm": {"home": "base0D"},
-    "tokyo-night-moon": {"home": "base0D"}, "tokyo-night-light": {"home": "base0D"},
-    "catppuccin-mocha": {"home": "base0E"}, "catppuccin-macchiato": {"home": "base0E"},
-    "catppuccin-frappe": {"home": "base0E"}, "catppuccin-latte": {"home": "base0E"},
+    "tokyo-night-dark": {"home": "base0D"},
+    "tokyo-night-storm": {"home": "base0D"},
+    "tokyo-night-moon": {"home": "base0D"},
+    "tokyo-night-light": {"home": "base0D"},
+    "catppuccin-mocha": {"home": "base0E"},
+    "catppuccin-macchiato": {"home": "base0E"},
+    "catppuccin-frappe": {"home": "base0E"},
+    "catppuccin-latte": {"home": "base0E"},
     "monokai": {"idl": "base08"},
     "kanagawa": {"gmt": "base0B"},
 }
 
 _ACCENT_SLOTS = [f"base0{c}" for c in "89ABCDEF"]
 _SURFACE_SLOTS = ["base01", "base02"]
-_MIN_CONTRAST = 18          # luma gap (0-255) below which a surface reads as the ocean
+_MIN_CONTRAST = 18  # luma gap (0-255) below which a surface reads as the ocean
 
 # Per-polarity constants. Alphas are the ones the 0.6.0 themes converged on.
 _POLARITY = {
     "dark": {
-        "grid": "#ffffff30", "column": "#ffffff14", "gmt_alpha": 0x34,
-        "night_alpha": 12, "day_wash_alpha": 0x12,
+        "grid": "#ffffff30",
+        "column": "#ffffff14",
+        "gmt_alpha": 0x34,
+        "night_alpha": 12,
+        "day_wash_alpha": 0x12,
     },
     "light": {
-        "grid": "#00000024", "column": "#0000000f", "gmt_alpha": 0x3a,
+        "grid": "#00000024",
+        "column": "#0000000f",
+        "gmt_alpha": 0x3A,
         # A light map's night side needs far more overlay to read as night; 44 sits
         # between the built-in subtle/dramatic presets (28/55).
-        "night_alpha": 44, "day_wash_alpha": 0x10,
+        "night_alpha": 44,
+        "day_wash_alpha": 0x10,
     },
 }
 
@@ -96,7 +131,8 @@ _POLARITY = {
 def parse_scheme(path):
     """Parse a base16 YAML file. These are flat and machine-generated (a dozen
     `key: "value"` lines), so a purpose-built reader beats a PyYAML dependency."""
-    meta, palette = {}, {}
+    meta: dict[str, str] = {}
+    palette: dict[str, str] = {}
     with open(path, encoding="utf-8") as f:
         for line in f:
             # Values are quoted ("#1d2021"), so a trailing-comment strip has to
@@ -115,11 +151,12 @@ def parse_scheme(path):
 
 def _rgb(hex_):
     s = hex_.lstrip("#")
-    return tuple(int(s[i:i + 2], 16) for i in (0, 2, 4))
+    return tuple(int(s[i : i + 2], 16) for i in (0, 2, 4))
 
 
 def _hex(rgb):
-    return "#%02x%02x%02x" % tuple(max(0, min(255, round(c))) for c in rgb)
+    r, g, b = (max(0, min(255, round(c))) for c in rgb)
+    return f"#{r:02x}{g:02x}{b:02x}"
 
 
 def _luma(hex_):
@@ -132,7 +169,7 @@ def _scale(hex_, factor):
 
 
 def _mix(a, b):
-    return _hex((x + y) / 2 for x, y in zip(_rgb(a), _rgb(b)))
+    return _hex((x + y) / 2 for x, y in zip(_rgb(a), _rgb(b), strict=True))
 
 
 def _hue_chroma(hex_):
@@ -169,8 +206,10 @@ def _nearest_hue(palette, target, cap, exclude=()):
 
     for max_distance in (cap, 180):
         found = [
-            slot for slot in _ACCENT_SLOTS
-            if slot not in exclude and chromas[slot] >= floor
+            slot
+            for slot in _ACCENT_SLOTS
+            if slot not in exclude
+            and chromas[slot] >= floor
             and abs((_hue_chroma(palette[slot])[0] - target + 180) % 360 - 180) <= max_distance
         ]
         if found:
@@ -201,7 +240,7 @@ def build_theme(meta, palette, slug):
 
     land = _land(palette, light)
     over = _OVERRIDE.get(slug, {})
-    idl = over.get("idl") or _nearest_hue(palette, 0, cap=20)                  # red
+    idl = over.get("idl") or _nearest_hue(palette, 0, cap=20)  # red
     gmt = over.get("gmt") or _nearest_hue(palette, 120, cap=80, exclude={idl})  # green
     home = over.get("home") or _nearest_hue(palette, 45, cap=60, exclude={idl, gmt})
 
@@ -223,14 +262,13 @@ def build_theme(meta, palette, slug):
         ("border", palette["base03"], "base03"),
         ("grid", p["grid"], "timezone boundary lines"),
         ("grid_label", palette["base04"], "base04"),
-        ("gmt", palette[gmt] + "%02x" % p["gmt_alpha"], f"{gmt}, green UTC+0 column"),
+        ("gmt", palette[gmt] + f"{p['gmt_alpha']:02x}", f"{gmt}, green UTC+0 column"),
         ("idl", palette[idl], f"{idl}, red International Date Line"),
         ("column", p["column"], "home timezone-column highlight"),
         ("", None, None),
         ("# Day/night overlay", None, None),
         ("night", night, "base03+base04" if light else "base00, darkened"),
-        ("day_wash", day_wash + "%02x" % p["day_wash_alpha"],
-         "base00" if light else "base05"),
+        ("day_wash", day_wash + f"{p['day_wash_alpha']:02x}", "base00" if light else "base05"),
         ("night_alpha", p["night_alpha"], None),
         ("", None, None),
         ("# Clocks", None, None),
@@ -243,8 +281,11 @@ def build_theme(meta, palette, slug):
         ("", None, None),
         ("# Optional extras", None, None),
         ("logo", palette["base06"], "tint for logo_invert"),
-    ] + ([("label_bg", palette["base00"], "plate behind labels; dark text needs a "
-                                          "light one")] if light else [])
+    ] + (
+        [("label_bg", palette["base00"], "plate behind labels; dark text needs a light one")]
+        if light
+        else []
+    )
 
 
 def to_toml(meta, palette, slug):
@@ -258,7 +299,7 @@ def to_toml(meta, palette, slug):
         "",
     ]
     for key, value, comment in build_theme(meta, palette, slug):
-        if value is None:                       # a section comment or a blank line
+        if value is None:  # a section comment or a blank line
             lines.append(key)
             continue
         rendered = value if isinstance(value, int) else f'"{value}"'
@@ -269,10 +310,13 @@ def to_toml(meta, palette, slug):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    ap.add_argument("source", help="a base16 .yaml file, or the schemes/base16 "
-                                   "directory when --curated is given")
-    ap.add_argument("--curated", action="store_true",
-                    help="regenerate every scheme greyline bundles")
+    ap.add_argument(
+        "source",
+        help="a base16 .yaml file, or the schemes/base16 directory when --curated is given",
+    )
+    ap.add_argument(
+        "--curated", action="store_true", help="regenerate every scheme greyline bundles"
+    )
     ap.add_argument("--out", help="directory to write into (default: stdout)")
     args = ap.parse_args(argv)
 

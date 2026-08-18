@@ -1,5 +1,6 @@
 """Theme files: built-in completeness/parity, user overrides, and robustness."""
-from datetime import datetime, timezone
+
+from datetime import UTC, datetime
 
 import pytest
 
@@ -9,7 +10,7 @@ CITIES = [
     {"name": "London", "lat": 51.51, "lon": -0.13, "tz": "Europe/London", "home": True},
     {"name": "Tokyo", "lat": 35.68, "lon": 139.69, "tz": "Asia/Tokyo", "home": False},
 ]
-DT = datetime(2024, 6, 20, 9, 30, tzinfo=timezone.utc)
+DT = datetime(2024, 6, 20, 9, 30, tzinfo=UTC)
 
 
 @pytest.mark.parametrize("name", sorted(themes.builtin_themes()))
@@ -54,8 +55,8 @@ def test_user_theme_overrides_builtin_per_key(tmp_path, monkeypatch):
     d.mkdir(parents=True)
     (d / "catppuccin.toml").write_text('home = "#ff0000"\n')
     th = themes.load_theme("catppuccin")
-    assert th["home"] == (255, 0, 0)                # overridden
-    assert th["ocean"] == (30, 30, 46)              # builtin catppuccin, not modus
+    assert th["home"] == (255, 0, 0)  # overridden
+    assert th["ocean"] == (30, 30, 46)  # builtin catppuccin, not modus
 
 
 def test_new_user_theme_falls_back_to_modus_for_missing_keys(tmp_path, monkeypatch):
@@ -65,7 +66,7 @@ def test_new_user_theme_falls_back_to_modus_for_missing_keys(tmp_path, monkeypat
     (d / "mytheme.toml").write_text('ocean = "#102030"\n')
     th = themes.load_theme("mytheme")
     assert th["ocean"] == (16, 32, 48)
-    assert th["land"] == (30, 34, 43)               # modus fallback
+    assert th["land"] == (30, 34, 43)  # modus fallback
     # Optional extras are never inherited into a new theme.
     assert "night_alpha" not in th and "logo" not in th
     img = render.render(CITIES, dt=DT, out_size=(320, 200), theme="mytheme")
@@ -85,21 +86,32 @@ def test_broken_user_theme_never_crashes(tmp_path, monkeypatch):
 
 
 def test_colors_overrides_apply_last():
-    th = themes.load_theme("modus", overrides={
-        "home": "#fabd2f", "night_alpha": 20, "ocean": "nope", "logo": "#112233",
-    })
+    th = themes.load_theme(
+        "modus",
+        overrides={
+            "home": "#fabd2f",
+            "night_alpha": 20,
+            "ocean": "nope",
+            "logo": "#112233",
+        },
+    )
     assert th["home"] == (250, 189, 47)
     assert th["night_alpha"] == 20
-    assert th["ocean"] == (11, 14, 20)              # invalid override ignored
+    assert th["ocean"] == (11, 14, 20)  # invalid override ignored
     assert th["logo"] == (17, 34, 51)
 
 
 # --- base16 ports (0.7) ---
 
+
 def test_pre_070_theme_names_still_resolve():
     # Renaming to the upstream base16 slugs must not break anyone's config.
-    for old, new in (("gruvbox", "gruvbox-dark-hard"), ("catppuccin", "catppuccin-mocha"),
-                     ("rosepine", "rose-pine"), ("tokyonight", "tokyo-night-dark")):
+    for old, new in (
+        ("gruvbox", "gruvbox-dark-hard"),
+        ("catppuccin", "catppuccin-mocha"),
+        ("rosepine", "rose-pine"),
+        ("tokyonight", "tokyo-night-dark"),
+    ):
         assert themes.load_theme(old) == themes.load_theme(new), old
 
 
@@ -126,8 +138,14 @@ def test_builtin_themes_keep_land_readable_against_the_ocean(name):
 def test_light_themes_carry_a_light_label_plate():
     # The plate behind each clock defaults to black; on a light map that would sit
     # under dark label text. Every light port must override it.
-    for name in ("gruvbox-light-medium", "everforest-light-hard", "rose-pine-dawn",
-                 "tokyo-night-light", "catppuccin-latte", "solarized-light"):
+    for name in (
+        "gruvbox-light-medium",
+        "everforest-light-hard",
+        "rose-pine-dawn",
+        "tokyo-night-light",
+        "catppuccin-latte",
+        "solarized-light",
+    ):
         th = themes.load_theme(name)
         assert "label_bg" in th, f"{name}: no label_bg"
         assert sum(th["label_bg"][:3]) > sum(th["text"][:3]), f"{name}: plate darker than text"

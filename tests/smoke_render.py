@@ -5,6 +5,7 @@ Windows/macOS box with no fontconfig) and asserts a non-empty PNG comes out. Run
 directly (``python tests/smoke_render.py``); used by the cross-platform CI matrix.
 Exits non-zero on failure.
 """
+
 import os
 import sys
 import tempfile

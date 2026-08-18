@@ -4,6 +4,7 @@ Merges the shipped default-config.toml with the user's
 ~/.config/greyline/config.toml (XDG-aware). Resolves the home timezone
 ("auto" => system tz) and flags the matching city as home.
 """
+
 import os
 import tomllib
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -99,13 +100,13 @@ def render_kwargs(cfg):
         "label_bg_alpha": int(
             cfg.get("label_bg_alpha", 130 if cfg.get("label_background", True) else 0)
         ),
-        "map_style": cfg.get("map_style", "vector"),  # vector (default) | raster (bring your own art)
+        "map_style": cfg.get("map_style", "vector"),  # vector (default) | raster (own art)
         "logo": bool(cfg.get("logo", True)),  # draw the bottom-left corner logo
         "logo_path": cfg.get("logo_path"),  # custom logo image (default: bundled Tux)
         "logo_color": cfg.get("logo_color"),  # hex → flat-colour (e.g. all-white) logo
         "logo_invert": bool(cfg.get("logo_invert", False)),  # recolour dark pixels to light
         "logo_scale": float(cfg.get("logo_scale", 1.0)),  # size the corner logo (1.0 = default)
-        "logo_max_height": float(cfg.get("logo_max_height", 0.0)),  # cap logo height (fraction of screen; 0 = uncapped)
+        "logo_max_height": float(cfg.get("logo_max_height", 0.0)),  # screen fraction; 0 = uncapped
         "bar_height": int(cfg.get("bar_height", 0)),  # px reserved at bottom for a status bar
         "desaturate": bool(cfg.get("desaturate", False)),  # grayscale the raster map
     }

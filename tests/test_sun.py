@@ -1,5 +1,6 @@
 """Day/night terminator math against known solar geometry."""
-from datetime import datetime, timezone
+
+from datetime import UTC, datetime
 
 import pytest
 
@@ -7,7 +8,7 @@ from worldtime import sun
 
 
 def _utc(y, m, d, h=12):
-    return datetime(y, m, d, h, tzinfo=timezone.utc)
+    return datetime(y, m, d, h, tzinfo=UTC)
 
 
 def test_solstice_declinations():
@@ -38,5 +39,5 @@ def test_boundary_lat_is_clamped():
 
 
 def test_night_hemisphere_follows_declination():
-    assert sun.night_is_south(10.0) is True    # northern summer -> dark side south
+    assert sun.night_is_south(10.0) is True  # northern summer -> dark side south
     assert sun.night_is_south(-10.0) is False

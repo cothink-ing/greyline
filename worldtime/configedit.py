@@ -6,6 +6,7 @@ heavily-commented default template keeps its comments and layout across edits, a
 so [[city]] arrays-of-tables are handled correctly. All config writes funnel through
 here (one path).
 """
+
 import os
 import shutil
 import tempfile
@@ -45,7 +46,7 @@ def ensure_config(path=None):
 
 
 def _load(path):
-    with open(path, "r", encoding="utf-8") as f:
+    with open(path, encoding="utf-8") as f:
         return tomlkit.parse(f.read())
 
 
@@ -92,8 +93,8 @@ def _is_hex_color(value):
 
 def _validate(dotted, value):
     if dotted in _ENUMS and value not in _ENUMS[dotted]:
-        allowed = ", ".join(sorted(_ENUMS[dotted]))
-        raise ValueError(f"{dotted}: {value!r} is not one of: {allowed}")
+        choices = ", ".join(sorted(_ENUMS[dotted]))
+        raise ValueError(f"{dotted}: {value!r} is not one of: {choices}")
     if dotted == "theme":
         allowed = set(themes.available_themes()) | set(themes.ALIASES)
         if value not in allowed:
@@ -102,12 +103,13 @@ def _validate(dotted, value):
         try:
             ZoneInfo(value)
         except (ZoneInfoNotFoundError, ValueError):
-            raise ValueError(f"home.tz: {value!r} is not a valid IANA timezone")
+            raise ValueError(f"home.tz: {value!r} is not a valid IANA timezone") from None
     if _is_color_key(dotted) and not _is_hex_color(value):
         raise ValueError(f"{dotted}: {value!r} is not a hex colour (e.g. #e64553)")
 
 
 # --- public operations (each loads, mutates, saves) ---
+
 
 def set_key(path, dotted, raw_value):
     """Set a (possibly nested) dotted key, e.g. 'twilight.darkness' -> 'medium'."""
@@ -161,7 +163,7 @@ def add_city(path, name, lat, lon, tz, home=False, label_side=None):
     try:
         ZoneInfo(tz)
     except (ZoneInfoNotFoundError, ValueError):
-        raise ValueError(f"{tz!r} is not a valid IANA timezone")
+        raise ValueError(f"{tz!r} is not a valid IANA timezone") from None
     doc = _load(path)
     if "city" not in doc:
         doc["city"] = tomlkit.aot()
