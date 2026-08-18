@@ -444,7 +444,10 @@ def render(
                   (m, m, out_w - m, out_h - m - bar_height), scale)
 
     # Semi-transparent rounded backplate behind each label, for legibility over the map.
+    # Black on a dark map; light themes set `label_bg` so the plate doesn't fight the
+    # dark label text they draw on top of it.
     if label_bg_alpha > 0 and items:
+        plate_rgb = tuple(th.get("label_bg", (0, 0, 0))[:3])
         pad_x = max(4, round(10 * scale * font_scale))
         pad_y = max(3, round(7 * scale * font_scale))
         rad = max(3, round(7 * scale * font_scale))
@@ -453,7 +456,7 @@ def render(
         for it in items:
             bx0, by0, bx1, by1 = it["box"]
             pd.rounded_rectangle([bx0 - pad_x, by0 - pad_y, bx1 + pad_x, by1 + pad_y],
-                                 radius=rad, fill=(0, 0, 0, label_bg_alpha))
+                                 radius=rad, fill=(*plate_rgb, label_bg_alpha))
         canvas = Image.alpha_composite(canvas, plate)
         draw = ImageDraw.Draw(canvas)  # rebind to the composited canvas
 

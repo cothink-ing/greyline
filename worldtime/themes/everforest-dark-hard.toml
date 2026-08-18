@@ -1,0 +1,30 @@
+# Everforest Dark Hard — generated from the base16 scheme 'everforest-dark-hard'
+# (https://github.com/tinted-theming/schemes, MIT). Author: Sainnhe Park (https://github.com/sainnhe).
+# Regenerate with tools/base16_to_theme.py; edit that, not this file.
+name = "Everforest Dark Hard"
+
+# Map surfaces
+ocean = "#272e33"          # base00
+land = "#414b50"           # landmasses
+border = "#859289"         # base03
+grid = "#ffffff30"         # timezone boundary lines
+grid_label = "#9da9a0"     # base04
+gmt = "#83c09234"          # base0C, green UTC+0 column
+idl = "#e67e80"            # base08, red International Date Line
+column = "#ffffff14"       # home timezone-column highlight
+
+# Day/night overlay
+night = "#101214"          # base00, darkened
+day_wash = "#d3c6aa12"     # base05
+night_alpha = 12
+
+# Clocks
+text = "#edeada"           # base06
+text_stroke = "#121517dc"
+dot = "#d3c6aa"            # base05
+dot_outline = "#121517d2"
+home = "#dbbc7f"           # base0A, the accent
+home_stroke = "#121517dc"
+
+# Optional extras
+logo = "#edeada"           # tint for logo_invert

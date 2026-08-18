@@ -165,3 +165,59 @@ def test_watch_loops_run_apply_until_interrupted(monkeypatch):
     monkeypatch.setattr("time.sleep", fake_sleep)
     rc = cli.main(["watch", "--interval", "60"])
     assert rc == 0 and calls["n"] == 1
+
+
+# --- help ---
+
+def test_help_command_prints_that_commands_help(capsys):
+    # `greyline help city add` must reach the nested subparser, not the root parser.
+    assert cli.main(["help", "city", "add"]) == 0
+    out = capsys.readouterr().out
+    assert "greyline city add" in out
+    assert "IANA timezone" in out  # the positional's own help, not just the usage line
+
+
+def test_help_bare_prints_the_command_list(capsys):
+    assert cli.main(["help"]) == 0
+    out = capsys.readouterr().out
+    assert "greyline help topics" in out
+    for name in ("init", "watch", "config", "city", "doctor", "help"):
+        assert name in out
+
+
+def test_help_topics_render_from_live_data(capsys):
+    # The reference pages are generated from the same data the renderer uses, so a
+    # new theme / recipe / backend shows up without touching the help text.
+    assert cli.main(["help", "themes"]) == 0
+    assert "modus" in capsys.readouterr().out
+    assert cli.main(["help", "desktops"]) == 0
+    assert recipes.RECIPES["kde"] in capsys.readouterr().out
+    assert cli.main(["help", "keys"]) == 0
+    keys = capsys.readouterr().out
+    assert "twilight" in keys and "darkness" in keys
+    assert "[[city]]\nname =" not in keys  # the city list is `greyline city`'s job
+
+
+def test_help_topic_list_matches_the_topics_epilog_advertises():
+    from worldtime import helptext
+    for name in helptext.topic_names():
+        assert name in helptext.HELP_EPILOG
+        assert helptext.render_topic(name)
+
+
+def test_help_prefers_commands_over_topics(capsys):
+    # `config` is both a command and the subject of the `keys` page — the command wins.
+    assert cli.main(["help", "config"]) == 0
+    assert "greyline config set" in capsys.readouterr().out
+
+
+def test_help_unknown_topic_exits_nonzero_with_a_pointer(capsys):
+    assert cli.main(["help", "nonsense"]) == 1
+    assert "greyline help topics" in capsys.readouterr().err
+
+
+def test_bare_config_and_city_print_help_instead_of_an_argparse_error(capsys):
+    # argparse's "the following arguments are required" helps nobody here.
+    for argv in (["config"], ["city"]):
+        assert cli.main(argv) == 1
+        assert "Examples:" in capsys.readouterr().out

@@ -13,8 +13,10 @@ backend = "auto"            # auto | sway | swww | hyprpaper | x11 (feh/xwallpap
 #   command = 'xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image -s {path}'               # XFCE
 # resolution = "2560x1440"   # optional; size of the single rendered image (else largest xrandr output, else 1920x1080)
 map_style = "vector"        # vector (scalable, themeable) | raster (needs your own map art, see NOTICE)
-theme = "modus"             # modus | blue | catppuccin | gruvbox | rosepine | tokyonight,
-                            # or your own from ~/.config/greyline/themes/ ("dark" = modus)
+theme = "modus"             # modus | blue, or any bundled base16 port (gruvbox-dark-hard,
+                            # everforest-light-medium, rose-pine, tokyo-night-storm,
+                            # catppuccin-mocha, nord, dracula, …), or your own from
+                            # ~/.config/greyline/themes/. `greyline help themes` lists them.
 format = "24h"              # 24h | 12h
 # font_family = "Aporetic Sans"  # label font: a fontconfig family name or a font-file path (default: Aporetic Sans, then system fonts)
 # font_scale = 1.0           # scale all label text (e.g. 1.25 = 25% larger, 0.8 = smaller)

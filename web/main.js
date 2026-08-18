@@ -3,7 +3,8 @@
 import { makeProjection } from "./geo.js";
 import { loadGeo, buildBase } from "./vectormap.js";
 import { overlayNight, drawClocks } from "./render.js";
-import { THEMES, DARKNESS_ALPHA, CITIES, tzOffsetHours } from "./config.js";
+import { THEMES, THEME_LABELS, THEME_ORDER, DARKNESS_ALPHA, CITIES, tzOffsetHours }
+  from "./config.js";
 
 const canvas = document.getElementById("wt");
 const ctx = canvas.getContext("2d");
@@ -53,6 +54,17 @@ function render() {
 }
 
 function bindControls() {
+  // The theme list is generated (three dozen palettes), so the picker is filled in
+  // here rather than spelled out in the markup.
+  const picker = document.getElementById("theme");
+  picker.append(...THEME_ORDER.map((name) => new Option(THEME_LABELS[name], name)));
+  picker.value = state.theme;
+  picker.addEventListener("change", () => {
+    state.theme = picker.value;
+    base = null;
+    render();
+  });
+
   document.querySelectorAll("[data-set]").forEach((el) => {
     el.addEventListener("click", () => {
       const [k, v] = el.dataset.set.split(":");

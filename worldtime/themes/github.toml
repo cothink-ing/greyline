@@ -1,0 +1,31 @@
+# Github — generated from the base16 scheme 'github'
+# (https://github.com/tinted-theming/schemes, MIT). Author: Tinted Theming (https://github.com/tinted-theming).
+# Regenerate with tools/base16_to_theme.py; edit that, not this file.
+name = "Github"
+
+# Map surfaces
+ocean = "#ffffff"          # base00
+land = "#afb8c1"           # landmasses
+border = "#8c959f"         # base03
+grid = "#00000024"         # timezone boundary lines
+grid_label = "#6e7781"     # base04
+gmt = "#1163293a"          # base0C, green UTC+0 column
+idl = "#cf222e"            # base0E, red International Date Line
+column = "#0000000f"       # home timezone-column highlight
+
+# Day/night overlay
+night = "#7d8690"          # base03+base04
+day_wash = "#ffffff10"     # base00
+night_alpha = 44
+
+# Clocks
+text = "#32383f"           # base06
+text_stroke = "#ffffffdc"
+dot = "#424a53"            # base05
+dot_outline = "#ffffffd2"
+home = "#bf8700"           # base0A, the accent
+home_stroke = "#ffffffdc"
+
+# Optional extras
+logo = "#32383f"           # tint for logo_invert
+label_bg = "#ffffff"       # plate behind labels; dark text needs a light one

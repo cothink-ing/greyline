@@ -1,0 +1,31 @@
+# Tokyo Night Light — generated from the base16 scheme 'tokyo-night-light'
+# (https://github.com/tinted-theming/schemes, MIT). Author: Michaël Ball.
+# Regenerate with tools/base16_to_theme.py; edit that, not this file.
+name = "Tokyo Night Light"
+
+# Map surfaces
+ocean = "#d5d6db"          # base00
+land = "#babcc4"           # landmasses
+border = "#9699a3"         # base03
+grid = "#00000024"         # timezone boundary lines
+grid_label = "#4c505e"     # base04
+gmt = "#485e303a"          # base0B, green UTC+0 column
+idl = "#8c4351"            # base0F, red International Date Line
+column = "#0000000f"       # home timezone-column highlight
+
+# Day/night overlay
+night = "#717480"          # base03+base04
+day_wash = "#d5d6db10"     # base00
+night_alpha = 44
+
+# Clocks
+text = "#1a1b26"           # base06
+text_stroke = "#d5d6dbdc"
+dot = "#343b59"            # base05
+dot_outline = "#d5d6dbd2"
+home = "#34548a"           # base0D, the accent
+home_stroke = "#d5d6dbdc"
+
+# Optional extras
+logo = "#1a1b26"           # tint for logo_invert
+label_bg = "#d5d6db"       # plate behind labels; dark text needs a light one

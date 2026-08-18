@@ -1,0 +1,31 @@
+# One Light — generated from the base16 scheme 'one-light'
+# (https://github.com/tinted-theming/schemes, MIT). Author: Daniel Pfeifer (http://github.com/purpleKarrot).
+# Regenerate with tools/base16_to_theme.py; edit that, not this file.
+name = "One Light"
+
+# Map surfaces
+ocean = "#fafafa"          # base00
+land = "#e5e5e6"           # landmasses
+border = "#a0a1a7"         # base03
+grid = "#00000024"         # timezone boundary lines
+grid_label = "#696c77"     # base04
+gmt = "#50a14f3a"          # base0B, green UTC+0 column
+idl = "#ca1243"            # base08, red International Date Line
+column = "#0000000f"       # home timezone-column highlight
+
+# Day/night overlay
+night = "#84868f"          # base03+base04
+day_wash = "#fafafa10"     # base00
+night_alpha = 44
+
+# Clocks
+text = "#202227"           # base06
+text_stroke = "#fafafadc"
+dot = "#383a42"            # base05
+dot_outline = "#fafafad2"
+home = "#c18401"           # base0A, the accent
+home_stroke = "#fafafadc"
+
+# Optional extras
+logo = "#202227"           # tint for logo_invert
+label_bg = "#fafafa"       # plate behind labels; dark text needs a light one

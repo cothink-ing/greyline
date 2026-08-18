@@ -1,0 +1,30 @@
+# Catppuccin Macchiato — generated from the base16 scheme 'catppuccin-macchiato'
+# (https://github.com/tinted-theming/schemes, MIT). Author: https://github.com/catppuccin/catppuccin.
+# Regenerate with tools/base16_to_theme.py; edit that, not this file.
+name = "Catppuccin Macchiato"
+
+# Map surfaces
+ocean = "#24273a"          # base00
+land = "#363a4f"           # landmasses
+border = "#494d64"         # base03
+grid = "#ffffff30"         # timezone boundary lines
+grid_label = "#5b6078"     # base04
+gmt = "#a6da9534"          # base0B, green UTC+0 column
+idl = "#ed8796"            # base08, red International Date Line
+column = "#ffffff14"       # home timezone-column highlight
+
+# Day/night overlay
+night = "#0e1017"          # base00, darkened
+day_wash = "#cad3f512"     # base05
+night_alpha = 12
+
+# Clocks
+text = "#f4dbd6"           # base06
+text_stroke = "#10121adc"
+dot = "#cad3f5"            # base05
+dot_outline = "#10121ad2"
+home = "#c6a0f6"           # base0E, the accent
+home_stroke = "#10121adc"
+
+# Optional extras
+logo = "#f4dbd6"           # tint for logo_invert

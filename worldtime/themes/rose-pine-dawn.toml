@@ -1,0 +1,31 @@
+# Rosé Pine Dawn — generated from the base16 scheme 'rose-pine-dawn'
+# (https://github.com/tinted-theming/schemes, MIT). Author: Emilia Dunfelt <edun@dunfelt.se>.
+# Regenerate with tools/base16_to_theme.py; edit that, not this file.
+name = "Rosé Pine Dawn"
+
+# Map surfaces
+ocean = "#faf4ed"          # base00
+land = "#c5bec2"           # landmasses
+border = "#9893a5"         # base03
+grid = "#00000024"         # timezone boundary lines
+grid_label = "#797593"     # base04
+gmt = "#56949f3a"          # base0C, green UTC+0 column
+idl = "#d7827e"            # base0A, red International Date Line
+column = "#0000000f"       # home timezone-column highlight
+
+# Day/night overlay
+night = "#88849c"          # base03+base04
+day_wash = "#faf4ed10"     # base00
+night_alpha = 44
+
+# Clocks
+text = "#575279"           # base06
+text_stroke = "#faf4eddc"
+dot = "#575279"            # base05
+dot_outline = "#faf4edd2"
+home = "#ea9d34"           # base09, the accent
+home_stroke = "#faf4eddc"
+
+# Optional extras
+logo = "#575279"           # tint for logo_invert
+label_bg = "#faf4ed"       # plate behind labels; dark text needs a light one

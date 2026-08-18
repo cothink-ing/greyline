@@ -29,7 +29,11 @@
   .grp:last-child { border-right: 0; }
   button { font: inherit; font-size: 12.5px; color: #cfd5e2; cursor: pointer;
     background: transparent; border: 1px solid transparent; border-radius: 8px; padding: 5px 10px; }
-  button:hover { background: rgba(255,255,255,.06); }
+  button:hover, select:hover { background: rgba(255,255,255,.06); }
+  select { font: inherit; font-size: 12.5px; color: #cfd5e2; cursor: pointer;
+    background: transparent; border: 1px solid rgba(255,255,255,.15); border-radius: 8px;
+    padding: 5px 8px; max-width: 46vw; }
+  select option { background: #12151c; }
   button.on { background: rgba(127,176,255,.20); border-color: rgba(127,176,255,.45); color: #eaf1ff; }
   @media (max-width: 560px) { #top { max-width: 90vw; } .grp { border-right: 0; } }
 </style>
@@ -47,12 +51,8 @@
 
 <div id="controls" class="panel">
   <div class="grp">
-    <button data-set="theme:modus" data-group="theme" class="on">modus</button>
-    <button data-set="theme:blue" data-group="theme">blue</button>
-    <button data-set="theme:catppuccin" data-group="theme">catppuccin</button>
-    <button data-set="theme:gruvbox" data-group="theme">gruvbox</button>
-    <button data-set="theme:rosepine" data-group="theme">rosepine</button>
-    <button data-set="theme:tokyonight" data-group="theme">tokyonight</button>
+    <!-- Options are filled in by main.js from the generated theme list. -->
+    <select id="theme" aria-label="theme"></select>
   </div>
   <div class="grp">
     <button data-set="fmt:24h" data-group="fmt" class="on">24h</button>

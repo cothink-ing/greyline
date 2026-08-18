@@ -1,0 +1,31 @@
+# Gruvbox light, soft — generated from the base16 scheme 'gruvbox-light-soft'
+# (https://github.com/tinted-theming/schemes, MIT). Author: Dawid Kurek (dawikur@gmail.com), morhetz (https://github.com/morhetz/gruvbox).
+# Regenerate with tools/base16_to_theme.py; edit that, not this file.
+name = "Gruvbox light, soft"
+
+# Map surfaces
+ocean = "#f2e5bc"          # base00
+land = "#d5c4a1"           # landmasses
+border = "#bdae93"         # base03
+grid = "#00000024"         # timezone boundary lines
+grid_label = "#665c54"     # base04
+gmt = "#79740e3a"          # base0B, green UTC+0 column
+idl = "#9d0006"            # base08, red International Date Line
+column = "#0000000f"       # home timezone-column highlight
+
+# Day/night overlay
+night = "#928574"          # base03+base04
+day_wash = "#f2e5bc10"     # base00
+night_alpha = 44
+
+# Clocks
+text = "#3c3836"           # base06
+text_stroke = "#f2e5bcdc"
+dot = "#504945"            # base05
+dot_outline = "#f2e5bcd2"
+home = "#b57614"           # base0A, the accent
+home_stroke = "#f2e5bcdc"
+
+# Optional extras
+logo = "#3c3836"           # tint for logo_invert
+label_bg = "#f2e5bc"       # plate behind labels; dark text needs a light one

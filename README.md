@@ -46,9 +46,11 @@ a minute and hands it to your existing wallpaper mechanism, then exits.
 - Day/night terminator that's seasonally correct, with discrete civil / nautical / astronomical
   twilight bands.
 - **Vector map** from public-domain Natural Earth data: crisp at any resolution, fully
-  themeable (`modus`, `blue`, `catppuccin`, `gruvbox`, `rosepine`, `tokyonight`, or your own
-  TOML theme), with honest zig-zag timezone boundaries, a green GMT column, and a red
-  International Date Line.
+  themeable — **35 built-in themes**, most of them ports of the popular
+  [base16 schemes](https://github.com/tinted-theming/schemes) (gruvbox, everforest,
+  rosé pine, tokyo night, catppuccin, nord, dracula, solarized, …) in both dark and light,
+  plus your own TOML theme. Honest zig-zag timezone boundaries, a green GMT column, and a
+  red International Date Line.
 - Any resolution, multi-monitor, HiDPI. Each output rendered at native pixels.
 - **Swappable corner logo:** ships with Tux; point `logo_path` at your own PNG.
 - Works on any desktop, with native backends for `sway`, `swww`, `hyprpaper`, `x11`
@@ -199,7 +201,14 @@ greyline enable | disable | status   # manage the systemd user timer
 greyline doctor                   # detected backend, outputs, session, timer
 greyline --list-outputs           # show detected backend + outputs
 greyline --out wt.png --res WxH   # render a PNG, no backend needed
+greyline help [<command>|<topic>] # help for any command, or a reference page
 ```
+
+**Built-in help.** `greyline help <command>` works for nested commands too
+(`greyline help city add`), and `greyline help <topic>` prints a reference page —
+`keys` (every config key, its allowed values and default), `themes` (including your own),
+`backends`, and `desktops` (the GNOME/KDE/XFCE recipes). `greyline help topics` lists them.
+The pages are generated from the same files this README documents, so they never go stale.
 
 **Scheduling.** On systemd, `greyline init`/`greyline enable` install a user timer that runs
 every minute. **No systemd?** Any init system or WM works; skip the timer and add greyline to
@@ -237,20 +246,39 @@ template. Keys:
 
 ### Themes
 
-Themes are TOML files, not code. Built-ins (in
-[`worldtime/themes/`](worldtime/themes/)):
+Themes are TOML files, not code — 35 ship in [`worldtime/themes/`](worldtime/themes/).
+Two are greyline's own; the rest are ports of the
+[tinted-theming base16 schemes](https://github.com/tinted-theming/schemes) (MIT), so the
+wallpaper matches the palette your editor and terminal already use. Light schemes are
+first-class: the terminator, label plates and grid flip polarity with them.
 
-| Name | Palette |
+| Family | Names |
 |---|---|
-| `modus` | the greyline dark theme (Modus-Vivendi-flavoured); `dark` is a permanent alias |
-| `blue` | faithful to the classic IBM/Lenovo blue world-time map |
-| `catppuccin` | [Catppuccin Mocha](https://catppuccin.com/) |
-| `gruvbox` | [Gruvbox](https://github.com/morhetz/gruvbox) dark (hard) |
-| `rosepine` | [Rosé Pine](https://rosepinetheme.com/) |
-| `tokyonight` | [Tokyo Night](https://github.com/tokyo-night) |
+| greyline | `modus` (the default dark theme; `dark` is a permanent alias), `blue` (the classic IBM/Lenovo blue map) |
+| [Gruvbox](https://github.com/morhetz/gruvbox) | `gruvbox-{dark,light}-{hard,medium,soft}` |
+| [Everforest](https://github.com/sainnhe/everforest) | `everforest-{dark,light}-{hard,medium,soft}` |
+| [Rosé Pine](https://rosepinetheme.com/) | `rose-pine`, `rose-pine-moon`, `rose-pine-dawn` |
+| [Tokyo Night](https://github.com/tokyo-night) | `tokyo-night-{dark,storm,moon,light}` |
+| [Catppuccin](https://catppuccin.com/) | `catppuccin-{mocha,macchiato,frappe,latte}` |
+| others | `nord`, `dracula`, `solarized-{dark,light}`, `onedark`, `one-light`, `kanagawa`, `monokai`, `github-dark`, `github` |
 
-The four ports are derived from the corresponding
-[tinted-theming base16 schemes](https://github.com/tinted-theming/schemes).
+`greyline help themes` lists whatever is installed, yours included. The pre-0.7 names
+(`gruvbox`, `catppuccin`, `rosepine`, `tokyonight`) are permanent aliases for the variant
+they used to mean, so existing configs keep working.
+
+**Any other base16 scheme.** greyline bundles the popular families; the upstream repo has
+~340. Convert one with the script that generates the bundled palettes — it lives in this
+repo (`tools/`), so grab a checkout or just the one file:
+
+```sh
+git clone --depth 1 https://github.com/tinted-theming/schemes /tmp/schemes
+python tools/base16_to_theme.py /tmp/schemes/base16/ayu-dark.yaml \
+    --out ~/.config/greyline/themes
+greyline config set theme ayu-dark
+```
+
+It maps base16's slots to greyline's map roles (documented at the top of the script),
+follows the scheme's own `variant: light` for polarity, and needs nothing but the stdlib.
 
 **Custom themes.** Drop a TOML file in `~/.config/greyline/themes/` and select it by
 filename: `~/.config/greyline/themes/mytheme.toml` → `greyline config set theme mytheme`.
@@ -263,7 +291,7 @@ built-in's name overrides that theme per key, and missing keys of a new theme fa
 theme file needed:
 
 ```toml
-theme = "gruvbox"
+theme = "gruvbox-dark-hard"
 
 [colors]
 home = "#d3869b"      # any theme key

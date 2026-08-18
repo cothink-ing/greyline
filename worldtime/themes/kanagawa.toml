@@ -1,0 +1,30 @@
+# Kanagawa — generated from the base16 scheme 'kanagawa'
+# (https://github.com/tinted-theming/schemes, MIT). Author: Tommaso Laurenzi (https://github.com/rebelot).
+# Regenerate with tools/base16_to_theme.py; edit that, not this file.
+name = "Kanagawa"
+
+# Map surfaces
+ocean = "#1f1f28"          # base00
+land = "#3b435b"           # landmasses
+border = "#54546d"         # base03
+grid = "#ffffff30"         # timezone boundary lines
+grid_label = "#727169"     # base04
+gmt = "#76946a34"          # base0B, green UTC+0 column
+idl = "#c34043"            # base08, red International Date Line
+column = "#ffffff14"       # home timezone-column highlight
+
+# Day/night overlay
+night = "#0c0c10"          # base00, darkened
+day_wash = "#dcd7ba12"     # base05
+night_alpha = 12
+
+# Clocks
+text = "#c8c093"           # base06
+text_stroke = "#0e0e12dc"
+dot = "#dcd7ba"            # base05
+dot_outline = "#0e0e12d2"
+home = "#ffa066"           # base09, the accent
+home_stroke = "#0e0e12dc"
+
+# Optional extras
+logo = "#c8c093"           # tint for logo_invert

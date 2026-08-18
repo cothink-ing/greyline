@@ -1,0 +1,31 @@
+# Everforest Light (Medium) — generated from the base16 scheme 'everforest-light-medium'
+# (https://github.com/tinted-theming/schemes, MIT). Author: Márcio Sobel (https://github.com/marciosobel).
+# Regenerate with tools/base16_to_theme.py; edit that, not this file.
+name = "Everforest Light (Medium)"
+
+# Map surfaces
+ocean = "#fdf6e3"          # base00
+land = "#e6e2cc"           # landmasses
+border = "#939f91"         # base03
+grid = "#00000024"         # timezone boundary lines
+grid_label = "#829181"     # base04
+gmt = "#35a77c3a"          # base0C, green UTC+0 column
+idl = "#f85552"            # base08, red International Date Line
+column = "#0000000f"       # home timezone-column highlight
+
+# Day/night overlay
+night = "#8a9889"          # base03+base04
+day_wash = "#fdf6e310"     # base00
+night_alpha = 44
+
+# Clocks
+text = "#475258"           # base06
+text_stroke = "#fdf6e3dc"
+dot = "#5c6a72"            # base05
+dot_outline = "#fdf6e3d2"
+home = "#dfa000"           # base0A, the accent
+home_stroke = "#fdf6e3dc"
+
+# Optional extras
+logo = "#475258"           # tint for logo_invert
+label_bg = "#fdf6e3"       # plate behind labels; dark text needs a light one

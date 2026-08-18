@@ -1,0 +1,30 @@
+# Nord — generated from the base16 scheme 'nord'
+# (https://github.com/tinted-theming/schemes, MIT). Author: arcticicestudio.
+# Regenerate with tools/base16_to_theme.py; edit that, not this file.
+name = "Nord"
+
+# Map surfaces
+ocean = "#2e3440"          # base00
+land = "#434c5e"           # landmasses
+border = "#4c566a"         # base03
+grid = "#ffffff30"         # timezone boundary lines
+grid_label = "#d8dee9"     # base04
+gmt = "#a3be8c34"          # base0B, green UTC+0 column
+idl = "#bf616a"            # base08, red International Date Line
+column = "#ffffff14"       # home timezone-column highlight
+
+# Day/night overlay
+night = "#12151a"          # base00, darkened
+day_wash = "#e5e9f012"     # base05
+night_alpha = 12
+
+# Clocks
+text = "#eceff4"           # base06
+text_stroke = "#15171ddc"
+dot = "#e5e9f0"            # base05
+dot_outline = "#15171dd2"
+home = "#ebcb8b"           # base0A, the accent
+home_stroke = "#15171ddc"
+
+# Optional extras
+logo = "#eceff4"           # tint for logo_invert

@@ -1,0 +1,31 @@
+# Catppuccin Latte — generated from the base16 scheme 'catppuccin-latte'
+# (https://github.com/tinted-theming/schemes, MIT). Author: https://github.com/catppuccin/catppuccin.
+# Regenerate with tools/base16_to_theme.py; edit that, not this file.
+name = "Catppuccin Latte"
+
+# Map surfaces
+ocean = "#eff1f5"          # base00
+land = "#ccd0da"           # landmasses
+border = "#bcc0cc"         # base03
+grid = "#00000024"         # timezone boundary lines
+grid_label = "#acb0be"     # base04
+gmt = "#40a02b3a"          # base0B, green UTC+0 column
+idl = "#d20f39"            # base08, red International Date Line
+column = "#0000000f"       # home timezone-column highlight
+
+# Day/night overlay
+night = "#b4b8c5"          # base03+base04
+day_wash = "#eff1f510"     # base00
+night_alpha = 44
+
+# Clocks
+text = "#dc8a78"           # base06
+text_stroke = "#eff1f5dc"
+dot = "#4c4f69"            # base05
+dot_outline = "#eff1f5d2"
+home = "#8839ef"           # base0E, the accent
+home_stroke = "#eff1f5dc"
+
+# Optional extras
+logo = "#dc8a78"           # tint for logo_invert
+label_bg = "#eff1f5"       # plate behind labels; dark text needs a light one

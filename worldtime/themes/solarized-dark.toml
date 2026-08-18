@@ -1,0 +1,30 @@
+# Solarized Dark — generated from the base16 scheme 'solarized-dark'
+# (https://github.com/tinted-theming/schemes, MIT). Author: Ethan Schoonover (modified by aramisgithub).
+# Regenerate with tools/base16_to_theme.py; edit that, not this file.
+name = "Solarized Dark"
+
+# Map surfaces
+ocean = "#002b36"          # base00
+land = "#586e75"           # landmasses
+border = "#657b83"         # base03
+grid = "#ffffff30"         # timezone boundary lines
+grid_label = "#839496"     # base04
+gmt = "#85990034"          # base0B, green UTC+0 column
+idl = "#dc322f"            # base08, red International Date Line
+column = "#ffffff14"       # home timezone-column highlight
+
+# Day/night overlay
+night = "#001116"          # base00, darkened
+day_wash = "#93a1a112"     # base05
+night_alpha = 12
+
+# Clocks
+text = "#eee8d5"           # base06
+text_stroke = "#001318dc"
+dot = "#93a1a1"            # base05
+dot_outline = "#001318d2"
+home = "#b58900"           # base0A, the accent
+home_stroke = "#001318dc"
+
+# Optional extras
+logo = "#eee8d5"           # tint for logo_invert

@@ -12,10 +12,18 @@ from .config import _xdg_config_home
 
 BUILTIN_DIR = os.path.join(os.path.dirname(__file__), "themes")
 
-# Backwards compatibility: the original dark theme is now called "modus" (after
-# Modus Vivendi). The alias is permanent — existing configs keep working. A user
-# theme file literally named dark.toml shadows the alias (checked first).
-ALIASES = {"dark": "modus"}
+# Backwards compatibility: every name greyline has ever shipped keeps working.
+# "dark" became "modus" (after Modus Vivendi) in 0.6; in 0.7 the palettes moved to
+# their upstream base16 slugs, which name the variant a bare family name left
+# implicit. The aliases are permanent, and a user theme file with an alias's name
+# shadows it (available_themes() is checked first).
+ALIASES = {
+    "dark": "modus",
+    "gruvbox": "gruvbox-dark-hard",
+    "catppuccin": "catppuccin-mocha",
+    "rosepine": "rose-pine",
+    "tokyonight": "tokyo-night-dark",
+}
 DEFAULT_THEME = "modus"
 
 # Every key render/vectormap index unconditionally. Built-in themes carry all of
@@ -27,7 +35,9 @@ COLOR_KEYS = frozenset({
 })
 # Optional per-theme extras — never inherited across themes (blue deliberately has
 # no night_alpha/logo and must not gain modus's through the fallback merge).
-OPTIONAL_KEYS = frozenset({"night_alpha", "logo"})
+# label_bg tints the plate behind each clock label; unset means black, which is
+# what every dark theme wants and no light theme does.
+OPTIONAL_KEYS = frozenset({"night_alpha", "logo", "label_bg"})
 
 
 def _hex(s):
@@ -86,7 +96,7 @@ def _apply(theme, values):
     """Merge hex values over tuple values, keeping the old ones for invalid entries
     (per-key fallback, mirroring how home.color has always behaved)."""
     out = dict(theme)
-    for key in COLOR_KEYS | {"logo"}:
+    for key in COLOR_KEYS | {"logo", "label_bg"}:
         if key in values:
             rgb = _hex(values[key])
             if rgb is not None:
@@ -108,6 +118,10 @@ def load_theme(name, overrides=None):
     Merge order: modus base (sans optional extras) < same-name built-in < the
     selected file (user files shadow built-ins) < `overrides` (the [colors]
     table). Unknown names and unreadable files fall back to modus silently.
+
+    The built-in layer follows aliases even when a user file shadows one, so a
+    partial ~/.config/greyline/themes/gruvbox.toml still inherits the rest of
+    gruvbox-dark-hard rather than dropping all the way back to modus.
     """
     avail = available_themes()
     if name not in avail:
@@ -122,7 +136,7 @@ def load_theme(name, overrides=None):
         name, parsed = DEFAULT_THEME, default
 
     theme = {k: v for k, v in _apply({}, default).items() if k not in OPTIONAL_KEYS}
-    builtin = _parse(os.path.join(BUILTIN_DIR, name + ".toml"))
+    builtin = _parse(os.path.join(BUILTIN_DIR, ALIASES.get(name, name) + ".toml"))
     if builtin is not None:
         theme = _apply(theme, builtin)
     theme = _apply(theme, parsed)

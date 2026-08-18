@@ -1,0 +1,30 @@
+# Monokai — generated from the base16 scheme 'monokai'
+# (https://github.com/tinted-theming/schemes, MIT). Author: Wimer Hazenberg (http://www.monokai.nl).
+# Regenerate with tools/base16_to_theme.py; edit that, not this file.
+name = "Monokai"
+
+# Map surfaces
+ocean = "#272822"          # base00
+land = "#49483e"           # landmasses
+border = "#75715e"         # base03
+grid = "#ffffff30"         # timezone boundary lines
+grid_label = "#a59f85"     # base04
+gmt = "#a6e22e34"          # base0B, green UTC+0 column
+idl = "#f92672"            # base08, red International Date Line
+column = "#ffffff14"       # home timezone-column highlight
+
+# Day/night overlay
+night = "#10100e"          # base00, darkened
+day_wash = "#f8f8f212"     # base05
+night_alpha = 12
+
+# Clocks
+text = "#f5f4f1"           # base06
+text_stroke = "#12120fdc"
+dot = "#f8f8f2"            # base05
+dot_outline = "#12120fd2"
+home = "#fd971f"           # base09, the accent
+home_stroke = "#12120fdc"
+
+# Optional extras
+logo = "#f5f4f1"           # tint for logo_invert

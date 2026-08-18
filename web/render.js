@@ -112,7 +112,10 @@ export function drawClocks(ctx, w, h, opts) {
   if (labelBgAlpha > 0) {
     const padX = Math.max(4, Math.round(10 * scale)), padY = Math.max(3, Math.round(7 * scale));
     const rad = Math.max(3, Math.round(7 * scale));
-    ctx.fillStyle = `rgba(0,0,0,${labelBgAlpha / 255})`;
+    // Black on a dark map; light themes carry a label_bg so the plate doesn't
+    // fight the dark label text drawn on top of it (render.py does the same).
+    const plate = theme.label_bg ?? [0, 0, 0];
+    ctx.fillStyle = `rgba(${plate[0]},${plate[1]},${plate[2]},${labelBgAlpha / 255})`;
     for (const it of items) {
       const [x0, y0, x1, y1] = it.box;
       ctx.beginPath();

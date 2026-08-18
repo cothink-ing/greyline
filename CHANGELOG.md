@@ -4,6 +4,54 @@ All notable changes to greyline are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.0] — 2026-08-18
+
+### Added
+- **35 built-in themes, ported from base16.** The palettes are now generated from the
+  [tinted-theming base16 schemes](https://github.com/tinted-theming/schemes) (MIT), so the
+  wallpaper matches the scheme your editor and terminal already use: every **gruvbox** and
+  **everforest** variant (dark/light × hard/medium/soft), **rose-pine** / -moon / -dawn,
+  **tokyo-night** dark/storm/moon/light, all four **catppuccin** flavours, plus `nord`,
+  `dracula`, `solarized-{dark,light}`, `onedark`, `one-light`, `kanagawa`, `monokai`,
+  `github-dark` and `github`. greyline's own `modus` and `blue` are unchanged.
+- **Light themes are first-class.** 12 of the new palettes are light, and the parts that
+  assumed a dark map now follow the theme: the night overlay uses a mid-tone at a much
+  higher alpha (a light map multiplied toward black shows no terminator), the grid and
+  column tints flip to black-on-light, and label plates take a new optional `label_bg`
+  theme key instead of a hardcoded black.
+- **`tools/base16_to_theme.py`** converts any of the ~340 upstream schemes into a greyline
+  theme, so the bundled set is a starting point rather than a ceiling. It documents the
+  whole base16 → greyline mapping, picks the date-line red / GMT green / accent by hue
+  rather than by base16's nominal slot numbering (schemes disagree — tokyo-night's base08
+  is lavender), and regenerates the bundled palettes with `--curated`.
+- **`tools/sync_web_themes.py`** generates `web/themes.js` from the TOMLs, and a test fails
+  if it is stale. The demo's palettes were hand-ported before, and drifted.
+- **`greyline help`.** `greyline help <command>` prints any command's help, nested ones
+  included (`greyline help city add`), and `greyline help <topic>` prints a reference
+  page: `keys` (every config key with its allowed values and default), `themes`,
+  `backends`, `desktops` (the GNOME/KDE/XFCE recipes). The pages are generated from the
+  same data the renderer uses — themes from `worldtime/themes/*.toml`, recipes from
+  `recipes.RECIPES`, keys from the packaged `default-config.toml` — so they can't drift.
+  `greyline help topics` lists them.
+- Every command now carries a longer description and worked examples in `--help`, and
+  each positional argument (`name`/`lat`/`lon`/`tz`, config keys) documents itself.
+
+### Changed
+- Theme files use their upstream base16 slugs, so variants are nameable. The pre-0.7 names
+  are **permanent aliases**: `gruvbox` → `gruvbox-dark-hard`, `catppuccin` →
+  `catppuccin-mocha`, `rosepine` → `rose-pine`, `tokyonight` → `tokyo-night-dark`
+  (`dark` → `modus` as before). Existing configs keep working untouched.
+- A user theme file named after an alias now inherits the theme it aliases rather than
+  falling back to `modus` — a partial `~/.config/greyline/themes/gruvbox.toml` means
+  "gruvbox, but…".
+- The ported palettes are re-derived rather than copied from their 0.6.0 hand-tuned
+  versions, so `rosepine`/`tokyonight`/`catppuccin`/`gruvbox` shift slightly. The most
+  visible change is landmass contrast: schemes whose `base01` sits within a shade of
+  `base00` (rose-pine, everforest, gruvbox-medium) now get a distinctly readable coastline.
+- The demo's theme buttons became a picker, since there are now three dozen.
+- `greyline config` and `greyline city` with no subcommand print their own help instead
+  of argparse's bare "the following arguments are required" error.
+
 ## [0.6.0] — 2026-08-14
 
 ### Added

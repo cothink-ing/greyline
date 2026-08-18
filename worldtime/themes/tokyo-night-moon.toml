@@ -1,0 +1,30 @@
+# Tokyo Night Moon — generated from the base16 scheme 'tokyo-night-moon'
+# (https://github.com/tinted-theming/schemes, MIT). Author: Ólafur Bjarki Bogason.
+# Regenerate with tools/base16_to_theme.py; edit that, not this file.
+name = "Tokyo Night Moon"
+
+# Map surfaces
+ocean = "#222436"          # base00
+land = "#2d3f76"           # landmasses
+border = "#3b4261"         # base03
+grid = "#ffffff30"         # timezone boundary lines
+grid_label = "#636da6"     # base04
+gmt = "#c3e88d34"          # base0B, green UTC+0 column
+idl = "#ff757f"            # base08, red International Date Line
+column = "#ffffff14"       # home timezone-column highlight
+
+# Day/night overlay
+night = "#0e0e16"          # base00, darkened
+day_wash = "#828bb812"     # base05
+night_alpha = 12
+
+# Clocks
+text = "#aeb4d1"           # base06
+text_stroke = "#0f1018dc"
+dot = "#828bb8"            # base05
+dot_outline = "#0f1018d2"
+home = "#82aaff"           # base0D, the accent
+home_stroke = "#0f1018dc"
+
+# Optional extras
+logo = "#aeb4d1"           # tint for logo_invert

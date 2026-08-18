@@ -1,0 +1,30 @@
+# Github Dark — generated from the base16 scheme 'github-dark'
+# (https://github.com/tinted-theming/schemes, MIT). Author: Tinted Theming (https://github.com/tinted-theming).
+# Regenerate with tools/base16_to_theme.py; edit that, not this file.
+name = "Github Dark"
+
+# Map surfaces
+ocean = "#0d1117"          # base00
+land = "#484f58"           # landmasses
+border = "#6e7681"         # base03
+grid = "#ffffff30"         # timezone boundary lines
+grid_label = "#8b949e"     # base04
+gmt = "#7ee78734"          # base0C, green UTC+0 column
+idl = "#ff7b72"            # base0E, red International Date Line
+column = "#ffffff14"       # home timezone-column highlight
+
+# Day/night overlay
+night = "#050709"          # base00, darkened
+day_wash = "#c9d1d912"     # base05
+night_alpha = 12
+
+# Clocks
+text = "#f0f6fc"           # base06
+text_stroke = "#06080adc"
+dot = "#c9d1d9"            # base05
+dot_outline = "#06080ad2"
+home = "#bb8009"           # base0A, the accent
+home_stroke = "#06080adc"
+
+# Optional extras
+logo = "#f0f6fc"           # tint for logo_invert

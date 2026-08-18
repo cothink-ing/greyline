@@ -1,0 +1,31 @@
+# Solarized Light — generated from the base16 scheme 'solarized-light'
+# (https://github.com/tinted-theming/schemes, MIT). Author: Ethan Schoonover (modified by aramisgithub).
+# Regenerate with tools/base16_to_theme.py; edit that, not this file.
+name = "Solarized Light"
+
+# Map surfaces
+ocean = "#fdf6e3"          # base00
+land = "#93a1a1"           # landmasses
+border = "#839496"         # base03
+grid = "#00000024"         # timezone boundary lines
+grid_label = "#657b83"     # base04
+gmt = "#8599003a"          # base0B, green UTC+0 column
+idl = "#dc322f"            # base08, red International Date Line
+column = "#0000000f"       # home timezone-column highlight
+
+# Day/night overlay
+night = "#74888c"          # base03+base04
+day_wash = "#fdf6e310"     # base00
+night_alpha = 44
+
+# Clocks
+text = "#073642"           # base06
+text_stroke = "#fdf6e3dc"
+dot = "#586e75"            # base05
+dot_outline = "#fdf6e3d2"
+home = "#b58900"           # base0A, the accent
+home_stroke = "#fdf6e3dc"
+
+# Optional extras
+logo = "#073642"           # tint for logo_invert
+label_bg = "#fdf6e3"       # plate behind labels; dark text needs a light one

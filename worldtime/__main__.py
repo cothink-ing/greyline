@@ -3,7 +3,10 @@
 Bare `greyline` renders the wallpaper for each output and applies it, once, then
 exits — a systemd user timer (or `greyline watch`) invokes it on a schedule. With
 --out it just writes a PNG (no backend needed). Subcommands (init/config/city/
-watch/enable/disable/status/doctor) manage setup and configuration.
+watch/enable/disable/status/doctor/help) manage setup and configuration.
+
+Help text lives in helptext.py: descriptions and example epilogs for each parser,
+plus the `greyline help <topic>` reference pages.
 """
 import argparse
 import os
@@ -12,7 +15,7 @@ import subprocess
 import sys
 import tempfile
 
-from . import __version__, backends, config, recipes, render, service
+from . import __version__, backends, config, helptext, recipes, render, service
 
 
 def _resolve_font(family, bold=False):
@@ -210,7 +213,44 @@ def cmd_watch(args):
     return 0
 
 
+def cmd_help(args):
+    """`greyline help [command...|topic]` — a command's help, or a reference page.
+
+    Commands win over topics on a name clash, so `greyline help config` stays the
+    config command's help however many reference pages get added later.
+    """
+    parser = build_parser()
+    node = parser
+    for i, token in enumerate(args.topic):
+        subs = _subcommands(node)
+        if token in subs:
+            node = subs[token]
+            continue
+        page = helptext.render_topic(token) if i == 0 else None
+        if page is None:
+            what = " ".join(args.topic[:i + 1])
+            print(f"no help for {what!r}. Try `greyline help` for the command list, "
+                  f"or `greyline help topics`.", file=sys.stderr)
+            return 1
+        print(page)
+        return 0
+    node.print_help()
+    return 0
+
+
+def _print_help_for(*path):
+    """Print a (possibly nested) subcommand's help — for a command invoked with no
+    subcommand, where argparse's bare 'arguments are required' error helps nobody."""
+    node = build_parser()
+    for token in path:
+        node = _subcommands(node)[token]
+    node.print_help()
+
+
 def cmd_config(args):
+    if not args.config_cmd:
+        _print_help_for("config")
+        return 1
     path = args.config or config.user_config_path()
     if args.config_cmd == "get":
         from . import configedit
@@ -244,6 +284,9 @@ def cmd_config(args):
 
 
 def cmd_city(args):
+    if not args.city_cmd:
+        _print_help_for("city")
+        return 1
     from . import configedit
     path = args.config or config.user_config_path()
     if args.city_cmd == "list":
@@ -318,6 +361,23 @@ def cmd_doctor(args):
     return 0
 
 
+def _subcommands(parser):
+    """The {name: parser} map a parser adds its subcommands under, or {}.
+
+    Recorded by build_parser() as it goes (`gl_subcommands`) so `greyline help
+    city add` can walk the tree without reaching into argparse internals."""
+    return getattr(parser, "gl_subcommands", {})
+
+
+def _add(sub, name, help, description=None, epilog=None, parents=()):
+    """add_parser with the two things argparse won't do for us: fall back to the
+    short help as the long description, and keep epilog examples unwrapped."""
+    return sub.add_parser(
+        name, help=help, description=description or help, epilog=epilog,
+        parents=list(parents), formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+
+
 def build_parser():
     # Render/apply flags: real defaults on the main parser (for the bare invocation),
     # and a SUPPRESS-default copy (render_opts) added to the render-running subcommands
@@ -325,18 +385,29 @@ def build_parser():
     # watch` work. Sharing via SUPPRESS-only on the subparsers avoids argparse's
     # parent/subparser default-clobber (a subcommand flag omits itself unless given).
     render_opts = argparse.ArgumentParser(add_help=False)
-    render_opts.add_argument("--config", default=argparse.SUPPRESS)
-    render_opts.add_argument("--backend", default=argparse.SUPPRESS)
-    render_opts.add_argument("--command", default=argparse.SUPPRESS)
-    render_opts.add_argument("--res", default=argparse.SUPPRESS)
-    render_opts.add_argument("--font-family", default=argparse.SUPPRESS)
+    render_opts.add_argument("--config", default=argparse.SUPPRESS,
+                             help="path to config.toml (default: XDG location)")
+    render_opts.add_argument("--backend", default=argparse.SUPPRESS,
+                             help="override the configured backend for this run")
+    render_opts.add_argument("--command", default=argparse.SUPPRESS,
+                             help="shell command for --backend command")
+    render_opts.add_argument("--res", default=argparse.SUPPRESS,
+                             help="force resolution WxH")
+    render_opts.add_argument("--font-family", default=argparse.SUPPRESS,
+                             help="override the label font")
 
-    p = argparse.ArgumentParser(prog="greyline")
+    p = argparse.ArgumentParser(
+        prog="greyline",
+        description=helptext.DESCRIPTION,
+        epilog=helptext.EPILOG,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
     p.add_argument("--version", action="version", version=f"%(prog)s {__version__}")
     p.add_argument("--config", default=None,
                    help="path to config.toml (default: XDG location)")
     p.add_argument("--backend", default=None,
-                   help="override backend: sway|swww|hyprpaper|x11|windows|macos|command")
+                   help="override backend: sway|swww|hyprpaper|x11|windows|macos|command"
+                        " (see `greyline help backends`)")
     p.add_argument("--command", default=None,
                    help="for --backend command: shell command run per output with "
                         "{path} (and {output}) substituted")
@@ -349,55 +420,69 @@ def build_parser():
     p.add_argument("--list-outputs", action="store_true",
                    help="print detected outputs and exit")
 
-    sub = p.add_subparsers(dest="cmd")
+    sub = p.add_subparsers(dest="cmd", metavar="<command>")
+    p.gl_subcommands = sub.choices
 
-    sp = sub.add_parser("init", help="detect desktop, write config, schedule updates")
+    sp = _add(sub, "init", "detect desktop, write config, schedule updates",
+              helptext.INIT_DESCRIPTION, helptext.INIT_EPILOG)
     sp.add_argument("--interval", default="*:*:00",
                     help="systemd OnCalendar expression (default: each minute)")
     sp.add_argument("--dry-run", action="store_true",
                     help="print what would happen; change nothing")
 
-    sp = sub.add_parser("watch", parents=[render_opts],
-                        help="render+apply in a loop (any init system / WM)")
+    sp = _add(sub, "watch", "render+apply in a loop (any init system / WM)",
+              helptext.WATCH_DESCRIPTION, parents=[render_opts])
     sp.add_argument("--interval", type=int, default=60,
                     help="seconds between renders (default: 60)")
 
-    cp = sub.add_parser("config", help="get/set/unset config keys")
-    cs = cp.add_subparsers(dest="config_cmd", required=True)
-    g = cs.add_parser("get", help="print a dotted key, or the whole config")
-    g.add_argument("key", nargs="?")
-    s = cs.add_parser("set", help="set a dotted key, e.g. twilight.darkness medium")
-    s.add_argument("key")
-    s.add_argument("value")
-    u = cs.add_parser("unset", help="remove a key (revert to default)")
-    u.add_argument("key")
+    cp = _add(sub, "config", "get/set/unset config keys",
+              helptext.CONFIG_DESCRIPTION, helptext.CONFIG_EPILOG)
+    cs = cp.add_subparsers(dest="config_cmd", metavar="<subcommand>")
+    cp.gl_subcommands = cs.choices
+    g = _add(cs, "get", "print a dotted key, or the whole config")
+    g.add_argument("key", nargs="?", help="dotted key, e.g. twilight.darkness "
+                                          "(omit for the whole file)")
+    s_ = _add(cs, "set", "set a dotted key, e.g. twilight.darkness medium")
+    s_.add_argument("key", help="dotted key, e.g. theme or twilight.darkness")
+    s_.add_argument("value", help="new value; validated against the key's allowed values")
+    u = _add(cs, "unset", "remove a key (revert to default)")
+    u.add_argument("key", help="dotted key to remove")
 
-    cip = sub.add_parser("city", help="list/add/remove cities")
-    ci = cip.add_subparsers(dest="city_cmd", required=True)
-    ci.add_parser("list", help="list configured cities")
-    a = ci.add_parser("add", help="add a city")
-    a.add_argument("name")
-    a.add_argument("lat", type=float)
-    a.add_argument("lon", type=float)
-    a.add_argument("tz")
+    cip = _add(sub, "city", "list/add/remove cities",
+               helptext.CITY_DESCRIPTION, helptext.CITY_EPILOG)
+    ci = cip.add_subparsers(dest="city_cmd", metavar="<subcommand>")
+    cip.gl_subcommands = ci.choices
+    _add(ci, "list", "list configured cities")
+    a = _add(ci, "add", "add a city")
+    a.add_argument("name", help="label drawn on the map, e.g. \"Kuala Lumpur\"")
+    a.add_argument("lat", type=float, help="latitude, +N/-S (e.g. 35.68)")
+    a.add_argument("lon", type=float, help="longitude, +E/-W (e.g. 139.69)")
+    a.add_argument("tz", help="IANA timezone, e.g. Asia/Tokyo")
     a.add_argument("--home", action="store_true", help="make this the home city")
-    a.add_argument("--label-side", choices=["left", "right", "above", "below"])
-    rm = ci.add_parser("remove", help="remove a city by name")
-    rm.add_argument("name")
+    a.add_argument("--label-side", choices=["left", "right", "above", "below"],
+                   help="nudge the label to one side of the dot")
+    rm = _add(ci, "remove", "remove a city by name")
+    rm.add_argument("name", help="city name, case-insensitive")
 
-    ep = sub.add_parser("enable", help="install + enable the systemd user timer")
-    ep.add_argument("--interval", default="*:*:00")
-    sub.add_parser("disable", help="disable the systemd user timer")
-    sub.add_parser("status", help="show the timer status")
-    sub.add_parser("doctor", parents=[render_opts],
-                   help="diagnose backend / session / timer")
+    ep = _add(sub, "enable", "install + enable the systemd user timer")
+    ep.add_argument("--interval", default="*:*:00",
+                    help="systemd OnCalendar expression (default: each minute)")
+    _add(sub, "disable", "disable the systemd user timer")
+    _add(sub, "status", "show the timer status")
+    _add(sub, "doctor", "diagnose backend / session / timer",
+         helptext.DOCTOR_DESCRIPTION, parents=[render_opts])
+
+    hp = _add(sub, "help", "show help for a command or reference topic",
+              "Show a command's help, or a reference page.", helptext.HELP_EPILOG)
+    hp.add_argument("topic", nargs="*", metavar="TOPIC",
+                    help="a command (e.g. `city add`) or a topic (e.g. themes)")
     return p
 
 
 _DISPATCH = {
     "init": cmd_init, "watch": cmd_watch, "config": cmd_config, "city": cmd_city,
     "enable": cmd_enable, "disable": cmd_disable, "status": cmd_status,
-    "doctor": cmd_doctor,
+    "doctor": cmd_doctor, "help": cmd_help,
 }
 
 
