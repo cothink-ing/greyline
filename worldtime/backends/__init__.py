@@ -10,8 +10,6 @@ Auto-detection order favours the most specific compositor IPC first.
 
 import importlib
 
-# Checked in order by detect(). The windows/macos backends are platform-gated
-# (available() returns False off their OS), so they never interfere on Linux.
 _ORDER = ["sway", "swww", "hyprpaper", "x11", "windows", "macos"]
 
 

@@ -16,11 +16,9 @@ All rendering happens in this 1400x1050 frame, then the final image is cover-sca
 to the target output resolution (see render.py). That keeps a single calibration.
 """
 
-# Reference frame of the calibration map (assets/world.time.1400x1050.png).
 REF_W = 1400
 REF_H = 1050
 
-# Affine coefficients (reference/calibrate.py).
 AX, BX, CX = 4.207694, 0.039820, 583.0723
 AY, BY, CY = -0.005353, -5.260840, 625.3477
 

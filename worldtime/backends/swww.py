@@ -23,7 +23,6 @@ def available():
     cli = _client()
     if not cli or not os.environ.get("WAYLAND_DISPLAY"):
         return False
-    # `query` only succeeds when the daemon is running.
     return subprocess.run([cli, "query"], capture_output=True).returncode == 0
 
 
@@ -31,8 +30,6 @@ def outputs():
     cli = _client()
     raw = subprocess.run([cli, "query"], capture_output=True, text=True, check=True).stdout
     result = []
-    # Lines look like "eDP-1: 1920x1200, scale: 1, ...". Some builds (the `awww` fork)
-    # prefix the line with ": ", so search rather than anchor at the start.
     for line in raw.splitlines():
         m = re.search(r"([\w.-]+):\s*(\d+)x(\d+)", line)
         if not m:

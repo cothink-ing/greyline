@@ -46,7 +46,7 @@ def outputs():
         scale = float(o.get("scale", 1.0) or 1.0)
         w = mode.get("width")
         h = mode.get("height")
-        if not w or not h:  # fall back to logical rect * scale
+        if not w or not h:
             rect = o.get("rect", {})
             w = round(rect.get("width", 0) * scale)
             h = round(rect.get("height", 0) * scale)

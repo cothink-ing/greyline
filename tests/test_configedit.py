@@ -18,13 +18,13 @@ def cfg(tmp_path):
 
 def test_set_key_preserves_comments_and_other_keys(cfg):
     before = Path(cfg).read_text()
-    assert "#" in before  # the default template is heavily commented
+    assert "#" in before
     configedit.set_key(cfg, "theme", "blue")
     after = Path(cfg).read_text()
-    assert "# Default configuration for greyline." in after  # comments intact
+    assert "# Default configuration for greyline." in after
     reparsed = config.load(cfg)
     assert reparsed["theme"] == "blue"
-    assert reparsed["format"] == "24h"  # untouched
+    assert reparsed["format"] == "24h"
 
 
 def test_set_nested_key(cfg):
@@ -53,24 +53,19 @@ def test_set_key_rejects_bad_timezone(cfg):
 def test_unset_key_reverts_to_default(cfg):
     configedit.set_key(cfg, "theme", "blue")
     assert configedit.unset_key(cfg, "theme") is True
-    # default-config still supplies theme=modus via the merge
     assert config.load(cfg)["theme"] == "modus"
-    assert configedit.unset_key(cfg, "theme") is False  # already gone
+    assert configedit.unset_key(cfg, "theme") is False
 
 
 def test_unset_key_descending_into_scalar_is_safe(cfg):
-    # Regression: unset must not crash when a dotted path runs into a non-table value
-    # (e.g. `logo` is a bool, so `logo.foo` has nowhere to descend).
     configedit.set_key(cfg, "logo", "true")
     assert configedit.unset_key(cfg, "logo.foo") is False
 
 
 def test_set_color_key_stays_a_hex_string(cfg):
-    # Regression: an all-digit hex like 990000 must not be coerced to the int 990000
-    # (which then crashes rendering); it stays the string "990000".
     configedit.set_key(cfg, "home.color", "990000")
     assert config.load(cfg)["home"]["color"] == "990000"
-    configedit.set_key(cfg, "home.color", "#000000")  # black must round-trip too
+    configedit.set_key(cfg, "home.color", "#000000")
     assert config.load(cfg)["home"]["color"] == "#000000"
 
 
@@ -93,7 +88,6 @@ def test_set_theme_accepts_user_theme_file(cfg, tmp_path, monkeypatch):
 
 
 def test_colors_table_keys_validate_as_colors(cfg):
-    # [colors] overrides stay strings and validate as hex (incl. 8-digit alpha)...
     configedit.set_key(cfg, "colors.home", "990000")
     configedit.set_key(cfg, "colors.gmt", "#11223344")
     c = config.load(cfg)
@@ -101,7 +95,6 @@ def test_colors_table_keys_validate_as_colors(cfg):
     assert c["colors"]["gmt"] == "#11223344"
     with pytest.raises(ValueError):
         configedit.set_key(cfg, "colors.ocean", "chartreuse")
-    # ...except night_alpha, which is an int.
     configedit.set_key(cfg, "colors.night_alpha", "20")
     assert config.load(cfg)["colors"]["night_alpha"] == 20
 
@@ -116,10 +109,10 @@ def test_add_and_remove_city(cfg):
     added = next(c for c in cities if c["name"] == "Testville")
     assert added["lat"] == 1.5 and added["tz"] == "Asia/Kuala_Lumpur"
     assert added["label_side"] == "left"
-    assert config.load(cfg)["home"]["tz"] == "Asia/Kuala_Lumpur"  # --home applied
-    assert added["home"] is True  # flagged as home city after merge
+    assert config.load(cfg)["home"]["tz"] == "Asia/Kuala_Lumpur"
+    assert added["home"] is True
 
-    assert configedit.remove_city(cfg, "testville") == 1  # case-insensitive
+    assert configedit.remove_city(cfg, "testville") == 1
     assert all(c["name"] != "Testville" for c in configedit.list_cities(cfg))
 
 

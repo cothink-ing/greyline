@@ -64,7 +64,5 @@ def apply(name, png_path):
             "command backend: no command configured "
             "(set `command` in config or the GREYLINE_COMMAND env var)"
         )
-    # {path}/{output} substitution via replace (not str.format) so literal braces
-    # in the user's shell command are left untouched. Runs the user's own string.
     filled = cmd.replace("{path}", png_path).replace("{output}", name)
     subprocess.run(filled, shell=True, check=True)

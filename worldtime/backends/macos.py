@@ -20,7 +20,6 @@ import subprocess
 import sys
 import tempfile
 
-# Marker in the rotated filename so old copies can be found and pruned.
 _ROTATE_PREFIX = ".greyline-wp-"
 
 
@@ -43,7 +42,6 @@ def _rotate(png_path):
     Returns the new path. The unique name defeats WindowServer's path-based cache.
     """
     d = os.path.dirname(png_path) or "."
-    # Prune previous rotations so the runtime dir does not grow without bound.
     for old in glob.glob(os.path.join(d, f"{_ROTATE_PREFIX}*.png")):
         with contextlib.suppress(OSError):
             os.remove(old)

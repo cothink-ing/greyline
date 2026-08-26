@@ -39,7 +39,7 @@ def system_timezone():
         marker = "/zoneinfo/"
         if marker in target:
             name = target.split(marker, 1)[1]
-            ZoneInfo(name)  # validate
+            ZoneInfo(name)
             return name
     except (OSError, ZoneInfoNotFoundError, ValueError):
         pass
@@ -68,13 +68,11 @@ def load(path=None):
     if os.path.isfile(user_path):
         with open(user_path, "rb") as f:
             user = tomllib.load(f)
-        # A user-provided city list replaces the defaults wholesale.
         cities = user.pop("city", None)
         cfg = _deep_merge(cfg, user)
         if cities is not None:
             cfg["city"] = cities
 
-    # Resolve home timezone and flag matching cities.
     home_tz = cfg.get("home", {}).get("tz", "auto")
     if home_tz == "auto":
         home_tz = system_timezone()
@@ -90,7 +88,7 @@ def render_kwargs(cfg):
     home = cfg.get("home", {})
     return {
         "theme": cfg.get("theme", "modus"),
-        "theme_overrides": cfg.get("colors") or None,  # [colors] table: per-key theme tweaks
+        "theme_overrides": cfg.get("colors") or None,
         "fmt": cfg.get("format", "24h"),
         "twilight_bands": bool(tw.get("bands", True)),
         "darkness": tw.get("darkness", "subtle"),
@@ -100,13 +98,13 @@ def render_kwargs(cfg):
         "label_bg_alpha": int(
             cfg.get("label_bg_alpha", 130 if cfg.get("label_background", True) else 0)
         ),
-        "map_style": cfg.get("map_style", "vector"),  # vector (default) | raster (own art)
-        "logo": bool(cfg.get("logo", True)),  # draw the bottom-left corner logo
-        "logo_path": cfg.get("logo_path"),  # custom logo image (default: bundled Tux)
-        "logo_color": cfg.get("logo_color"),  # hex → flat-colour (e.g. all-white) logo
-        "logo_invert": bool(cfg.get("logo_invert", False)),  # recolour dark pixels to light
-        "logo_scale": float(cfg.get("logo_scale", 1.0)),  # size the corner logo (1.0 = default)
-        "logo_max_height": float(cfg.get("logo_max_height", 0.0)),  # screen fraction; 0 = uncapped
-        "bar_height": int(cfg.get("bar_height", 0)),  # px reserved at bottom for a status bar
-        "desaturate": bool(cfg.get("desaturate", False)),  # grayscale the raster map
+        "map_style": cfg.get("map_style", "vector"),
+        "logo": bool(cfg.get("logo", True)),
+        "logo_path": cfg.get("logo_path"),
+        "logo_color": cfg.get("logo_color"),
+        "logo_invert": bool(cfg.get("logo_invert", False)),
+        "logo_scale": float(cfg.get("logo_scale", 1.0)),
+        "logo_max_height": float(cfg.get("logo_max_height", 0.0)),
+        "bar_height": int(cfg.get("bar_height", 0)),
+        "desaturate": bool(cfg.get("desaturate", False)),
     }

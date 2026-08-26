@@ -58,7 +58,6 @@ def systemd_user_available():
         capture_output=True,
         text=True,
     )
-    # "running"/"degraded" => usable; "offline"/no bus => rc != 0 with an error.
     return r.returncode == 0 or r.stdout.strip() in {"running", "degraded", "starting"}
 
 

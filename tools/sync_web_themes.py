@@ -23,7 +23,6 @@ sys.path.insert(0, ROOT)
 from worldtime import themes  # noqa: E402  (needs ROOT on the path first)
 
 OUT = os.path.join(ROOT, "web", "themes.js")
-# The two greyline originals lead; the base16 ports follow alphabetically.
 FIRST = ["modus", "blue"]
 
 

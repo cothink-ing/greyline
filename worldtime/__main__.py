@@ -70,9 +70,6 @@ def run_apply(args):
     rkw = config.render_kwargs(cfg)
     cities = cfg.get("city", [])
 
-    # Font family: CLI flag > config `font_family` > built-in default. Accept either a
-    # fontconfig family name or a direct font-file path (fc-match treats its arg as a
-    # family pattern, so a bare path would resolve wrong — route paths straight to Pillow).
     family = args.font_family or cfg.get("font_family") or "Aporetic Sans"
     if os.path.isfile(family):
         font = font_bold = family
@@ -80,7 +77,6 @@ def run_apply(args):
         font = _resolve_font(family) or family
         font_bold = _resolve_font(family, bold=True) or family
 
-    # Single-image mode (testing / non-backend use).
     if args.out:
         res = _parse_res(args.res) if args.res else (1920, 1200)
         img = render.render(cities, out_size=res, font_path=font, font_bold_path=font_bold, **rkw)
@@ -90,8 +86,6 @@ def run_apply(args):
 
     backend_name = args.backend or cfg.get("backend", "auto")
     if backend_name == "command":
-        # The command backend reads its template + size from the environment
-        # (keeps the backend contract's apply(name, path) signature unchanged).
         command = args.command or cfg.get("command")
         if not command:
             print(
@@ -105,7 +99,7 @@ def run_apply(args):
             os.environ["GREYLINE_RESOLUTION"] = resolution
     try:
         name, mod = backends.resolve(backend_name)
-    except RuntimeError as e:  # no compositor/backend detected — report cleanly, no traceback
+    except RuntimeError as e:
         print(e, file=sys.stderr)
         return 1
     outs = mod.outputs()
@@ -119,12 +113,9 @@ def run_apply(args):
         return 1
 
     rt = _runtime_dir()
-    # Only the command backend funnels through DEs that cache the wallpaper by path (#11).
     rotate = name == "command"
     failures = 0
     for o in outs:
-        # Render + apply each output independently: a single failing monitor
-        # (e.g. unplugged mid-run) must not blank the others.
         try:
             img = render.render(
                 cities,
@@ -142,7 +133,6 @@ def run_apply(args):
     return 1 if failures == len(outs) else 0
 
 
-# --- subcommands ---
 
 
 def cmd_init(args):
@@ -152,11 +142,6 @@ def cmd_init(args):
 
     detected = backends.detect()
     deskey = recipes.detect_desktop()
-    # A full desktop environment (GNOME/KDE/XFCE) paints its own wallpaper, so the
-    # generic x11 root-window backend is silently overpainted there even when feh/
-    # xwallpaper happens to be installed. Prefer the DE's own wallpaper command over
-    # the x11 fallback. Real wlroots compositors (sway/swww/hyprpaper) still win —
-    # their sessions carry no gnome/kde/xfce token in $XDG_CURRENT_DESKTOP.
     if detected and not (detected == "x11" and deskey):
         backend, command = detected, None
         backend_line = f"backend = {detected}  (detected)"
@@ -413,11 +398,6 @@ def _add(sub, name, help, description=None, epilog=None, parents=()):
 
 
 def build_parser():
-    # Render/apply flags: real defaults on the main parser (for the bare invocation),
-    # and a SUPPRESS-default copy (render_opts) added to the render-running subcommands
-    # (watch/doctor) so both `greyline watch --backend X` and `greyline --backend X
-    # watch` work. Sharing via SUPPRESS-only on the subparsers avoids argparse's
-    # parent/subparser default-clobber (a subcommand flag omits itself unless given).
     render_opts = argparse.ArgumentParser(add_help=False)
     render_opts.add_argument(
         "--config", default=argparse.SUPPRESS, help="path to config.toml (default: XDG location)"
@@ -579,7 +559,7 @@ def main(argv=None):
     handler = _DISPATCH.get(cmd) if cmd else None
     if handler:
         return handler(args)
-    return run_apply(args)  # bare invocation / --out / --list-outputs
+    return run_apply(args)
 
 
 if __name__ == "__main__":

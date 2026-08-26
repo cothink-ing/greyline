@@ -13,11 +13,6 @@ from .config import _xdg_config_home
 
 BUILTIN_DIR = os.path.join(os.path.dirname(__file__), "themes")
 
-# Backwards compatibility: every name greyline has ever shipped keeps working.
-# "dark" became "modus" (after Modus Vivendi) in 0.6; in 0.7 the palettes moved to
-# their upstream base16 slugs, which name the variant a bare family name left
-# implicit. The aliases are permanent, and a user theme file with an alias's name
-# shadows it (available_themes() is checked first).
 ALIASES = {
     "dark": "modus",
     "gruvbox": "gruvbox-dark-hard",
@@ -27,8 +22,6 @@ ALIASES = {
 }
 DEFAULT_THEME = "modus"
 
-# Every key render/vectormap index unconditionally. Built-in themes carry all of
-# them; partial user themes are merged over a complete base so lookups never fail.
 COLOR_KEYS = frozenset(
     {
         "night",
@@ -49,10 +42,6 @@ COLOR_KEYS = frozenset(
         "gmt",
     }
 )
-# Optional per-theme extras — never inherited across themes (blue deliberately has
-# no night_alpha/logo and must not gain modus's through the fallback merge).
-# label_bg tints the plate behind each clock label; unset means black, which is
-# what every dark theme wants and no light theme does.
 OPTIONAL_KEYS = frozenset({"night_alpha", "logo", "label_bg"})
 
 
@@ -65,7 +54,7 @@ def _hex(s):
     if not isinstance(s, str):
         return None
     s = s.strip().lstrip("#")
-    if len(s) == 3:  # #rgb shorthand -> #rrggbb
+    if len(s) == 3:
         s = "".join(c * 2 for c in s)
     if len(s) not in (6, 8):
         return None
@@ -146,7 +135,7 @@ def load_theme(name, overrides=None):
     parsed = _parse(path) if path else None
 
     default = _parse(os.path.join(BUILTIN_DIR, DEFAULT_THEME + ".toml"))
-    if default is None:  # packaging bug — the smoke test exists to catch this
+    if default is None:
         raise RuntimeError(f"builtin theme {DEFAULT_THEME!r} is missing or invalid")
     if parsed is None:
         name, parsed = DEFAULT_THEME, default

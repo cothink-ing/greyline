@@ -8,7 +8,7 @@ def test_deep_merge_is_recursive():
     over = {"t": {"y": 9, "z": 3}}
     out = config._deep_merge(base, over)
     assert out == {"a": 1, "t": {"x": 1, "y": 9, "z": 3}}
-    assert base["t"] == {"x": 1, "y": 2}  # inputs untouched
+    assert base["t"] == {"x": 1, "y": 2}
 
 
 def test_defaults_load_with_cities():
@@ -27,7 +27,7 @@ def test_user_config_overrides_and_replaces_cities(tmp_path):
     )
     cfg = config.load(path=str(user))
     assert cfg["theme"] == "dark"
-    assert [c["name"] for c in cfg["city"]] == ["London", "Tokyo"]  # replaced, not merged
+    assert [c["name"] for c in cfg["city"]] == ["London", "Tokyo"]
     home = [c for c in cfg["city"] if c["home"]]
     assert [c["name"] for c in home] == ["London"]
 
@@ -37,7 +37,6 @@ def test_render_kwargs_carries_colors_overrides(tmp_path):
     user.write_text('[colors]\nhome = "#fabd2f"\nnight_alpha = 20\n')
     rkw = config.render_kwargs(config.load(path=str(user)))
     assert rkw["theme_overrides"] == {"home": "#fabd2f", "night_alpha": 20}
-    # And None when the table is absent, so render() sees "no overrides".
     assert (
         config.render_kwargs(config.load(path="/nonexistent/config.toml"))["theme_overrides"]
         is None
@@ -48,6 +47,6 @@ def test_render_kwargs_shape():
     cfg = config.load(path="/nonexistent/config.toml")
     rkw = config.render_kwargs(cfg)
     assert rkw["theme"] and rkw["fmt"] in ("24h", "12h")
-    assert rkw["logo_scale"] == 1.0  # default logo sizing
-    assert rkw["logo_max_height"] == 0.0  # uncapped by default
-    assert "show_date" not in rkw  # dropped feature must not leak back in
+    assert rkw["logo_scale"] == 1.0
+    assert rkw["logo_max_height"] == 0.0
+    assert "show_date" not in rkw

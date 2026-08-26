@@ -66,7 +66,6 @@ def test_apply_without_command_errors(monkeypatch):
         command.apply("screen", "/tmp/x.png")
 
 
-# --- windows backend (mocked; no Windows needed) ---
 
 
 def test_windows_available_gates_on_platform(monkeypatch):
@@ -84,7 +83,7 @@ def test_windows_apply_calls_systemparametersinfo(monkeypatch):
     class _FakeUser32:
         def SystemParametersInfoW(self, action, uiParam, pvParam, fWinIni):
             calls["args"] = (action, uiParam, pvParam, fWinIni)
-            return 1  # non-zero = success
+            return 1
 
     class _FakeWindll:
         user32 = _FakeUser32()
@@ -94,7 +93,6 @@ def test_windows_apply_calls_systemparametersinfo(monkeypatch):
     action, _uiParam, pvParam, fWinIni = calls["args"]
     assert action == windows.SPI_SETDESKWALLPAPER
     assert pvParam == r"C:\Users\me\AppData\greyline\default.png"
-    # UPDATEINIFILE | SENDCHANGE so the change persists and goes live.
     assert fWinIni == windows.SPIF_UPDATEINIFILE | windows.SPIF_SENDCHANGE
 
 
@@ -103,7 +101,7 @@ def test_windows_apply_raises_on_failure(monkeypatch):
 
     class _FakeUser32:
         def SystemParametersInfoW(self, *a):
-            return 0  # zero = failure
+            return 0
 
     class _FakeWindll:
         user32 = _FakeUser32()
@@ -117,7 +115,6 @@ def test_windows_apply_raises_on_failure(monkeypatch):
         windows.apply("default", "C:/x.png")
 
 
-# --- macos backend (mocked; no Mac needed) ---
 
 
 def test_macos_available_gates_on_platform(monkeypatch):
@@ -139,13 +136,10 @@ def test_macos_apply_rotates_path_and_runs_osascript(monkeypatch, tmp_path):
     monkeypatch.setattr(macos.subprocess, "run", fake_run)
     macos.apply("default", str(src))
 
-    # osascript invoked with a set-picture AppleScript.
     assert calls["cmd"][0] == "osascript" and calls["cmd"][1] == "-e"
     script = calls["cmd"][2]
     assert "set picture of every desktop" in script
 
-    # The applied path is a *rotated* copy (different name, defeats the cache),
-    # it exists, and carries the same bytes as the render.
     rotated = glob.glob(str(tmp_path / f"{macos._ROTATE_PREFIX}*.png"))
     assert len(rotated) == 1
     assert rotated[0] != str(src)
@@ -156,12 +150,11 @@ def test_macos_apply_rotates_path_and_runs_osascript(monkeypatch, tmp_path):
 def test_macos_rotate_prunes_previous_copies(monkeypatch, tmp_path):
     src = tmp_path / "default.png"
     src.write_bytes(b"A")
-    # A stale rotation left over from a prior tick.
     stale = tmp_path / f"{macos._ROTATE_PREFIX}old.png"
     stale.write_bytes(b"old")
 
     monkeypatch.setattr(macos.subprocess, "run", lambda *a, **k: None)
     macos.apply("default", str(src))
 
-    assert not stale.exists()  # old copy pruned
+    assert not stale.exists()
     assert len(glob.glob(str(tmp_path / f"{macos._ROTATE_PREFIX}*.png"))) == 1

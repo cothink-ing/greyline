@@ -7,20 +7,13 @@ backend with {path} (the rendered PNG) substituted. Best-effort / community-veri
 issue template).
 """
 
-# Keyed by the lowercased token we match in $XDG_CURRENT_DESKTOP.
 RECIPES = {
-    # Empty-then-set defeats GNOME's "same URI => no refresh" cache; set both the
-    # light and dark keys so it works whichever colour scheme is active.
     "gnome": (
         'gsettings set org.gnome.desktop.background picture-uri "" && '
         'gsettings set org.gnome.desktop.background picture-uri "file://{path}" && '
         'gsettings set org.gnome.desktop.background picture-uri-dark "file://{path}"'
     ),
-    # Plasma caches the wallpaper by path and won't refresh on an unchanged filename;
-    # greyline ping-pongs two buffers (see _output_path) so {path} differs each tick.
     "kde": "plasma-apply-wallpaperimage {path}",
-    # The monitor segment varies by XFCE version/output name; monitor0 is the common
-    # default. Users can find theirs with: xfconf-query -c xfce4-desktop -l | grep last-image
     "xfce": (
         "xfconf-query -c xfce4-desktop "
         "-p /backdrop/screen0/monitor0/workspace0/last-image -s {path}"

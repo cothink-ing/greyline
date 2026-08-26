@@ -31,7 +31,7 @@ def apply(name, png_path):
     tool = _tool()
     if tool and tool.endswith("feh"):
         subprocess.run([tool, "--bg-fill", png_path], capture_output=True, text=True, check=True)
-    elif tool:  # xwallpaper
+    elif tool:
         subprocess.run(
             [tool, "--output", name, "--zoom", png_path], capture_output=True, text=True, check=True
         )

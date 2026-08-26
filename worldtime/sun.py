@@ -29,14 +29,11 @@ def subsolar_point(dt_utc: datetime) -> tuple[float, float]:
         dt_utc = dt_utc.replace(tzinfo=UTC)
     dt_utc = dt_utc.astimezone(UTC)
 
-    # Day of year (1-based) and fractional hour.
     doy = dt_utc.timetuple().tm_yday
     hour = dt_utc.hour + dt_utc.minute / 60.0 + dt_utc.second / 3600.0
 
-    # Fractional year (radians).
     gamma = 2.0 * math.pi / 365.0 * (doy - 1 + (hour - 12) / 24.0)
 
-    # Solar declination (radians) -> degrees.
     dec = (
         0.006918
         - 0.399912 * math.cos(gamma)
@@ -48,7 +45,6 @@ def subsolar_point(dt_utc: datetime) -> tuple[float, float]:
     )
     sublat = math.degrees(dec)
 
-    # Equation of time (minutes).
     eot = 229.18 * (
         0.000075
         + 0.001868 * math.cos(gamma)
@@ -57,10 +53,8 @@ def subsolar_point(dt_utc: datetime) -> tuple[float, float]:
         - 0.040849 * math.sin(2 * gamma)
     )
 
-    # Subsolar longitude: solar noon (true solar time = 720 min) over this meridian.
     minutes_utc = dt_utc.hour * 60 + dt_utc.minute + dt_utc.second / 60.0
     sublon = (720.0 - (minutes_utc + eot)) / 4.0
-    # Normalise to [-180, 180].
     sublon = (sublon + 180.0) % 360.0 - 180.0
     return sublat, sublon
 

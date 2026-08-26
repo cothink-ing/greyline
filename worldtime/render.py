@@ -13,29 +13,19 @@ from zoneinfo import ZoneInfo
 from PIL import Image, ImageChops, ImageDraw, ImageEnhance, ImageFont, ImageOps
 
 from . import geo, sun, themes, vectormap
-from .themes import _hex  # re-exported here for back-compat (moved to themes.py)
+from .themes import _hex
 
 ASSET_DIR = os.path.join(os.path.dirname(__file__), "assets")
 BASE_1400 = os.path.join(ASSET_DIR, "world.time.1400x1050.png")
-LOGO_PNG = os.path.join(ASSET_DIR, "tux.png")  # default corner logo (see NOTICE for swapping it)
+LOGO_PNG = os.path.join(ASSET_DIR, "tux.png")
 
-# Twilight boundaries (solar elevation, degrees): terminator + civil/nautical/astro.
-# Each is filled as a night-side polygon; stacking translucent layers darkens the
-# deeper-night regions progressively.
 TWILIGHT_ELEVATIONS = (0.0, -6.0, -12.0, -18.0)
 
-# Per-layer overlay alpha by darkness preset (4 stacked layers at full night).
 DARKNESS_ALPHA = {"subtle": 28, "medium": 40, "dramatic": 55}
 
-# Built-in palette snapshot (parsed from worldtime/themes/*.toml). render() goes
-# through themes.load_theme() so user themes and [colors] overrides work; this dict
-# stays for tests and the web-demo port. "dark" is the pre-0.6 name for modus.
 THEMES = themes.builtin_themes()
 THEMES["dark"] = THEMES["modus"]
 
-# Font candidates (Aporetic preferred per the repo; DejaVu as the portable fallback).
-# The Windows (segoe/arial) and macOS (Helvetica/SFNS) names are found by Pillow's
-# own OS-font-dir search; if none resolve, _load_font falls back to load_default().
 FONT_CANDIDATES = [
     "Aporetic Sans",
     "AporeticSans",
@@ -43,10 +33,10 @@ FONT_CANDIDATES = [
     "DejaVuSans.ttf",
     "DejaVu Sans",
     "segoeui.ttf",
-    "arial.ttf",  # Windows
+    "arial.ttf",
     "Helvetica.ttc",
     "SFNS.ttf",
-    "Arial.ttf",  # macOS
+    "Arial.ttf",
 ]
 FONT_BOLD_CANDIDATES = [
     "Aporetic Sans Bold",
@@ -54,10 +44,10 @@ FONT_BOLD_CANDIDATES = [
     "DejaVuSans-Bold.ttf",
     "DejaVu Sans Bold",
     "segoeuib.ttf",
-    "arialbd.ttf",  # Windows
+    "arialbd.ttf",
     "Helvetica.ttc",
     "SFNS.ttf",
-    "Arial Bold.ttf",  # macOS
+    "Arial Bold.ttf",
 ]
 
 
@@ -111,14 +101,8 @@ def _raster_projection(out_w, out_h, anchor):
     return proj, (sc, cx, cy)
 
 
-# Vector-map framing. Plain equirectangular over the FULL globe so nothing is cropped —
-# the raster's tighter ~333deg window cut off the mid-Pacific (Alaska, Hawaii, the
-# Aleutians). Latitude uses the raster art's px-per-degree ratio (|BY|/|AX|), so
-# continents keep their familiar (slightly tall) shape rather than the squashed look of a
-# 1:1 equirectangular. Centred west of Greenwich so the seam falls in the empty Bering/
-# Pacific and the Americas (incl. Alaska) sit comfortably inside the left edge.
 VECTOR_LON_CENTER = 12.0
-VECTOR_LAT_CENTER = 0.0  # equator-centred → pole-to-pole on a 16:10 panel
+VECTOR_LAT_CENTER = 0.0
 
 
 def _vector_projection(out_w, out_h):
@@ -185,16 +169,12 @@ def _overlay_night(base, dt, theme, bands, alpha, proj):
             )
             base = _blend_region(base, layer, op)
 
-    # Day side: SCREEN a light tint (the wash colour scaled by its alpha); black = no-op.
     dw = theme.get("day_wash")
     if dw:
         a = dw[3] if len(dw) > 3 else 255
         tint = tuple(round(c * a / 255) for c in dw[:3])
         stack(day_side=True, base_color=(0, 0, 0), tint=tint, op=ImageChops.screen)
 
-    # Night side: MULTIPLY toward the night colour; white = no-op. The per-band multiplier
-    # is the night colour pulled toward white by `alpha` (so a stack of bands darkens
-    # progressively without crushing line contrast the way an opaque scrim would).
     night = theme.get("night")
     if alpha > 0 and night:
         t = alpha / 255.0
@@ -249,12 +229,8 @@ def _draw_logo(
         logo = Image.open(logo_path).convert("RGBA")
     except OSError:
         return None
-    # ~10% of canvas width by default; logo_scale lets you size it up/down. A wide
-    # wordmark stays short at this width; a square logo (e.g. Tux) reads larger, so
-    # logo_scale < 1 is handy there.
     target_w = max(24, round(canvas.width * 0.104 * logo_scale))
     target_h = round(target_w * logo.height / logo.width)
-    # Cap the height for tall logos, recomputing width to keep the aspect ratio.
     if logo_max_height and target_h > canvas.height * logo_max_height:
         target_h = round(canvas.height * logo_max_height)
         target_w = max(1, round(target_h * logo.width / logo.height))
@@ -312,7 +288,7 @@ def _place_labels(items, obstacles, bounds, scale):
                 + max(0, bounds[1] - by)
                 + max(0, (by + h) - bounds[3])
             )
-            pen += off * (w + h) * 3  # heavily penalise going off-screen
+            pen += off * (w + h) * 3
             if best_pen is None or pen < best_pen:
                 best, best_pen = box, pen
             if pen == 0:
@@ -366,13 +342,9 @@ def render(
     logo_path = logo_path or LOGO_PNG
     dt = dt or datetime.now(UTC)
     alpha = th.get("night_alpha", DARKNESS_ALPHA.get(darkness, DARKNESS_ALPHA["subtle"]))
-    home_rgb = _hex(home_color) or tuple(th["home"])  # accent colour for the home city
+    home_rgb = _hex(home_color) or tuple(th["home"])
     out_w, out_h = out_size or (geo.REF_W, geo.REF_H)
 
-    # Home city + its *standard* (geographic) UTC offset, used to highlight its timezone
-    # column. The map's zone polygons are keyed by standard offset (London is always the
-    # zone-0 band), so we subtract the DST component out — otherwise the highlight jumps
-    # one column east/west for half the year in any DST-observing region (issue #14).
     home = next((c for c in cities if c.get("home")), None)
     home_offset = None
     if home and column_highlight:
@@ -382,15 +354,10 @@ def render(
             std = off - (local.dst() or timedelta(0))
             home_offset = std.total_seconds() / 3600.0
 
-    # Build the map base + a projection (lon/lat -> output px) for the chosen style.
     if map_style == "vector":
-        # Full-globe equirectangular (see _vector_projection) — the terminator, column
-        # highlight and city clocks all share this one mapping, so they line up.
         proj = _vector_projection(out_w, out_h)
         scale = proj.scale
         grid_font = _load_font(max(8, round(11 * scale)), FONT_CANDIDATES, font_path)
-        # The home highlight fills the real zone polygon here (like the GMT column),
-        # so the straight-band fallback below is skipped for the vector style.
         canvas = vectormap.build_base(
             out_w, out_h, th, grid_font, proj.to_px, home_offset=home_offset
         ).convert("RGBA")
@@ -403,9 +370,8 @@ def render(
                 'art is not bundled (see NOTICE); use map_style="vector" or supply your own '
                 "1400x1050 map via base_path."
             )
-        base = Image.open(base_path).convert("RGBA")  # the 1400x1050 calibration frame
-        if desaturate:  # grayscale the blue artwork → a black-and-white map, then
-            # contrast 150% + brightness 70% (darker) for a crisp, muted base.
+        base = Image.open(base_path).convert("RGBA")
+        if desaturate:
             gray = ImageOps.grayscale(base)
             gray = ImageEnhance.Contrast(gray).enhance(1.5)
             gray = ImageEnhance.Brightness(gray).enhance(0.7)
@@ -415,8 +381,6 @@ def render(
         )
         canvas = scaled.crop((round(cx), round(cy), round(cx) + out_w, round(cy) + out_h))
 
-    # Home timezone-column highlight for the RASTER style (a straight band, one hour of
-    # longitude wide). The vector style fills the real zone polygon in build_base instead.
     if column_highlight and home and map_style != "vector":
         hx, _hy = proj.to_px(home["lon"], home["lat"])
         x0, _ = proj.to_px(home["lon"] - 7.5, home["lat"])
@@ -428,10 +392,8 @@ def render(
         )
         canvas = Image.alpha_composite(canvas, band)
 
-    # Day/night + twilight overlay (output space, via the projection).
     canvas = _overlay_night(canvas, dt, th, twilight_bands, alpha, proj)
 
-    # Logo first — its box becomes an obstacle so no label hides behind it.
     obstacles = []
     if logo:
         b = _draw_logo(
@@ -440,19 +402,17 @@ def render(
         if b:
             obstacles.append(b)
 
-    # Fonts for the clocks (crisp text, sizes scale with output + font_scale).
     fs = max(8, round(16 * scale * font_scale))
     fs_home = max(10, round(20 * scale * font_scale))
     font = _load_font(fs, FONT_CANDIDATES, font_path)
     font_home = _load_font(fs_home, FONT_BOLD_CANDIDATES, font_bold_path)
     draw = ImageDraw.Draw(canvas)
 
-    # Size each label; collect for placement.
     items = []
     for c in cities:
         px, py = proj.to_px(c["lon"], c["lat"])
         if px < -40 or px > out_w + 40 or py < -40 or py > out_h + 40:
-            continue  # off-screen
+            continue
         is_home = bool(c.get("home"))
         f = font_home if is_home else font
         text = "\n".join(_label_lines(c, dt, fmt))
@@ -470,11 +430,10 @@ def render(
                 "w": bb[2] - bb[0],
                 "h": bb[3] - bb[1],
                 "dotr": round((6 if is_home else 4) * scale),
-                "side": c.get("label_side"),  # optional placement preference
+                "side": c.get("label_side"),
             }
         )
 
-    # Place labels avoiding dots, the logo box, the screen edges and each other.
     dot_boxes = [
         (it["px"] - it["dotr"], it["py"] - it["dotr"], it["px"] + it["dotr"], it["py"] + it["dotr"])
         for it in items
@@ -482,9 +441,6 @@ def render(
     m = round(10 * scale)
     _place_labels(items, obstacles + dot_boxes, (m, m, out_w - m, out_h - m - bar_height), scale)
 
-    # Semi-transparent rounded backplate behind each label, for legibility over the map.
-    # Black on a dark map; light themes set `label_bg` so the plate doesn't fight the
-    # dark label text they draw on top of it.
     if label_bg_alpha > 0 and items:
         plate_rgb = tuple(th.get("label_bg", (0, 0, 0))[:3])
         pad_x = max(4, round(10 * scale * font_scale))
@@ -500,9 +456,8 @@ def render(
                 fill=(*plate_rgb, label_bg_alpha),
             )
         canvas = Image.alpha_composite(canvas, plate)
-        draw = ImageDraw.Draw(canvas)  # rebind to the composited canvas
+        draw = ImageDraw.Draw(canvas)
 
-    # Draw dots + labels at their placed boxes.
     for it in items:
         is_home = it["is_home"]
         dot = home_rgb if is_home else th["dot"]

@@ -92,7 +92,6 @@ DOCTOR_DESCRIPTION = """\
 Diagnose a wallpaper that isn't updating: print the detected session, the resolved
 backend and its outputs, and whether the systemd user timer is available."""
 
-# One line per backend, keyed as in backends._ORDER (+ the manual `command`).
 _BACKENDS = {
     "sway": "sway and other wlroots compositors, via swaymsg IPC",
     "swww": "the swww daemon on Wayland, via the swww client",
@@ -105,8 +104,6 @@ _BACKENDS = {
 
 
 def _wrap(text, indent="  ", width=88):
-    # Theme names and alias arrows are hyphenated; wrapping inside one turns
-    # "github-dark" into two half-names on separate lines.
     return textwrap.fill(
         text,
         width=width,

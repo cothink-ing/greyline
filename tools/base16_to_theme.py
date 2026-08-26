@@ -47,8 +47,6 @@ import os
 import re
 import sys
 
-# Bundled set: the families a desktop-theme user is most likely to already run,
-# with every variant of the four greyline ships opinionated support for.
 CURATED = [
     "gruvbox-dark-hard",
     "gruvbox-dark-medium",
@@ -85,11 +83,6 @@ CURATED = [
     "github",
 ]
 
-# Slot picks the hue rule gets wrong for a specific scheme, either because the
-# scheme has a signature accent (tokyo-night is cyan, catppuccin is mauve — both
-# hand-tuned that way before 0.7, and users know them by that colour) or because
-# the slot the scheme itself calls red/green doesn't read as one by hue: monokai's
-# "red" is magenta, and kanagawa's green is so muted its vivid orange outranks it.
 _OVERRIDE = {
     "tokyo-night-dark": {"home": "base0D"},
     "tokyo-night-storm": {"home": "base0D"},
@@ -105,9 +98,8 @@ _OVERRIDE = {
 
 _ACCENT_SLOTS = [f"base0{c}" for c in "89ABCDEF"]
 _SURFACE_SLOTS = ["base01", "base02"]
-_MIN_CONTRAST = 18  # luma gap (0-255) below which a surface reads as the ocean
+_MIN_CONTRAST = 18
 
-# Per-polarity constants. Alphas are the ones the 0.6.0 themes converged on.
 _POLARITY = {
     "dark": {
         "grid": "#ffffff30",
@@ -120,8 +112,6 @@ _POLARITY = {
         "grid": "#00000024",
         "column": "#0000000f",
         "gmt_alpha": 0x3A,
-        # A light map's night side needs far more overlay to read as night; 44 sits
-        # between the built-in subtle/dramatic presets (28/55).
         "night_alpha": 44,
         "day_wash_alpha": 0x10,
     },
@@ -135,8 +125,6 @@ def parse_scheme(path):
     palette: dict[str, str] = {}
     with open(path, encoding="utf-8") as f:
         for line in f:
-            # Values are quoted ("#1d2021"), so a trailing-comment strip has to
-            # come after the quotes — hex colours start with the comment character.
             m = re.match(r'\s*(\w+):\s*"([^"]*)"|\s*(\w+):\s*([^#\n]+)', line)
             if not m:
                 continue
@@ -240,13 +228,11 @@ def build_theme(meta, palette, slug):
 
     land = _land(palette, light)
     over = _OVERRIDE.get(slug, {})
-    idl = over.get("idl") or _nearest_hue(palette, 0, cap=20)  # red
-    gmt = over.get("gmt") or _nearest_hue(palette, 120, cap=80, exclude={idl})  # green
+    idl = over.get("idl") or _nearest_hue(palette, 0, cap=20)
+    gmt = over.get("gmt") or _nearest_hue(palette, 120, cap=80, exclude={idl})
     home = over.get("home") or _nearest_hue(palette, 45, cap=60, exclude={idl, gmt})
 
     if light:
-        # Halos sit behind dark text, so they take the light background; the night
-        # overlay needs a mid-tone from the middle of the ramp.
         stroke = palette["base00"]
         night = _mix(palette["base03"], palette["base04"])
         day_wash = palette["base00"]
@@ -299,7 +285,7 @@ def to_toml(meta, palette, slug):
         "",
     ]
     for key, value, comment in build_theme(meta, palette, slug):
-        if value is None:  # a section comment or a blank line
+        if value is None:
             lines.append(key)
             continue
         rendered = value if isinstance(value, int) else f'"{value}"'

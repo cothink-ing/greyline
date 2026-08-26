@@ -15,7 +15,6 @@ an overlay PNG (computed = green ring, original offset = red dot) for visual che
 import numpy as np
 from PIL import Image, ImageDraw
 
-# city: (lon, lat, offsetX, offsetY)  -- offsets straight from worldtime.cities.js
 CAL = {
     "San Francisco": (-122.42, 37.77, 62, 430),
     "New York":      (-74.01, 40.71, 295, 419),
@@ -49,11 +48,9 @@ for i, n in enumerate(names):
     print("  %-14s dx=%+6.1f dy=%+6.1f" % (n, fx[i] - px[i], fy[i] - py[i]))
 print("RMS: dx=%.1f dy=%.1f" % (np.sqrt(((fx-px)**2).mean()), np.sqrt(((fy-py)**2).mean())))
 
-# overlay for visual validation
 img = Image.open("../assets/world.time.1400x1050.png").convert("RGB")
 d = ImageDraw.Draw(img)
 for i, n in enumerate(names):
-    # original offset (red), computed-from-affine (green ring)
     d.ellipse([px[i]-4, py[i]-4, px[i]+4, py[i]+4], fill=(255, 60, 60))
     cxx, cyy = fx[i], fy[i]
     d.ellipse([cxx-7, cyy-7, cxx+7, cyy+7], outline=(60, 255, 60), width=2)

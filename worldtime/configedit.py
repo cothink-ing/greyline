@@ -16,9 +16,6 @@ import tomlkit
 
 from . import config, themes
 
-# Known enum/value constraints, checked before writing so `set` can't produce a
-# config that renders wrong. Keys are dotted paths. (`theme` is validated
-# dynamically against the available theme files — see _validate.)
 _ENUMS = {
     "format": {"24h", "12h"},
     "map_style": {"vector", "raster"},
@@ -51,7 +48,6 @@ def _load(path):
 
 
 def _save(path, doc):
-    # Atomic: write a sibling temp file then replace, so a crash never truncates config.
     d = os.path.dirname(path) or "."
     fd, tmp = tempfile.mkstemp(dir=d, prefix=".greyline-", suffix=".toml")
     try:
@@ -108,12 +104,10 @@ def _validate(dotted, value):
         raise ValueError(f"{dotted}: {value!r} is not a hex colour (e.g. #e64553)")
 
 
-# --- public operations (each loads, mutates, saves) ---
 
 
 def set_key(path, dotted, raw_value):
     """Set a (possibly nested) dotted key, e.g. 'twilight.darkness' -> 'medium'."""
-    # Colour keys stay strings — "990000" is a hex colour, not the integer 990000.
     value = raw_value if _is_color_key(dotted) else _coerce(raw_value)
     _validate(dotted, value)
     doc = _load(path)
