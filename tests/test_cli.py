@@ -6,7 +6,6 @@ from worldtime import __main__ as cli
 from worldtime import config, recipes, service
 
 
-
 def test_parse_res_valid():
     assert cli._parse_res("2560x1440") == (2560, 1440)
     assert cli._parse_res("1920X1080") == (1920, 1080)
