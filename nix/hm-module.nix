@@ -21,6 +21,16 @@ let
   swwwDaemon = "${lib.getExe cfg.swwwPackage}-daemon";
 in
 {
+  # `fontFamily` predates the freeform `settings` and duplicated its `font_family`
+  # key, which the unit then pinned as a CLI flag. Renaming keeps existing configs
+  # working (with a deprecation warning) and leaves one source of truth.
+  imports = [
+    (lib.mkRenamedOptionModule
+      [ "services" "greyline" "fontFamily" ]
+      [ "services" "greyline" "settings" "font_family" ]
+    )
+  ];
+
   options.services.greyline = {
     enable = lib.mkEnableOption "the greyline live world-time wallpaper";
 
@@ -66,12 +76,6 @@ in
       '';
     };
 
-    fontFamily = lib.mkOption {
-      type = lib.types.str;
-      default = "Aporetic Sans";
-      description = "Label font family, resolved at runtime via fontconfig.";
-    };
-
     target = lib.mkOption {
       type = lib.types.str;
       default = "sway-session.target";
@@ -112,6 +116,11 @@ in
         Written to ~/.config/greyline/config.toml. When empty, the package's
         bundled defaults (10 world cities, dark vector theme) are used. Provide a
         `city` list to choose your own cities and a `home.tz` to pick the accented one.
+
+        Declaring anything here makes home-manager own that file: it becomes a
+        read-only symlink into the store, so `greyline init` and `greyline config set`
+        can no longer edit it. Leave this empty to keep managing the config
+        imperatively with those commands.
       '';
       example = lib.literalExpression ''
         {
@@ -131,6 +140,17 @@ in
 
   config = lib.mkIf cfg.enable {
     home.packages = [ cfg.package ];
+
+    assertions = [
+      {
+        assertion = !(cfg.settings ? backend);
+        message = ''
+          services.greyline: set `backend`, not `settings.backend` — the module wires the
+          service unit (swww daemon, extraPackages, ordering) from the `backend` option,
+          and passes it to greyline itself.
+        '';
+      }
+    ];
 
     xdg.configFile = lib.mkIf (cfg.settings != { }) {
       "greyline/config.toml".source = tomlFormat.generate "greyline-config.toml" cfg.settings;
@@ -164,7 +184,12 @@ in
         Environment = [
           "PATH=${lib.makeBinPath (cfg.extraPackages ++ [ pkgs.fontconfig ])}:/run/current-system/sw/bin"
         ];
-        ExecStart = ''${cfg.package}/bin/greyline --backend ${cfg.backend} --font-family "${cfg.fontFamily}"''
+        # Only `backend` is passed as a flag, because the module is its source of truth
+        # (it wires the unit from it). Everything else reaches greyline through
+        # config.toml — a flag would outrank that file on every tick and silently pin
+        # the value.
+        ExecStart =
+          "${cfg.package}/bin/greyline --backend ${cfg.backend}"
           + lib.optionalString (cfg.command != "") " --command ${lib.escapeShellArg cfg.command}";
       };
       Install.WantedBy = [ cfg.target ];

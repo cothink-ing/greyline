@@ -17,6 +17,54 @@ def test_parse_res_malformed_exits_cleanly():
             cli._parse_res(bad)
 
 
+def test_is_substitute_accepts_the_family_fontconfig_reports():
+    assert not cli._is_substitute("Iosevka Nerd Font", "Iosevka Nerd Font")
+    assert not cli._is_substitute("dejavu sans", "DejaVu Sans")
+    assert not cli._is_substitute("BlexMono Nerd Font Medium", "BlexMono Nerd Font")
+    assert not cli._is_substitute("Noto Sans", "Noto Sans,Noto Sans Regular")
+
+
+def test_is_substitute_flags_a_fontconfig_fallback():
+    assert cli._is_substitute("Aporetic Sans", "DejaVu Sans")
+    assert cli._is_substitute("BlexMono Nerd Font Medium", "DejaVu Sans")
+
+
+def test_is_substitute_silent_when_fontconfig_is_absent():
+    assert not cli._is_substitute("Aporetic Sans", None)
+
+
+def test_resolve_fonts_passes_a_font_file_path_through(tmp_path):
+    f = tmp_path / "Custom.ttf"
+    f.write_bytes(b"")
+    assert cli._resolve_fonts(str(f)) == (str(f), str(f))
+
+
+def test_resolve_fonts_queries_regular_and_bold(monkeypatch):
+    seen = []
+
+    def fake_match(query):
+        seen.append(query)
+        return f"/fonts/{query}.ttf", "Iosevka Nerd Font"
+
+    monkeypatch.setattr(cli, "_fc_match", fake_match)
+    assert cli._resolve_fonts("Iosevka Nerd Font") == (
+        "/fonts/Iosevka Nerd Font.ttf",
+        "/fonts/Iosevka Nerd Font:bold.ttf",
+    )
+    assert seen == ["Iosevka Nerd Font", "Iosevka Nerd Font:bold"]
+
+
+def test_resolve_fonts_warns_only_when_the_family_was_requested(monkeypatch, capsys):
+    monkeypatch.setattr(cli, "_fc_match", lambda q: ("/fonts/DejaVuSans.ttf", "DejaVu Sans"))
+    cli._resolve_fonts("Aporetic Sans", warn=False)
+    assert capsys.readouterr().err == ""
+    cli._resolve_fonts("Aporetic Sans")
+    assert "not installed" in capsys.readouterr().err
+
+
+def test_resolve_fonts_falls_back_to_the_family_without_fontconfig(monkeypatch):
+    monkeypatch.setattr(cli, "_fc_match", lambda q: (None, None))
+    assert cli._resolve_fonts("Iosevka Nerd Font") == ("Iosevka Nerd Font", "Iosevka Nerd Font")
 
 
 def test_detect_desktop_matches_case_insensitively():
@@ -29,8 +77,6 @@ def test_detect_desktop_matches_case_insensitively():
 
 def test_all_recipes_have_path_placeholder():
     assert all("{path}" in cmd for cmd in recipes.RECIPES.values())
-
-
 
 
 def test_service_unit_execstart_and_timer(monkeypatch):
@@ -50,8 +96,6 @@ def test_install_and_enable_dry_run_lists_actions_without_writing(monkeypatch, t
     assert any("daemon-reload" in a for a in actions)
     assert any("enable --now greyline.timer" in a for a in actions)
     assert not (tmp_path / "systemd").exists()
-
-
 
 
 def test_output_path_stable_for_native_backends(tmp_path):
@@ -74,8 +118,6 @@ def test_output_path_pingpongs_between_two_buffers(tmp_path):
 
     assert cli._output_path(rt, "screen", rotate=True) == str(pa)
     assert sorted(p.name for p in tmp_path.iterdir()) == ["screen-a.png", "screen-b.png"]
-
-
 
 
 def test_init_writes_config_and_detected_backend(monkeypatch, tmp_path):
@@ -129,8 +171,6 @@ def test_init_dry_run_writes_nothing(monkeypatch, tmp_path):
     assert rc == 0 and not cfg_path.exists()
 
 
-
-
 def test_render_flags_work_before_and_after_subcommand():
     parse = cli.build_parser().parse_args
     for argv in (
@@ -156,8 +196,6 @@ def test_watch_loops_run_apply_until_interrupted(monkeypatch):
     monkeypatch.setattr("time.sleep", fake_sleep)
     rc = cli.main(["watch", "--interval", "60"])
     assert rc == 0 and calls["n"] == 1
-
-
 
 
 def test_help_command_prints_that_commands_help(capsys):

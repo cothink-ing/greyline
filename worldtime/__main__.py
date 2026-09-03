@@ -18,14 +18,58 @@ import tempfile
 
 from . import __version__, backends, config, helptext, recipes, render, service
 
+DEFAULT_FONT_FAMILY = "Aporetic Sans"
 
-def _resolve_font(family, bold=False):
-    """Resolve a font family to a file path via fontconfig, or None."""
+
+def _fc_match(query):
+    """(font-file path, matched family names) for a fontconfig query, or (None, None)."""
     if not shutil.which("fc-match"):
-        return None
-    query = f"{family}:bold" if bold else family
-    out = subprocess.run(["fc-match", "-f", "%{file}", query], capture_output=True, text=True)
-    return out.stdout.strip() or None
+        return None, None
+    out = subprocess.run(
+        ["fc-match", "-f", "%{file}\t%{family}", query], capture_output=True, text=True
+    )
+    path, _, families = out.stdout.strip().partition("\t")
+    return (path or None), families
+
+
+def _is_substitute(requested, matched):
+    """True when fontconfig answered with a different family than the one asked for.
+
+    fc-match never fails: an uninstalled family silently resolves to whatever the
+    substitution rules pick, so the only way to notice is to compare the names.
+    Comparison ignores case, spaces and punctuation, and accepts a prefix either way
+    so a family+style request ("BlexMono Nerd Font Medium") matches the family
+    fontconfig reports ("BlexMono Nerd Font").
+    """
+
+    def norm(s):
+        return "".join(ch for ch in s.lower() if ch.isalnum())
+
+    req = norm(requested)
+    if not req or not matched:
+        return False
+    return not any(
+        req.startswith(norm(f)) or norm(f).startswith(req) for f in matched.split(",") if norm(f)
+    )
+
+
+def _resolve_fonts(family, warn=True):
+    """(regular, bold) font-file paths for a family name or a direct font-file path.
+
+    ``warn`` is off for the built-in default, which the user never asked for and
+    which is expected to be substituted on most systems.
+    """
+    if os.path.isfile(family):
+        return family, family
+    path, matched = _fc_match(family)
+    if warn and path and _is_substitute(family, matched):
+        print(
+            f"warning: font family {family!r} is not installed; "
+            f"fontconfig substituted {matched.split(',')[0]!r}",
+            file=sys.stderr,
+        )
+    bold, _ = _fc_match(f"{family}:bold")
+    return (path or family), (bold or path or family)
 
 
 def _runtime_dir():
@@ -71,12 +115,8 @@ def run_apply(args):
     rkw = config.render_kwargs(cfg)
     cities = cfg.get("city", [])
 
-    family = args.font_family or cfg.get("font_family") or "Aporetic Sans"
-    if os.path.isfile(family):
-        font = font_bold = family
-    else:
-        font = _resolve_font(family) or family
-        font_bold = _resolve_font(family, bold=True) or family
+    requested = args.font_family or cfg.get("font_family")
+    font, font_bold = _resolve_fonts(requested or DEFAULT_FONT_FAMILY, warn=bool(requested))
 
     if args.out:
         res = _parse_res(args.res) if args.res else (1920, 1200)
@@ -132,8 +172,6 @@ def run_apply(args):
             failures += 1
             print(f"output {o['name']}: {e}", file=sys.stderr)
     return 1 if failures == len(outs) else 0
-
-
 
 
 def cmd_init(args):
@@ -368,6 +406,14 @@ def cmd_doctor(args):
             print(f"  note: {note}")
     except RuntimeError as e:
         print(f"backend: ERROR — {e}")
+    family = getattr(args, "font_family", None) or cfg.get("font_family") or DEFAULT_FONT_FAMILY
+    path, matched = _fc_match(family)
+    if path is None:
+        print(f"font: {family} — no fc-match on PATH; Pillow picks a fallback")
+    elif _is_substitute(family, matched):
+        print(f"font: {family} — NOT INSTALLED, fontconfig substituted {matched.split(',')[0]}")
+    else:
+        print(f"font: {family} -> {path}")
     print(
         "systemd --user: "
         + (

@@ -117,9 +117,9 @@ imports = [ inputs.greyline.homeManagerModules.default ];
 services.greyline = {
   enable = true;
   backend = "sway";              # auto | sway | swww | hyprpaper | x11 | command
-  fontFamily = "Aporetic Sans";  # resolved via fontconfig
   settings = {
     theme = "modus";
+    font_family = "Aporetic Sans";  # resolved via fontconfig
     format = "24h";
     twilight = { bands = true; darkness = "subtle"; };
     home = { tz = "auto"; column_highlight = true; };  # "auto" = system tz
@@ -185,7 +185,14 @@ platforms yet, so wrap `greyline watch` in the OS scheduler:
 direct font-file path) and `font_scale` to size the label text; `--font-family` overrides the
 config for one run. greyline uses fontconfig (`fc-match`) on Linux; on Windows/macOS Pillow
 resolves a system font automatically (Segoe UI / Helvetica), falling back to a built-in font —
-so labels always render, though exact typography may differ from Linux.
+so labels always render, though exact typography may differ from Linux. `fc-match` never fails
+— an uninstalled family silently resolves to a substitute — so greyline prints a warning to
+stderr when the font you asked for is not the one it got.
+
+On home-manager, set the font in `settings.font_family`. The old `services.greyline.fontFamily`
+option still works but is deprecated and warns. Note that declaring any `settings` makes
+home-manager own `~/.config/greyline/config.toml`, so `greyline config set` can no longer edit
+it — leave `settings` empty to keep managing the config imperatively.
 
 ## Usage
 

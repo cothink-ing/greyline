@@ -4,6 +4,27 @@ All notable changes to greyline are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Fixed
+- **`font_family` in `config.toml` was ignored under the home-manager module.** The
+  generated unit appended `--font-family "${cfg.fontFamily}"` to `ExecStart`, and a CLI
+  flag outranks the config file — so the module option's default won on every tick and
+  `settings.font_family` (or a hand-edited `config.toml`) had no effect. The default,
+  `Aporetic Sans`, is usually not installed, and `fc-match` answers with a substitute
+  instead of failing, so the only symptom was a wallpaper stuck on DejaVu Sans.
+
+  The unit now passes only `--backend` (which the module owns, since it wires the
+  service from it) and `--command`; everything else reaches greyline through
+  `config.toml`. `settings.backend` is now an assertion failure rather than a silent
+  no-op.
+- **A font that isn't installed now says so**, on stderr at render time and in
+  `greyline doctor`, which also reports the resolved font file.
+
+### Deprecated
+- `services.greyline.fontFamily` is renamed to `services.greyline.settings.font_family`.
+  Existing configs keep working and emit the standard home-manager rename warning.
+
 ## [0.7.2] — 2026-09-03
 
 ### Fixed
