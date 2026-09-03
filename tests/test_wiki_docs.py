@@ -47,7 +47,33 @@ def test_generated_pages_describe_no_particular_machine():
 
 
 def _pages():
+    return _gen_wiki().PAGES
+
+
+def test_normalise_is_platform_independent(monkeypatch):
+    """A Windows checkout has to generate byte-identical pages, or --check fails
+    there and nowhere else. It did, until the separators were normalised too."""
+    gen_wiki = _gen_wiki()
+    monkeypatch.setattr(gen_wiki.os, "sep", "\\")
+    monkeypatch.setattr(gen_wiki, "ROOT", "D:\\a\\greyline\\greyline")
+    sentinel = "C:\\Temp\\tmp42"
+    windows_output = "\n".join(
+        [
+            f"Your config: {sentinel}\\greyline\\config.toml",
+            "Detected here: sway",
+            "  D:\\a\\greyline\\greyline\\worldtime\\themes\\modus.toml",
+        ]
+    )
+    assert gen_wiki._normalise(windows_output, sentinel) == "\n".join(
+        [
+            "Your config: ~/.config/greyline/config.toml",
+            "  worldtime/themes/modus.toml",
+        ]
+    )
+
+
+def _gen_wiki():
     sys.path.insert(0, os.path.join(ROOT, "tools"))
     import gen_wiki
 
-    return gen_wiki.PAGES
+    return gen_wiki

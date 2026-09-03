@@ -16,7 +16,8 @@ Edit the source the page is generated from, not the page.
 Three parts of the help output describe *this machine* rather than greyline, and
 are normalised out: the absolute path of your config and theme directories, the
 absolute path of the packaged theme dir, and the "Detected here:" line naming the
-backend that happens to be running.
+backend that happens to be running. Path separators are normalised too, so the
+pages a Windows checkout generates match the ones in git.
 """
 
 import os
@@ -117,6 +118,10 @@ def _normalise(text, sentinel_config):
             continue
         line = line.replace(sentinel_config, "~/.config")
         line = line.replace(ROOT + os.sep, "")
+        if os.sep != "/":
+            # The only backslashes a help page can contain are the ones os.path.join
+            # just put there; the addenda, which do use them, are not passed through here.
+            line = line.replace(os.sep, "/")
         if not line.strip() and out and not out[-1].strip():
             continue
         out.append(line)
