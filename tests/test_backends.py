@@ -69,8 +69,6 @@ def test_apply_without_command_errors(monkeypatch):
         command.apply("screen", "/tmp/x.png")
 
 
-
-
 def test_windows_available_gates_on_platform(monkeypatch):
     monkeypatch.setattr(windows.sys, "platform", "win32")
     assert windows.available() is True
@@ -116,8 +114,6 @@ def test_windows_apply_raises_on_failure(monkeypatch):
     monkeypatch.setattr(ctypes, "get_last_error", lambda: 5, raising=False)
     with pytest.raises(RuntimeError):
         windows.apply("default", "C:/x.png")
-
-
 
 
 def test_macos_available_gates_on_platform(monkeypatch):

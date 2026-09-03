@@ -97,8 +97,6 @@ def test_colors_overrides_apply_last():
     assert th["logo"] == (17, 34, 51)
 
 
-
-
 def test_pre_070_theme_names_still_resolve():
     for old, new in (
         ("gruvbox", "gruvbox-dark-hard"),

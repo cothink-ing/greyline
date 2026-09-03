@@ -32,11 +32,9 @@ def outputs():
 
 def apply(name, png_path):
 
-
     subprocess.run(
         ["hyprctl", "hyprpaper", "wallpaper", f"{name},{png_path},cover"],
         capture_output=True,
         text=True,
         check=True,
     )
-

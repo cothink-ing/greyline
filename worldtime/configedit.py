@@ -104,8 +104,6 @@ def _validate(dotted, value):
         raise ValueError(f"{dotted}: {value!r} is not a hex colour (e.g. #e64553)")
 
 
-
-
 def set_key(path, dotted, raw_value):
     """Set a (possibly nested) dotted key, e.g. 'twilight.darkness' -> 'medium'."""
     value = raw_value if _is_color_key(dotted) else _coerce(raw_value)
