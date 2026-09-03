@@ -38,7 +38,10 @@ greyline = "worldtime.__main__:main"
 [project.urls]
 Homepage = "https://github.com/cothinking-dev/greyline"
 Repository = "https://github.com/cothinking-dev/greyline"
+Documentation = "https://github.com/cothinking-dev/greyline/wiki"
 Issues = "https://github.com/cothinking-dev/greyline/issues"
+Changelog = "https://github.com/cothinking-dev/greyline/blob/main/CHANGELOG.md"
+Demo = "https://cothinking-dev.github.io/greyline/"
 
 [project.optional-dependencies]
 test = ["pytest"]

@@ -6,6 +6,27 @@ All notable changes to greyline are documented here. The format is based on
 
 ## [Unreleased]
 
+### Changed
+- **The README is 97 lines instead of 402, and the reference material moved to the
+  [wiki](https://github.com/cothinking-dev/greyline/wiki).** The config-key table, the
+  theme list and the GNOME/KDE/XFCE recipes were maintained by hand in the README *and*
+  generated from the code by `helptext.py`, which is the exact duplication that module
+  exists to prevent; the README's copies were already the lossier of the two. The wiki's
+  Configuration, Themes, Backends and Desktop-environments pages are now generated from
+  `greyline help <topic>` by `tools/gen_wiki.py`, checked into `docs/wiki/`, gated by
+  `tests/test_wiki_docs.py`, and pushed to the wiki by a workflow. Installation,
+  Architecture and Troubleshooting are hand-written in the same directory. Nothing was
+  dropped; the README keeps the pitch, the install, and the pointers.
+- **`worldtime/default-config.toml` points at `greyline help desktops`** for the desktop
+  recipes rather than at a README section that no longer exists.
+- **PyPI gets working links.** The README's images and file links are absolute, so they
+  resolve off GitHub, and `[project.urls]` gained `Documentation`, `Changelog` and `Demo`.
+
+### Added
+- **`CONTRIBUTING.md`.** Absorbs the README's contributing section and its principles,
+  where someone about to open a pull request will actually read them, and documents which
+  of the three documentation surfaces is the source of truth for what.
+
 ### Fixed
 - **`font_family` in `config.toml` was ignored under the home-manager module.** The
   generated unit appended `--font-family "${cfg.fontFamily}"` to `ExecStart`, and a CLI

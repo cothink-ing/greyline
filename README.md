@@ -2,403 +2,98 @@
 
 [![CI](https://github.com/cothinking-dev/greyline/actions/workflows/ci.yml/badge.svg)](https://github.com/cothinking-dev/greyline/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/greyline.svg)](https://pypi.org/project/greyline/)
-[![Live demo](https://img.shields.io/badge/live-demo-2ea44f)](https://cothinking-dev.github.io/greyline/)
-[![License: GPL v2+](https://img.shields.io/badge/License-GPLv2%2B-blue.svg)](LICENSE)
+[![License: GPL v2+](https://img.shields.io/badge/License-GPLv2%2B-blue.svg)](https://github.com/cothinking-dev/greyline/blob/main/LICENSE)
 
-> [!NOTE]
-> **Greyline is in Beta.** It works and I run it daily on my linux machine, but expect bugs
-> or breaking changes before 1.0. It was built with AI help, but with heavy guardrails and
->  adherence to performance, battery life and industry best practices. 
+![greyline on a dark theme: a world map with city clocks and a day/night terminator](https://raw.githubusercontent.com/cothinking-dev/greyline/main/docs/screenshots/hero.png)
 
-> A live world-time desktop wallpaper for Wayland/X11 — a world map with clocks for your
-> cities, your home city highlighted, and a day/night terminator that tracks the sun. A modern
-> recreation of the classic IBM/ThinkPad **"World Time"** Active Desktop.
+<sub>Shown with the ThinkPad wordmark, which you supply yourself. The bundled logo is Tux.</sub>
 
-![greyline — dark theme](docs/screenshots/hero.png)
+> A live world-time desktop wallpaper for Wayland and X11: a world map with clocks for
+> your cities, your home city marked, and a day/night terminator that tracks the sun.
+> A recreation of the IBM/ThinkPad **World Time** Active Desktop.
 
-<sub>Shown with the optional ThinkPad wordmark (a user-supplied logo, see [Credits](#credits)).
-The bundled default logo is Tux.</sub>
+[**Try it in your browser**](https://cothinking-dev.github.io/greyline/) ·
+[**Documentation**](https://github.com/cothinking-dev/greyline/wiki) ·
+[**Changelog**](https://github.com/cothinking-dev/greyline/blob/main/CHANGELOG.md)
 
-**▶ [Try the live demo](https://cothinking-dev.github.io/greyline/):** greyline running in your
-browser (your timezone highlighted), no install needed.
+There is no daemon and no browser behind this. A scheduler runs greyline once a minute:
+it renders a PNG per output, hands each to the wallpaper mechanism you already use, and
+exits.
 
-greyline doesn't run a browser or a background daemon. A small Python program renders a PNG once
-a minute and hands it to your existing wallpaper mechanism, then exits.
+greyline is in beta. I run it daily on Linux; expect rough edges before 1.0.
 
-## Table of Contents
-
-- [Features](#features)
-- [Requirements](#requirements)
-- [Installation](#installation)
-- [Usage](#usage)
-- [Configuration](#configuration)
-- [How it works](#how-it-works)
-- [Principles (north star)](#principles-north-star)
-- [Contributing](#contributing)
-- [Credits](#credits)
-
-## Features
-
-- **Multi-timezone clocks** at each city's real location, with accurate DST via the OS IANA
-  database (`zoneinfo`). 12h or 24h.
-- Home city accented (dot + bold label + optional timezone-column highlight), auto-detected
-  from your system timezone or pinned in config.
-- Day/night terminator that's seasonally correct, with discrete civil / nautical / astronomical
-  twilight bands.
-- **Vector map** from public-domain Natural Earth data: crisp at any resolution, fully
-  themeable — **35 built-in themes**, most of them ports of the popular
-  [base16 schemes](https://github.com/tinted-theming/schemes) (gruvbox, everforest,
-  rosé pine, tokyo night, catppuccin, nord, dracula, solarized, …) in both dark and light,
-  plus your own TOML theme. Honest zig-zag timezone boundaries, a green GMT column, and a
-  red International Date Line.
-- Any resolution, multi-monitor, HiDPI. Each output rendered at native pixels.
-- **Swappable corner logo:** ships with Tux; point `logo_path` at your own PNG.
-- Works on any desktop, with native backends for `sway`, `swww`, `hyprpaper`, `x11`
-  (feh/xwallpaper), plus a generic `command` backend for GNOME / KDE / XFCE and anything else.
-- **One-command setup:** `greyline init` detects your desktop, writes a config, and schedules
-  updates.
-
-| `blue` theme | home city accented | minimal, no logo, 12h |
-|---|---|---|
-| ![blue theme](docs/screenshots/blue.png) | ![home city highlighted](docs/screenshots/home.png) | ![minimal, 12-hour](docs/screenshots/minimal.png) |
-
-## Requirements
-
-- **OS:** Linux, **Wayland or X11** (the supported, tested target). Architectures: `x86_64`
-  and `aarch64`. **Windows and macOS have beta, untested support** — see
-  [Windows & macOS (beta)](#windows--macos-beta).
-- **Python ≥ 3.11**, only when installing via pip/pipx/uv (the Nix package bundles its own).
-- **Runtime dependencies:** [Pillow](https://python-pillow.org/) and
-  [tomlkit](https://github.com/sdispater/tomlkit), installed automatically; plus **fontconfig**
-  (`fc-match`) for font resolution.
-- **A wallpaper mechanism for your desktop:** one of the tools in the table below.
-- **Scheduling:** a **systemd** user timer (most distros) *or* any session autostart running
-  `greyline watch` (Runit/OpenRC/s6/… — no systemd required).
-
-greyline is **distro-agnostic**: install it with pipx/uv on any distribution, or via the Nix
-flake on NixOS. Supported desktops and what each needs:
-
-| Desktop / compositor | Backend | Needs |
-|---|---|---|
-| **sway** / SwayFX | `sway` | `swaymsg` + `swaybg` |
-| **Hyprland**, river, Wayfire, other wlroots | `swww` or `hyprpaper` | `swww` / `hyprpaper` daemon |
-| **X11** window managers | `x11` | `feh` or `xwallpaper` |
-| **GNOME** | `command` | `gsettings` |
-| **KDE Plasma** | `command` | `plasma-apply-wallpaperimage` |
-| **XFCE** | `command` | `xfconf-query` |
-| anything else with a CLI wallpaper-setter | `command` | your own command |
-
-`greyline init` detects your desktop and picks the backend for you; the `command`-backend rows
-are **community-verified** (see [Contributing](#contributing)).
-
-## Installation
-
-### pipx / uv (any distro, any desktop)
+## Install
 
 ```sh
 pipx install greyline    # or: uv tool install greyline
-greyline init            # detect your desktop, write a config, schedule updates
+greyline init
 ```
 
-`greyline init` writes a starter `~/.config/greyline/config.toml`, auto-detects your
-compositor/desktop and picks the backend (on **GNOME / KDE / XFCE** it fills in the right
-wallpaper command for you), and (where systemd is present) installs and enables the
-once-a-minute user timer. No `git clone`, no hand-copied units.
+`init` detects your compositor, picks a backend, writes
+`~/.config/greyline/config.toml`, and where systemd is present enables a user timer that
+fires every minute. On GNOME, KDE and XFCE it fills in the wallpaper command for you.
+Without systemd, put `greyline watch` in your session autostart instead.
 
-### Nix (flake + home-manager) — recommended on NixOS
+You need Linux on Wayland or X11, Python 3.11 or newer, and a wallpaper tool for your
+desktop: `swaybg`, `swww`, `hyprpaper`, `feh` or `xwallpaper`, or the one your desktop
+environment already ships. The wiki covers
+[Nix and home-manager](https://github.com/cothinking-dev/greyline/wiki/Installation#nix-with-home-manager)
+and the beta
+[Windows and macOS](https://github.com/cothinking-dev/greyline/wiki/Installation#windows-and-macos)
+backends.
 
-```nix
-# flake.nix
-inputs.greyline.url = "github:cothinking-dev/greyline";
-
-# home-manager
-imports = [ inputs.greyline.homeManagerModules.default ];
-
-services.greyline = {
-  enable = true;
-  backend = "sway";              # auto | sway | swww | hyprpaper | x11 | command
-  settings = {
-    theme = "modus";
-    font_family = "Aporetic Sans";  # resolved via fontconfig
-    format = "24h";
-    twilight = { bands = true; darkness = "subtle"; };
-    home = { tz = "auto"; column_highlight = true; };  # "auto" = system tz
-    city = [
-      { name = "Kuala Lumpur"; lat = 3.14;  lon = 101.69; tz = "Asia/Kuala_Lumpur"; }
-      { name = "London";       lat = 51.51; lon = -0.13;  tz = "Europe/London"; }
-      { name = "New York";     lat = 40.71; lon = -74.01; tz = "America/New_York"; }
-      { name = "Tokyo";        lat = 35.68; lon = 139.69; tz = "Asia/Tokyo"; }
-    ];
-  };
-};
-```
-
-### Run without installing
+## Use
 
 ```sh
-nix run github:cothinking-dev/greyline -- --out wt.png --res 2560x1440   # writes a PNG
-uvx greyline --out wt.png --res 2560x1440                                # same, via PyPI
+greyline city add "Tokyo" 35.68 139.69 Asia/Tokyo --home
+greyline config set theme gruvbox-dark-hard
+greyline doctor                 # why isn't my wallpaper changing?
 ```
 
-### Windows & macOS (beta)
+Thirty-five themes ship, light and dark. Most are ports of the base16 schemes your editor
+and terminal already use, so the wallpaper matches them.
 
-> [!WARNING]
-> **Beta and untested on real hardware.** greyline is developed and tested on Linux. The
-> Windows and macOS backends are written against each platform's documented wallpaper API
-> but have **not been run on an actual Windows or Mac desktop** — only in CI (which renders
-> the image and exercises the code, but cannot verify the wallpaper visibly changes, since
-> CI runners are headless). The rendering itself is the same well-tested pure-Python/Pillow
-> code as on Linux. **Please [open an issue](https://github.com/cothinking-dev/greyline/issues)
-> to report whether it works** — success or failure both help.
->
-> Known limitations: **single combined desktop only** (no per-monitor wallpapers yet), and
-> **no automatic scheduling** — you run the update loop yourself (see below).
+| `blue` theme | home city marked | no logo, 12-hour |
+|---|---|---|
+| ![the blue theme, a light map on a deep blue ocean](https://raw.githubusercontent.com/cothinking-dev/greyline/main/docs/screenshots/blue.png) | ![a map with one city accented and its timezone column highlighted](https://raw.githubusercontent.com/cothinking-dev/greyline/main/docs/screenshots/home.png) | ![a minimal map with no corner logo and 12-hour clocks](https://raw.githubusercontent.com/cothinking-dev/greyline/main/docs/screenshots/minimal.png) |
 
-**Install** (Python ≥ 3.11; [Pillow](https://python-pillow.org/) ships wheels for both OSes):
+The full reference is built in. It is generated from the same files the renderer reads,
+so it describes the version you actually have:
 
 ```sh
-pipx install greyline      # or: pip install greyline
+greyline help                 # every command; `greyline help city add` for one
+greyline help keys            # every config key, its values and its default
+greyline help topics          # themes, backends, desktops
 ```
 
-**Run** — greyline auto-detects the `windows` / `macos` backend. Update once, or loop:
-
-```sh
-greyline --list-outputs    # sanity-check detection
-greyline                   # render + set the wallpaper once
-greyline watch             # keep it updating (foreground; Ctrl-C to stop)
-```
-
-You can also force the backend explicitly with `--backend windows` / `--backend macos`, or
-set `backend = "windows"` / `"macos"` in the config file.
-
-**Keep it running in the background** — there's no native service installer on these
-platforms yet, so wrap `greyline watch` in the OS scheduler:
-
-- **Windows** — Task Scheduler → *Create Task* → trigger *At log on* → action
-  *Start a program*: `greyline` with argument `watch`. (Or drop a shortcut to
-  `greyline watch` in `shell:startup`.)
-- **macOS** — a `~/Library/LaunchAgents/ing.cothink.greyline.plist` launchd agent whose
-  `ProgramArguments` are the path to `greyline` and `watch`, with `RunAtLoad` set; load it
-  with `launchctl load ~/Library/LaunchAgents/ing.cothink.greyline.plist`.
-
-**Fonts:** set `font_family` in the config (a fontconfig family name like `"DejaVu Sans"`, or a
-direct font-file path) and `font_scale` to size the label text; `--font-family` overrides the
-config for one run. greyline uses fontconfig (`fc-match`) on Linux; on Windows/macOS Pillow
-resolves a system font automatically (Segoe UI / Helvetica), falling back to a built-in font —
-so labels always render, though exact typography may differ from Linux. `fc-match` never fails
-— an uninstalled family silently resolves to a substitute — so greyline prints a warning to
-stderr when the font you asked for is not the one it got.
-
-On home-manager, set the font in `settings.font_family`. The old `services.greyline.fontFamily`
-option still works but is deprecated and warns. Note that declaring any `settings` makes
-home-manager own `~/.config/greyline/config.toml`, so `greyline config set` can no longer edit
-it — leave `settings` empty to keep managing the config imperatively.
-
-## Usage
-
-After `greyline init`, the wallpaper updates on its own. Everything else is subcommands:
-
-```
-greyline                          # render all outputs and apply (what the timer runs)
-greyline init                     # first-time setup: config + backend + scheduling
-greyline watch [--interval SEC]   # render+apply on a loop (any init system / WM)
-greyline config set <key> <val>   # also: get [key] / unset <key>   (edits the config file)
-greyline city add "<name>" <lat> <lon> <tz> [--home]   # also: list / remove "<name>"
-greyline enable | disable | status   # manage the systemd user timer
-greyline doctor                   # detected backend, outputs, session, timer
-greyline --list-outputs           # show detected backend + outputs
-greyline --out wt.png --res WxH   # render a PNG, no backend needed
-greyline help [<command>|<topic>] # help for any command, or a reference page
-```
-
-**Built-in help.** `greyline help <command>` works for nested commands too
-(`greyline help city add`), and `greyline help <topic>` prints a reference page —
-`keys` (every config key, its allowed values and default), `themes` (including your own),
-`backends`, and `desktops` (the GNOME/KDE/XFCE recipes). `greyline help topics` lists them.
-The pages are generated from the same files this README documents, so they never go stale.
-
-**Scheduling.** On systemd, `greyline init`/`greyline enable` install a user timer that runs
-every minute. **No systemd?** Any init system or WM works; skip the timer and add greyline to
-your session autostart:
-
-```sh
-greyline watch    # renders + applies every minute in the foreground
-```
-
-## Configuration
-
-Edit config from the CLI (comments in the file are preserved) or edit the file directly:
-
-```sh
-greyline city add "London" 51.51 -0.13 Europe/London --home
-greyline config set theme blue
-greyline config set twilight.darkness dramatic
-```
-
-The shipped [`worldtime/default-config.toml`](worldtime/default-config.toml) is the documented
-template. Keys:
-
-| Key | Values |
-|---|---|
-| `backend` | `auto` / `sway` / `swww` / `hyprpaper` / `x11` / `command` |
-| `command`, `resolution` | for the `command` backend (see below) |
-| `map_style` | `vector` (default) / `raster` (bring your own art) |
-| `theme`, `format` | a built-in or custom theme name (see [Themes](#themes)) · `24h`/`12h` |
-| `font_family`, `font_scale` | label font (family name or file path) · text-size multiplier |
-| `logo`, `logo_path`, `logo_invert`, `logo_scale`, `logo_max_height` | corner logo (default: Tux); `logo_max_height` caps height as a fraction of screen height |
-| `[twilight]` | `bands`, `darkness` (`subtle`/`medium`/`dramatic`) |
-| `[home]` | `tz` (`auto` or IANA), `column_highlight`, `color` |
-| `[colors]` | per-key overrides of the selected theme (see [Themes](#themes)) |
-| `[[city]]` | `name`, `lat`, `lon`, `tz`, optional `label_side` |
-
-### Themes
-
-Themes are TOML files, not code — 35 ship in [`worldtime/themes/`](worldtime/themes/).
-Two are greyline's own; the rest are ports of the
-[tinted-theming base16 schemes](https://github.com/tinted-theming/schemes) (MIT), so the
-wallpaper matches the palette your editor and terminal already use. Light schemes are
-first-class: the terminator, label plates and grid flip polarity with them.
-
-| Family | Names |
-|---|---|
-| greyline | `modus` (the default dark theme; `dark` is a permanent alias), `blue` (the classic IBM/Lenovo blue map) |
-| [Gruvbox](https://github.com/morhetz/gruvbox) | `gruvbox-{dark,light}-{hard,medium,soft}` |
-| [Everforest](https://github.com/sainnhe/everforest) | `everforest-{dark,light}-{hard,medium,soft}` |
-| [Rosé Pine](https://rosepinetheme.com/) | `rose-pine`, `rose-pine-moon`, `rose-pine-dawn` |
-| [Tokyo Night](https://github.com/tokyo-night) | `tokyo-night-{dark,storm,moon,light}` |
-| [Catppuccin](https://catppuccin.com/) | `catppuccin-{mocha,macchiato,frappe,latte}` |
-| others | `nord`, `dracula`, `solarized-{dark,light}`, `onedark`, `one-light`, `kanagawa`, `monokai`, `github-dark`, `github` |
-
-`greyline help themes` lists whatever is installed, yours included. The pre-0.7 names
-(`gruvbox`, `catppuccin`, `rosepine`, `tokyonight`) are permanent aliases for the variant
-they used to mean, so existing configs keep working.
-
-**Any other base16 scheme.** greyline bundles the popular families; the upstream repo has
-~340. Convert one with the script that generates the bundled palettes — it lives in this
-repo (`tools/`), so grab a checkout or just the one file:
-
-```sh
-git clone --depth 1 https://github.com/tinted-theming/schemes /tmp/schemes
-python tools/base16_to_theme.py /tmp/schemes/base16/ayu-dark.yaml \
-    --out ~/.config/greyline/themes
-greyline config set theme ayu-dark
-```
-
-It maps base16's slots to greyline's map roles (documented at the top of the script),
-follows the scheme's own `variant: light` for polarity, and needs nothing but the stdlib.
-
-**Custom themes.** Drop a TOML file in `~/.config/greyline/themes/` and select it by
-filename: `~/.config/greyline/themes/mytheme.toml` → `greyline config set theme mytheme`.
-Copy a packaged theme as a starting point — `modus.toml` documents every key. Colours are
-`"#rrggbb"` or `"#rrggbbaa"` (trailing alpha). A user file may be partial: a file with a
-built-in's name overrides that theme per key, and missing keys of a new theme fall back to
-`modus`.
-
-**One-off tweaks.** Override single colours of the selected theme from config.toml, no
-theme file needed:
-
-```toml
-theme = "gruvbox-dark-hard"
-
-[colors]
-home = "#d3869b"      # any theme key
-night_alpha = 20
-```
-
-Precedence: theme file < `[colors]` < `home.color`.
-
-### Desktop environments (GNOME / KDE / XFCE)
-
-On desktops that manage their own wallpaper, `greyline init` configures the generic `command`
-backend automatically: greyline renders a PNG and runs a command to set it as your wallpaper,
-with `{path}` (the PNG) and `{output}` substituted.
-
-greyline is **not** a live-wallpaper engine, so you don't need `swww`/`awww` or any wallpaper
-daemon on GNOME — it sets a static image through the desktop's own tool (`gsettings` on GNOME).
-
-> **Note:** this **replaces** your desktop wallpaper; it is not an overlay. greyline re-renders
-> and re-sets it each minute; the last image stays after greyline stops.
-
-To set the command by hand (`greyline config set command '…'`, or in the config file):
-
-```toml
-backend = "command"
-# resolution = "2560x1440"   # optional; else largest xrandr output, else 1920x1080
-# GNOME (empty-then-set defeats GNOME's same-URI cache; sets light + dark):
-command = 'gsettings set org.gnome.desktop.background picture-uri "" && gsettings set org.gnome.desktop.background picture-uri "file://{path}" && gsettings set org.gnome.desktop.background picture-uri-dark "file://{path}"'
-# KDE Plasma:
-command = 'plasma-apply-wallpaperimage {path}'
-# XFCE (the monitor segment varies — see: xfconf-query -c xfce4-desktop -l | grep last-image):
-command = 'xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image -s {path}'
-```
-
-These recipes are **best-effort / community-verified**; the maintainers run sway and can't test
-them directly. If yours needs a tweak, please [report it](#contributing).
+Those pages are on the web too:
+[Configuration](https://github.com/cothinking-dev/greyline/wiki/Configuration) ·
+[Themes](https://github.com/cothinking-dev/greyline/wiki/Themes) ·
+[Backends](https://github.com/cothinking-dev/greyline/wiki/Backends) ·
+[Desktop environments](https://github.com/cothinking-dev/greyline/wiki/Desktop-environments) ·
+[Troubleshooting](https://github.com/cothinking-dev/greyline/wiki/Troubleshooting)
 
 ## How it works
 
-A scheduler runs `greyline` once a minute; it renders a PNG per output and hands each to the
-detected backend, then exits.
-
-```mermaid
-flowchart LR
-    T["systemd timer<br/>or greyline watch"] --> G(greyline)
-    CFG["config.toml<br/>cities · theme · home"] --> G
-    G --> S["sun.py<br/>subsolar point<br/>+ terminator"]
-    G --> V["vectormap.py<br/>Natural Earth GeoJSON"]
-    S --> R["render.py<br/>compose map, clocks,<br/>terminator, labels"]
-    V --> R
-    R --> P["PNG per output"]
-    P --> B["backend<br/>sway · swww · hyprpaper<br/>x11 · command"]
-    B --> W(["desktop wallpaper"])
-```
-
-- **`sun.py`** — subsolar point + terminator/twilight boundary latitudes (pure astronomy math).
-- **`geo.py` / `vectormap.py`** — lon/lat → pixel projection; the vector map is drawn from
-  Natural Earth GeoJSON (supersampled for smooth coastlines).
-- **`render.py`** — composites map + overlays, then draws clocks at native resolution with smart
-  label placement (labels pick a side to avoid overlapping each other and the edges).
-- **`backends/`** — the only platform-specific code; everything else is portable.
-
-## Principles (north star)
-
-greyline optimises for **universal compatibility**, **performance & battery life**, and staying
-**lightweight** — in that order. These guide every change (see the
-[Road to v1](https://github.com/cothinking-dev/greyline/issues/10) tracker):
-
-- **No daemon; render once and exit.** A tick renders a PNG, hands it to your existing wallpaper
-  mechanism, and the process ends — nothing stays resident.
-- **Real-time updates and animations are deliberately out of scope.** A clock to the minute is the
-  contract; per-second redraws would burn battery for no real gain.
-- **No unbounded files or caches.** Artifacts are bounded and self-managing — e.g. the KDE refresh
-  fix ping-pongs *two* fixed buffers rather than writing a new timestamped file each minute.
-- **Solve desktop quirks at the edge.** Prefer a recipe/command tweak (e.g. GNOME's empty-then-set)
-  or a bounded mechanism over a background service or a growing pile of workaround state.
-
-When in doubt, a change should make greyline *lighter*, not heavier.
+`sun.py` computes the subsolar point and the terminator. `vectormap.py` draws the map
+from public-domain Natural Earth GeoJSON. `render.py` composites them and places the
+clocks at native resolution. A backend hands the finished PNG to your desktop. Only the
+backends are platform-specific, which is why the same renderer runs in the browser demo.
+The diagram is in
+[Architecture](https://github.com/cothinking-dev/greyline/wiki/Architecture).
 
 ## Contributing
 
-greyline is a **personal passion project**, built and maintained in spare time and released as
-**free and open-source software** (GPL-2.0-or-later). It's a labour of love, not a product.
-Issues, desktop-compatibility recipes, and pull requests are all welcome.
+Bug reports, desktop-compatibility recipes and pull requests are all welcome. The
+maintainer runs sway, so reports from GNOME, KDE and XFCE are the only way those recipes
+get verified. Start at
+[CONTRIBUTING.md](https://github.com/cothinking-dev/greyline/blob/main/CONTRIBUTING.md).
 
-- Found a bug, or a `command` recipe that needs tweaking on your desktop?
-  [Open an issue](https://github.com/cothinking-dev/greyline/issues/new/choose); there's a
-  dedicated **desktop-compatibility report** template for GNOME/KDE/XFCE.
-- Run the tests with `nix flake check`, or `pytest` in the dev shell.
-- Lint/format with [ruff](https://docs.astral.sh/ruff/) and type-check with mypy (both in
-  the dev shell, configured in `pyproject.toml`): `ruff check .`, `ruff format .`, `mypy`.
-  `nix flake check` runs all of them, so CI enforces what the dev shell provides.
+## License
 
-## Credits
-
-Code is **GPL-2.0-or-later**. It descends from Maxim Proskurnya's GPL "World Time Wallpaper"
-tribute; the concept and original artwork are © IBM/Lenovo.
-
-The default **vector** map uses public-domain **Natural Earth** data, and the default logo is
-**Tux** (Larry Ewing / GIMP); both are cleanly redistributable. The original IBM/Lenovo ThinkPad
-raster art and wordmark are **not** bundled; `map_style = "raster"` and the ThinkPad logo require
-you to supply those files yourself (see [`NOTICE`](NOTICE) and [`docs/CREDITS.md`](docs/CREDITS.md)).
-
-> Built with the assistance of AI coding tools.
+GPL-2.0-or-later. greyline descends from Maxim Proskurnya's GPL "World Time Wallpaper"
+tribute; the concept and the original artwork are © IBM/Lenovo and are not bundled here.
+The map is public-domain Natural Earth data and the default logo is Tux, by Larry Ewing.
+`map_style = "raster"` and the ThinkPad wordmark need art you supply yourself. See
+[NOTICE](https://github.com/cothinking-dev/greyline/blob/main/NOTICE) and
+[docs/CREDITS.md](https://github.com/cothinking-dev/greyline/blob/main/docs/CREDITS.md).

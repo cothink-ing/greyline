@@ -1,0 +1,42 @@
+name: Sync docs/wiki to the GitHub wiki
+
+# The wiki is a published copy of docs/wiki/, not a second source: four of its pages
+# are generated from `greyline help <topic>` by tools/gen_wiki.py (gated by
+# tests/test_wiki_docs.py) and the rest are hand-written in the repo, so they go
+# through review like code. Edits made in the wiki's web editor are overwritten.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/wiki/**"
+      - ".github/workflows/wiki.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: wiki
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: Clone the wiki
+        run: |
+          git clone \
+            "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.wiki.git" \
+            wiki
+      - name: Copy pages and push if anything changed
+        working-directory: wiki
+        run: |
+          rm -f ./*.md
+          cp ../docs/wiki/*.md .
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet && { echo "wiki already up to date"; exit 0; }
+          git commit -m "docs: sync from ${{ github.sha }}"
+          git push
