@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from worldtime import sun
+from greyline import sun
 
 
 def _utc(y, m, d, h=12):

@@ -9,7 +9,7 @@ from datetime import UTC, datetime
 
 from PIL import Image, ImageChops
 
-from worldtime import cache, render
+from greyline import cache, render
 
 CITIES = [
     {"name": "London", "lat": 51.51, "lon": -0.13, "tz": "Europe/London", "home": True},

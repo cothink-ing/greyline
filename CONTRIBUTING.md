@@ -35,7 +35,7 @@ Documentation has generators, and they are gated by tests:
 
 ```sh
 python tools/gen_wiki.py          # docs/wiki/*.md from `greyline help <topic>`
-python tools/sync_web_themes.py   # web/themes.js from worldtime/themes/*.toml
+python tools/sync_web_themes.py   # web/themes.js from greyline/themes/*.toml
 ```
 
 ## What a good change looks like
@@ -68,7 +68,7 @@ to specific work.
 There are three places documentation lives, and only one of them is written by hand for
 any given fact:
 
-- **`worldtime/helptext.py`** is the source of truth for the config keys, the theme list,
+- **`greyline/helptext.py`** is the source of truth for the config keys, the theme list,
   the backend list and the desktop recipes. Each is rendered from the data the renderer
   itself uses, so a `greyline help` page cannot describe a greyline that does not exist.
 - **`docs/wiki/`** is the GitHub wiki. Four of its pages are generated from the help

@@ -21,14 +21,18 @@ let
   swwwDaemon = "${lib.getExe cfg.swwwPackage}-daemon";
 in
 {
-  # `fontFamily` predates the freeform `settings` and duplicated its `font_family`
-  # key, which the unit then pinned as a CLI flag. Renaming keeps existing configs
-  # working (with a deprecation warning) and leaves one source of truth.
+  # `fontFamily` predated the freeform `settings` and duplicated its `font_family` key,
+  # which the unit then pinned as a CLI flag — so the module option quietly outranked
+  # the config file (#16). It was renamed in 0.7.3 and removed in 0.8.4; breaking
+  # changes are cheap before 1.0 and expensive after. This stays until 1.0 so that an
+  # unmigrated config gets a sentence explaining itself rather than home-manager's bare
+  # "option does not exist".
   imports = [
-    (lib.mkRenamedOptionModule
-      [ "services" "greyline" "fontFamily" ]
-      [ "services" "greyline" "settings" "font_family" ]
-    )
+    (lib.mkRemovedOptionModule [ "services" "greyline" "fontFamily" ] ''
+      services.greyline.fontFamily has been removed. Use
+      services.greyline.settings.font_family instead — it is the same value, written
+      into config.toml rather than pinned onto the unit's command line.
+    '')
   ];
 
   options.services.greyline = {

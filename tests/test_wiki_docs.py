@@ -29,7 +29,7 @@ def test_generated_pages_are_in_sync():
 
 
 def test_every_help_topic_has_a_page():
-    from worldtime import helptext
+    from greyline import helptext
 
     topics = set(helptext.topic_names()) - {"topics"}
     generated = {topic for _, topic, _, _ in _pages()}
@@ -61,13 +61,13 @@ def test_normalise_is_platform_independent(monkeypatch):
         [
             f"Your config: {sentinel}\\greyline\\config.toml",
             "Detected here: sway",
-            "  D:\\a\\greyline\\greyline\\worldtime\\themes\\modus.toml",
+            "  D:\\a\\greyline\\greyline\\greyline\\themes\\modus.toml",
         ]
     )
     assert gen_wiki._normalise(windows_output, sentinel) == "\n".join(
         [
             "Your config: ~/.config/greyline/config.toml",
-            "  worldtime/themes/modus.toml",
+            "  greyline/themes/modus.toml",
         ]
     )
 

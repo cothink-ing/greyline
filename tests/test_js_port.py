@@ -26,7 +26,7 @@ from zoneinfo import ZoneInfo
 
 import pytest
 
-from worldtime import geo, render, sun
+from greyline import geo, render, sun
 
 NODE = shutil.which("node")
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

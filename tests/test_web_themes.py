@@ -1,4 +1,4 @@
-"""The browser demo's palettes are generated from worldtime/themes/*.toml — this is
+"""The browser demo's palettes are generated from greyline/themes/*.toml — this is
 the check that keeps them from drifting apart again (they did, pre-0.7)."""
 
 import os

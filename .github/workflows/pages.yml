@@ -1,14 +1,14 @@
 name: Deploy demo to GitHub Pages
 
 # Publishes the live browser demo in web/ to GitHub Pages. The Natural Earth GeoJSON
-# is copied from worldtime/geodata/ at build time (not duplicated in git).
+# is copied from greyline/geodata/ at build time (not duplicated in git).
 # One-time setup: repo Settings → Pages → Source = "GitHub Actions".
 on:
   push:
     branches: [main]
     paths:
       - "web/**"
-      - "worldtime/geodata/**"
+      - "greyline/geodata/**"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -33,7 +33,7 @@ jobs:
         run: |
           mkdir -p _site/data
           cp web/*.html web/*.js _site/
-          cp worldtime/geodata/*.geojson _site/data/
+          cp greyline/geodata/*.geojson _site/data/
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5
         with:

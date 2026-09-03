@@ -6,6 +6,40 @@ All notable changes to greyline are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.8.4] — 2026-09-03
+
+### Changed
+- **The Python package is `greyline`, not `worldtime`.** The project, the binary, the
+  config directory and the systemd units have all been `greyline` since 0.1; the package
+  inside kept the working name the project started under, and it surfaced — in
+  `pip show -f greyline`, in `python -m worldtime`, in every traceback, and in the
+  `pythonImportsCheck` any distro packager has to write. Breaking changes are cheap
+  before 1.0 and expensive after, so it is `greyline` everywhere now. **If you import
+  greyline as a library, `from worldtime import …` becomes `from greyline import …`.**
+  Nothing changes for the CLI, the config file or the units. The two files under
+  `reference/` keep their upstream names, which were never ours.
+
+### Removed
+- **`services.greyline.fontFamily`.** Renamed to `settings.font_family` in 0.7.3 and
+  gone now. It is not a silent removal: home-manager will tell you the option was
+  removed and name its replacement. Installation documents setting the font from a
+  standing start, including the part people get wrong — installing the font itself,
+  because `fc-match` never fails, it substitutes.
+
+### Fixed
+- **A theme file that does not parse no longer falls back in silence.** `greyline config
+  set theme` has checked the name since 0.8.0, but a file that *exists* and is malformed
+  fell back to modus with nothing said anywhere: not on stderr, not in `doctor`, exit 0.
+  That is the shape of [#16] again with a different key. `doctor` now has a `theme:` line
+  naming the theme actually in use, why it fell back, and any colour values it had to
+  skip; the renderer says the same on stderr, so it lands in the journal instead of
+  depending on somebody thinking to run `doctor`.
+- **`greyline doctor` exits non-zero when something you asked for is not happening** — a
+  config value it cannot use, a theme that fell back, a font you named that is not
+  installed. A key greyline does not recognise stays a warning and exit 0: there is no
+  such setting to honour, and a leftover from another version must not fail a health
+  check. `greyline doctor` is now usable in a script.
+
 ## [0.8.3] — 2026-09-03
 
 ### Changed
@@ -484,6 +518,7 @@ All notable changes to greyline are documented here. The format is based on
 - Backends: `sway`, `swww`, `hyprpaper`, `x11` (feh/xwallpaper), auto-detected.
 - Nix flake + home-manager module; systemd user timer for once-a-minute rendering.
 
+[0.8.4]: https://github.com/cothink-ing/greyline/releases/tag/v0.8.4
 [0.8.3]: https://github.com/cothink-ing/greyline/releases/tag/v0.8.3
 [0.8.2]: https://github.com/cothink-ing/greyline/releases/tag/v0.8.2
 [0.8.1]: https://github.com/cothink-ing/greyline/releases/tag/v0.8.1

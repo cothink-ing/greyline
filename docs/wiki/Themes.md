@@ -32,7 +32,7 @@ Older names, kept working forever:
 Write your own: put a TOML palette at
   ~/.config/greyline/themes/<name>.toml
 using this as a starting point:
-  worldtime/themes/modus.toml
+  greyline/themes/modus.toml
 
 A user file whose name matches a built-in shadows it. Keys map semantic names to
 "#rrggbb" or "#rrggbbaa"; anything you omit falls back to the built-in.

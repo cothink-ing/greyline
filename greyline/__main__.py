@@ -17,7 +17,7 @@ import subprocess
 import sys
 import tempfile
 
-from . import __version__, backends, config, helptext, recipes, render, schema, service
+from . import __version__, backends, config, helptext, recipes, render, schema, service, themes
 
 DEFAULT_FONT_FAMILY = "Aporetic Sans"
 
@@ -119,6 +119,9 @@ def run_apply(args):
         print(f"error: {e}", file=sys.stderr)
         print("  run `greyline doctor` to see the config in effect", file=sys.stderr)
         return 1
+    for problem in themes.resolve(cfg.get("theme", "modus"))[2]:
+        print(f"warning: theme: {problem}", file=sys.stderr)
+
     cities = cfg.get("city", [])
 
     requested = args.font_family or cfg.get("font_family")
@@ -416,7 +419,12 @@ def _config_lines(path):
 
 
 def _font_line(args, cfg):
-    """The font asked for, where the request came from, and what fontconfig did with it."""
+    """(line, is the family actually in use the one that was asked for).
+
+    The flag is False only when a family the *user* named was substituted. The built-in
+    default is expected to be substituted on most systems — nobody asked for it — and a
+    box with no fontconfig at all cannot be judged either way, so neither counts.
+    """
     if getattr(args, "font_family", None):
         family, source = args.font_family, "--font-family"
     elif cfg.get("font_family"):
@@ -425,13 +433,14 @@ def _font_line(args, cfg):
         family, source = DEFAULT_FONT_FAMILY, "built-in default"
     path, matched = _fc_match(family)
     if path is None:
-        return f"font: {family} ({source}) — no fc-match on PATH; Pillow picks a fallback"
+        return f"font: {family} ({source}) — no fc-match on PATH; Pillow picks a fallback", True
     if _is_substitute(family, matched):
         return (
             f"font: {family} ({source}) — NOT INSTALLED, "
-            f"fontconfig substituted {matched.split(',')[0]}"
+            f"fontconfig substituted {matched.split(',')[0]}",
+            source == "built-in default",
         )
-    return f"font: {family} ({source}) -> {path}"
+    return f"font: {family} ({source}) -> {path}", True
 
 
 def _doctor_config(args):
@@ -462,6 +471,21 @@ def _doctor_config(args):
     return cfg, usable
 
 
+def _theme_lines(cfg):
+    """What the renderer will draw with, and anything it had to ignore to get there.
+
+    The font line has answered "did my setting take effect?" since 0.7.3; the theme
+    could not, and a theme file with a typo in it fell back to modus without a word
+    anywhere — same failure as #16, different key.
+    """
+    requested = cfg.get("theme", "modus")
+    resolved, path, problems = themes.resolve(requested)
+    where = "built-in" if path and path.startswith(themes.BUILTIN_DIR) else path
+    named = resolved if resolved == requested else f"{requested} -> {resolved}"
+    lines = [f"theme: {named} ({where})"] + [f"  ERROR — {p}" for p in problems]
+    return lines, not problems
+
+
 def cmd_doctor(args):
     print(
         f"greyline {__version__} · python {platform.python_version()} · "
@@ -487,7 +511,11 @@ def cmd_doctor(args):
             print(f"  note: {note}")
     except RuntimeError as e:
         print(f"backend: ERROR — {e}")
-    print(_font_line(args, cfg))
+    theme_lines, theme_ok = _theme_lines(cfg)
+    for line in theme_lines:
+        print(line)
+    font_line, font_ok = _font_line(args, cfg)
+    print(font_line)
     print(
         "systemd --user: "
         + (
@@ -496,7 +524,10 @@ def cmd_doctor(args):
             else "not available (use `greyline watch`)"
         )
     )
-    return 0 if usable else 1
+    # Non-zero when something you asked for is not happening — an unusable config value,
+    # a theme that fell back, a font you named that is not installed. An unknown config
+    # key is only a warning: greyline has no such setting to honour in the first place.
+    return 0 if usable and theme_ok and font_ok else 1
 
 
 def _subcommands(parser):

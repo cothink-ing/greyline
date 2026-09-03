@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from worldtime import render, themes
+from greyline import render, themes
 
 CITIES = [
     {"name": "London", "lat": 51.51, "lon": -0.13, "tz": "Europe/London", "home": True},

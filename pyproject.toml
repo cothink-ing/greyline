@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "greyline"
-version = "0.8.3"
+version = "0.8.4"
 description = "A live, multi-timezone world-time desktop wallpaper for Wayland/X11."
 readme = "README.md"
 requires-python = ">=3.11"          # tomllib + zoneinfo (stdlib)
@@ -33,7 +33,7 @@ classifiers = [
 ]
 
 [project.scripts]
-greyline = "worldtime.__main__:main"
+greyline = "greyline.__main__:main"
 
 [project.urls]
 Homepage = "https://github.com/cothink-ing/greyline"
@@ -74,7 +74,7 @@ allowed-confusables = ["−"]
 
 [tool.mypy]
 python_version = "3.11"
-files = ["worldtime", "tests", "tools"]
+files = ["greyline", "tests", "tools"]
 # The codebase is largely unannotated; still type-check function bodies.
 check_untyped_defs = true
 warn_redundant_casts = true
@@ -83,8 +83,8 @@ warn_unreachable = true
 no_implicit_optional = true
 
 [tool.setuptools]
-packages = ["worldtime", "worldtime.backends"]
+packages = ["greyline", "greyline.backends"]
 
 [tool.setuptools.package-data]
 # Explicit list (not assets/*.png) so locally-present IBM/Lenovo artwork is never packaged.
-worldtime = ["assets/tux.png", "default-config.toml", "geodata/*.geojson", "themes/*.toml"]
+greyline = ["assets/tux.png", "default-config.toml", "geodata/*.geojson", "themes/*.toml"]

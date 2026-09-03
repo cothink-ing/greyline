@@ -59,9 +59,23 @@ One key is not set here: `backend` is a module option, because the unit is wired
 (the swww daemon, `extraPackages`, unit ordering). Setting `settings.backend` is an
 evaluation error rather than a silent no-op.
 
-`services.greyline.fontFamily` is **deprecated** as of 0.7.3 — it is renamed to
-`settings.font_family`. Existing configs keep working and emit home-manager's standard
-rename warning; setting both spellings is an evaluation error.
+### Setting the font
+
+Put it in `settings`, like every other config key:
+
+```nix
+services.greyline.settings.font_family = "Iosevka Nerd Font";
+```
+
+It takes a fontconfig family name or a path to a font file. Make sure the font is
+actually installed (`fonts.packages` on NixOS, `home.packages` under home-manager) —
+`fc-match` never fails, it substitutes, so an uninstalled family silently becomes
+something else. `greyline doctor` prints the family it asked for, the file it got, and
+flags the substitution when they disagree.
+
+There was a separate `services.greyline.fontFamily` option before 0.7.3. It was renamed
+in 0.7.3 and removed in 0.8.4; if you still have it, home-manager will say so and point
+you at `settings.font_family`. Nothing else to do — the value is the same.
 
 ### `settings` and `greyline config set` are mutually exclusive
 

@@ -6,8 +6,8 @@ import tomllib
 
 import pytest
 
-from worldtime import __main__ as cli
-from worldtime import config, recipes, service
+from greyline import __main__ as cli
+from greyline import config, recipes, service
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 PYPROJECT = os.path.join(ROOT, "pyproject.toml")
@@ -104,23 +104,28 @@ def test_font_line_names_where_the_family_came_from(monkeypatch):
     monkeypatch.setattr(cli, "_fc_match", lambda q: ("/fonts/X.ttf", q.split(":")[0]))
     args = argparse.Namespace(font_family=None)
     assert cli._font_line(args, {}) == (
-        f"font: {cli.DEFAULT_FONT_FAMILY} (built-in default) -> /fonts/X.ttf"
+        f"font: {cli.DEFAULT_FONT_FAMILY} (built-in default) -> /fonts/X.ttf",
+        True,
     )
     assert cli._font_line(args, {"font_family": "Iosevka Nerd Font"}) == (
-        "font: Iosevka Nerd Font (config) -> /fonts/X.ttf"
+        "font: Iosevka Nerd Font (config) -> /fonts/X.ttf",
+        True,
     )
     args = argparse.Namespace(font_family="Iosevka Nerd Font")
     assert cli._font_line(args, {"font_family": "ignored"}) == (
-        "font: Iosevka Nerd Font (--font-family) -> /fonts/X.ttf"
+        "font: Iosevka Nerd Font (--font-family) -> /fonts/X.ttf",
+        True,
     )
 
 
 def test_font_line_flags_a_substitution_and_a_missing_fontconfig(monkeypatch):
     args = argparse.Namespace(font_family="Nope Grotesk")
     monkeypatch.setattr(cli, "_fc_match", lambda q: ("/fonts/DejaVuSans.ttf", "DejaVu Sans"))
-    assert "NOT INSTALLED, fontconfig substituted DejaVu Sans" in cli._font_line(args, {})
+    line, ok = cli._font_line(args, {})
+    assert "NOT INSTALLED, fontconfig substituted DejaVu Sans" in line and not ok
     monkeypatch.setattr(cli, "_fc_match", lambda q: (None, None))
-    assert "no fc-match on PATH" in cli._font_line(args, {})
+    line, ok = cli._font_line(args, {})
+    assert "no fc-match on PATH" in line and ok
 
 
 def test_detect_desktop_matches_case_insensitively():
@@ -330,7 +335,7 @@ def test_help_topics_render_from_live_data(capsys):
 
 
 def test_help_topic_list_matches_the_topics_epilog_advertises():
-    from worldtime import helptext
+    from greyline import helptext
 
     for name in helptext.topic_names():
         assert name in helptext.HELP_EPILOG
@@ -351,3 +356,19 @@ def test_bare_config_and_city_print_help_instead_of_an_argparse_error(capsys):
     for argv in (["config"], ["city"]):
         assert cli.main(argv) == 1
         assert "Examples:" in capsys.readouterr().out
+
+
+def test_theme_lines_flag_a_fallback_and_stay_quiet_otherwise(tmp_path, monkeypatch):
+    lines, ok = cli._theme_lines({"theme": "gruvbox-dark-hard"})
+    assert lines == ["theme: gruvbox-dark-hard (built-in)"] and ok
+
+    lines, ok = cli._theme_lines({"theme": "catppuccin"})
+    assert lines == ["theme: catppuccin -> catppuccin-mocha (built-in)"] and ok
+
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    d = tmp_path / "greyline" / "themes"
+    d.mkdir(parents=True)
+    (d / "broken.toml").write_text("this is [not toml")
+    lines, ok = cli._theme_lines({"theme": "broken"})
+    assert lines[0] == "theme: broken -> modus (built-in)"
+    assert "not valid TOML" in lines[1] and not ok

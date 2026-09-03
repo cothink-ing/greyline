@@ -5,7 +5,7 @@ bundles the following third-party data and assets under their own terms.
 
 ## Natural Earth — map data (public domain)
 
-The default vector map is drawn from Natural Earth data in `worldtime/geodata/`:
+The default vector map is drawn from Natural Earth data in `greyline/geodata/`:
 
 - `ne_110m_land.geojson`
 - `ne_110m_admin_0_countries.geojson`
@@ -24,7 +24,7 @@ and `python tools/prep_geodata.py --check` verifies the shipped files match it.
 
 ## Tux — default corner logo (Larry Ewing)
 
-`worldtime/assets/tux.png` is Tux, the Linux mascot, created by **Larry Ewing**
+`greyline/assets/tux.png` is Tux, the Linux mascot, created by **Larry Ewing**
 (`lewing@isc.tamu.edu`) using **GIMP**.
 
 > Permission to use and/or modify this image is granted provided you acknowledge

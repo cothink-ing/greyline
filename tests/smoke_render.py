@@ -11,7 +11,7 @@ import sys
 import tempfile
 import tomllib
 
-from worldtime import config, render
+from greyline import config, render
 
 
 def main():

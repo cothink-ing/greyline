@@ -37,9 +37,22 @@ makes the config a read-only symlink into the Nix store; `doctor` marks it
 `greyline config set` cannot write to it. See
 [Installation](Installation#settings-and-greyline-config-set-are-mutually-exclusive).
 
-The `font:` line names where the family came from — `config`, `--font-family`, or
-`built-in default`. If you set `font_family` and it still says `built-in default`,
-greyline never saw your config.
+**greyline read it but could not use it.** `doctor` has a line per setting that can
+quietly fall back:
+
+- `theme:` names the theme actually in use. `theme: mytheme -> modus` means yours could
+  not be loaded, and the line under it says why — a file that is not valid TOML, or a
+  name that does not exist. Colour values it had to skip are listed too, so a stray
+  `ocean = "nope"` is visible rather than merely ignored.
+- `font:` names where the family came from — `config`, `--font-family`, or
+  `built-in default` — and whether fontconfig substituted something else. `fc-match`
+  never fails; an uninstalled family silently becomes another one.
+
+**Exit code.** `greyline doctor` exits non-zero when something you asked for is not
+happening: a config value it cannot use, a theme that fell back, a font you named that
+is not installed. A key greyline does not recognise is only a warning — there is no
+such setting to honour, so it is ignored and your wallpaper keeps working. That makes
+`greyline doctor` usable in a script.
 
 ## The wallpaper never changes
 

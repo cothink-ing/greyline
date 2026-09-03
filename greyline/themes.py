@@ -1,6 +1,6 @@
 """Theme loading: built-in and user TOML palettes.
 
-Themes are data, not code — worldtime/themes/*.toml ships the built-ins, and
+Themes are data, not code — greyline/themes/*.toml ships the built-ins, and
 ~/.config/greyline/themes/*.toml (XDG-aware) lets users add new themes or
 override built-ins per key. Each file maps semantic keys to hex colours
 ("#rrggbb" or "#rrggbbaa"); see themes/modus.toml for the reference schema.
@@ -117,21 +117,58 @@ def builtin_themes():
     return {name: _apply({}, _parse(path)) for name, path in _scan(BUILTIN_DIR).items()}
 
 
+def resolve(name):
+    """(theme actually used, its file, [problems]) for a requested theme name.
+
+    `load_theme` must not fail — a theme file with a typo in it cannot be allowed to
+    stop a wallpaper that redraws every minute — so it falls back to modus and carries
+    on. That silence is right for the renderer and wrong for the person who asked for
+    one theme and got another, which is the shape of bug #16. Both go through here, so
+    what `greyline doctor` reports is what the renderer did, not a second guess at it.
+
+    `problems` is empty when the theme loaded exactly as asked.
+    """
+    avail = available_themes()
+    resolved = name if name in avail else ALIASES.get(name, name)
+    path = avail.get(resolved)
+    fallback = avail.get(DEFAULT_THEME)
+
+    if path is None:
+        return DEFAULT_THEME, fallback, [f"no theme named {name!r} — using {DEFAULT_THEME}"]
+
+    parsed = _parse(path)
+    if parsed is None:
+        return DEFAULT_THEME, fallback, [f"{path} is not valid TOML — using {DEFAULT_THEME}"]
+
+    problems = []
+    unusable = sorted(
+        key
+        for key in COLOR_KEYS | {"logo", "label_bg"}
+        if key in parsed and _hex(parsed[key]) is None
+    )
+    if unusable:
+        problems.append(f"{path}: not a colour, ignored: {', '.join(unusable)}")
+    alpha = parsed.get("night_alpha")
+    if alpha is not None and not (
+        isinstance(alpha, int) and not isinstance(alpha, bool) and 0 <= alpha <= 255
+    ):
+        problems.append(f"{path}: night_alpha={alpha!r} is not 0-255, ignored")
+    return resolved, path, problems
+
+
 def load_theme(name, overrides=None):
     """Return a render-ready colour dict for `name` (tuples, not hex strings).
 
     Merge order: modus base (sans optional extras) < same-name built-in < the
     selected file (user files shadow built-ins) < `overrides` (the [colors]
-    table). Unknown names and unreadable files fall back to modus silently.
+    table). Unknown names and unreadable files fall back to modus; `resolve` reports
+    why, and `greyline doctor` prints it.
 
     The built-in layer follows aliases even when a user file shadows one, so a
     partial ~/.config/greyline/themes/gruvbox.toml still inherits the rest of
     gruvbox-dark-hard rather than dropping all the way back to modus.
     """
-    avail = available_themes()
-    if name not in avail:
-        name = ALIASES.get(name, name)
-    path = avail.get(name)
+    name, path, _ = resolve(name)
     parsed = _parse(path) if path else None
 
     default = _parse(os.path.join(BUILTIN_DIR, DEFAULT_THEME + ".toml"))

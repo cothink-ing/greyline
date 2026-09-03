@@ -1,6 +1,6 @@
 """Geographic <-> pixel affine: anchor point and x round-trip."""
 
-from worldtime import geo
+from greyline import geo
 
 
 def test_origin_maps_to_offsets():

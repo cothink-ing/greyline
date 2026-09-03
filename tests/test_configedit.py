@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from worldtime import config, configedit
+from greyline import config, configedit
 
 
 @pytest.fixture

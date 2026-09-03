@@ -8,7 +8,7 @@ the config and the other checks the packaged defaults against the schema.
 
 import pytest
 
-from worldtime import config, render, schema
+from greyline import config, render, schema
 
 
 class _Recorder(dict):
@@ -149,7 +149,7 @@ def test_validate_accepts_good_values(key, value):
 
 def test_every_theme_colour_key_is_settable_under_colors():
     """`[colors]` overrides whatever a theme file can set, so the two must agree."""
-    from worldtime import themes
+    from greyline import themes
 
     for key in themes.COLOR_KEYS:
         assert schema.lookup(f"colors.{key}") is not None, f"colors.{key} is not settable"

@@ -2,7 +2,7 @@
 """Generate the wiki's reference pages from `greyline help <topic>`.
 
 The config keys, theme list, backend list and desktop recipes all already have a
-single source of truth in the code — worldtime/helptext.py renders them from
+single source of truth in the code — greyline/helptext.py renders them from
 default-config.toml, themes/*.toml and recipes.RECIPES. Before 0.8 the README
 kept a second, hand-maintained copy of each; this generates the web copy instead:
 
@@ -177,7 +177,7 @@ def render_all():
     with tempfile.TemporaryDirectory() as sentinel:
         os.environ["XDG_CONFIG_HOME"] = sentinel
         try:
-            from worldtime import helptext
+            from greyline import helptext
 
             return {
                 title: render_page(title, topic, blurb, addendum, helptext, sentinel)

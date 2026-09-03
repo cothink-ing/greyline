@@ -1,7 +1,7 @@
 // The default 10 cities (default-config.toml) plus the shared colour/label helpers.
 // Colours are [r,g,b] or [r,g,b,a] (a is 0–255); use rgba() to get a canvas string.
 
-// Palettes live in themes.js, generated from worldtime/themes/*.toml — the demo and
+// Palettes live in themes.js, generated from greyline/themes/*.toml — the demo and
 // the renderer must not drift. Re-exported here so importers keep one config module.
 export { THEMES, THEME_LABELS, THEME_ORDER } from "./themes.js";
 

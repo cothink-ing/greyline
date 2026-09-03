@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Prepare the bundled Natural Earth GeoJSON: drop unused properties, round coordinates.
 
-The files under worldtime/geodata/ are Natural Earth (public domain), but they are not
+The files under greyline/geodata/ are Natural Earth (public domain), but they are not
 byte-for-byte upstream — they are upstream put through this script, and this docstring
 is the record of what was done to them:
 
@@ -25,7 +25,7 @@ is the record of what was done to them:
 Together: 4.57 MB to 2.91 MB in the wheel, and 1.57 MB to 0.87 MB gzipped over the
 wire for the browser demo, whose first paint was dominated by the 10m timezone file.
 
-    python tools/prep_geodata.py --source /tmp/natural-earth --out worldtime/geodata
+    python tools/prep_geodata.py --source /tmp/natural-earth --out greyline/geodata
     python tools/prep_geodata.py --check   # fail if the bundled files are not prepared
 """
 
@@ -35,7 +35,7 @@ import os
 import sys
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-GEO_DIR = os.path.join(ROOT, "worldtime", "geodata")
+GEO_DIR = os.path.join(ROOT, "greyline", "geodata")
 
 PRECISION = 3
 

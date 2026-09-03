@@ -4,7 +4,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from worldtime import render, themes
+from greyline import render, themes
 
 CITIES = [
     {"name": "London", "lat": 51.51, "lon": -0.13, "tz": "Europe/London", "home": True},
@@ -183,3 +183,49 @@ def test_label_bg_reaches_the_render():
         CITIES, render.Options(theme="gruvbox-light-medium"), dt=DT, out_size=(320, 200)
     )
     assert img.size == (320, 200) and img.mode == "RGB"
+
+
+def test_resolve_reports_a_healthy_builtin_without_complaint():
+    resolved, path, problems = themes.resolve("gruvbox-dark-hard")
+    assert resolved == "gruvbox-dark-hard"
+    assert path.endswith("gruvbox-dark-hard.toml")
+    assert problems == []
+
+
+def test_resolve_follows_an_alias_silently():
+    resolved, _path, problems = themes.resolve("catppuccin")
+    assert resolved == "catppuccin-mocha" and problems == []
+
+
+def test_resolve_reports_an_unknown_name():
+    resolved, _path, problems = themes.resolve("no-such-theme")
+    assert resolved == themes.DEFAULT_THEME
+    assert problems and "no theme named" in problems[0]
+
+
+def test_resolve_reports_a_theme_file_that_does_not_parse(tmp_path, monkeypatch):
+    """The silent fallback that started this: the render must survive it, and say so."""
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    d = tmp_path / "greyline" / "themes"
+    d.mkdir(parents=True)
+    (d / "broken.toml").write_text("this is [not toml")
+
+    resolved, _path, problems = themes.resolve("broken")
+    assert resolved == themes.DEFAULT_THEME
+    assert problems and "not valid TOML" in problems[0]
+    # And the render still works, which is why the fallback exists at all.
+    assert themes.load_theme("broken") == themes.load_theme(themes.DEFAULT_THEME)
+
+
+def test_resolve_reports_values_it_had_to_ignore(tmp_path, monkeypatch):
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path))
+    d = tmp_path / "greyline" / "themes"
+    d.mkdir(parents=True)
+    (d / "sloppy.toml").write_text('ocean = "nope"\nhome = "#ff0000"\nnight_alpha = 900\n')
+
+    resolved, _path, problems = themes.resolve("sloppy")
+    assert resolved == "sloppy"
+    assert any("not a colour, ignored: ocean" in p for p in problems)
+    assert any("night_alpha=900" in p for p in problems)
+    # The good key still lands; only the unusable ones are dropped.
+    assert themes.load_theme("sloppy")["home"] == (255, 0, 0)

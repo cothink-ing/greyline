@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Generate web/themes.js from worldtime/themes/*.toml.
+"""Generate web/themes.js from greyline/themes/*.toml.
 
 The browser demo has to draw the same palettes as the renderer, and it can't read
 TOML. Before 0.7 the dict was hand-ported and drifted; with three dozen themes that
@@ -20,7 +20,7 @@ from pathlib import Path
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
-from worldtime import themes  # noqa: E402  (needs ROOT on the path first)
+from greyline import themes  # noqa: E402  (needs ROOT on the path first)
 
 OUT = os.path.join(ROOT, "web", "themes.js")
 FIRST = ["modus", "blue"]
@@ -36,7 +36,7 @@ def render_js():
     order = FIRST + [n for n in sorted(files) if n not in FIRST]
 
     lines = [
-        "// Themes for the browser demo — GENERATED from worldtime/themes/*.toml by",
+        "// Themes for the browser demo — GENERATED from greyline/themes/*.toml by",
         "// tools/sync_web_themes.py. Do not edit; edit the TOML and re-run it.",
         "// Colours are [r,g,b] or [r,g,b,a] (a is 0-255); use rgba() to get a canvas string.",
         "",

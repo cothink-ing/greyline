@@ -14,8 +14,8 @@ build/
 
 # IBM/Lenovo ThinkPad artwork — copyright IBM/Lenovo, NOT redistributable (see NOTICE).
 # Kept on disk for local/personal use but never committed to this repo.
-worldtime/assets/world.time.1400x1050.png
-worldtime/assets/thinkpad_logo.png
+greyline/assets/world.time.1400x1050.png
+greyline/assets/thinkpad_logo.png
 
 # local copy of geodata for the demo (the Pages workflow copies it at deploy)
 web/data/

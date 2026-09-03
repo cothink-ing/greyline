@@ -1,4 +1,4 @@
-// Themes for the browser demo — GENERATED from worldtime/themes/*.toml by
+// Themes for the browser demo — GENERATED from greyline/themes/*.toml by
 // tools/sync_web_themes.py. Do not edit; edit the TOML and re-run it.
 // Colours are [r,g,b] or [r,g,b,a] (a is 0-255); use rgba() to get a canvas string.
 

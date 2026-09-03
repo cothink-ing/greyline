@@ -32,7 +32,7 @@ logo = true                 # draw the bottom-left corner logo (bundled default:
 bar_height = 0              # px reserved at the bottom for a status bar (lifts the logo)
 
 # Override any colour of the selected theme without writing a theme file. Keys and
-# format as in the packaged worldtime/themes/*.toml ("#rrggbb" or "#rrggbbaa").
+# format as in the packaged greyline/themes/*.toml ("#rrggbb" or "#rrggbbaa").
 # [colors]
 # home = "#fabd2f"
 # night_alpha = 20

@@ -1,6 +1,6 @@
 """Config merge, home-city flagging, and render kwarg mapping."""
 
-from worldtime import config, render
+from greyline import config, render
 
 
 def test_deep_merge_is_recursive():

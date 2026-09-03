@@ -1,4 +1,4 @@
 """greyline — a live world-time desktop wallpaper (recreates the classic ThinkPad
 "World Time" Active Desktop)."""
 
-__version__ = "0.8.3"
+__version__ = "0.8.4"

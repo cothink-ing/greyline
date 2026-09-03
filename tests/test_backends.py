@@ -13,7 +13,7 @@ from pathlib import Path
 
 import pytest
 
-from worldtime.backends import command, macos, sway, swww, windows
+from greyline.backends import command, macos, sway, swww, windows
 
 
 def test_available_requires_command(monkeypatch):
@@ -393,7 +393,7 @@ def test_substitute_fills_both_placeholders():
 def test_substitute_leaves_the_shipped_recipes_byte_for_byte():
     """The GNOME recipe wraps {path} in its own quotes, so nothing may be added around
     the substitution — that is the reason this refuses rather than quoting."""
-    from worldtime import recipes
+    from greyline import recipes
 
     path = "/run/user/1000/greyline/eDP-1.png"
     for key, recipe in recipes.RECIPES.items():

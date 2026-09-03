@@ -39,7 +39,7 @@
             pkgs.python3Packages.pytestCheckHook
             pkgs.nodejs
           ];
-          pythonImportsCheck = [ "worldtime" ];
+          pythonImportsCheck = [ "greyline" ];
           doCheck = true;
           # pythonImportsCheckPhase cd's to $NIX_BUILD_TOP; return to the source so
           # pytest finds tests/.
