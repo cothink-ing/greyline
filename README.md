@@ -80,7 +80,7 @@ flake on NixOS. Supported desktops and what each needs:
 
 | Desktop / compositor | Backend | Needs |
 |---|---|---|
-| **sway** / SwayFX | `sway` | `swaymsg` |
+| **sway** / SwayFX | `sway` | `swaymsg` + `swaybg` |
 | **Hyprland**, river, Wayfire, other wlroots | `swww` or `hyprpaper` | `swww` / `hyprpaper` daemon |
 | **X11** window managers | `x11` | `feh` or `xwallpaper` |
 | **GNOME** | `command` | `gsettings` |

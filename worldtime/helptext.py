@@ -93,7 +93,7 @@ Diagnose a wallpaper that isn't updating: print the detected session, the resolv
 backend and its outputs, and whether the systemd user timer is available."""
 
 _BACKENDS = {
-    "sway": "sway and other wlroots compositors, via swaymsg IPC",
+    "sway": "sway / SwayFX, via swaymsg IPC and a swaybg client it manages itself",
     "swww": "the swww daemon on Wayland, via the swww client",
     "hyprpaper": "Hyprland's hyprpaper, via hyprctl",
     "x11": "bare X11 window managers, via feh or xwallpaper",

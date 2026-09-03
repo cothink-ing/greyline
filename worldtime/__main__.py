@@ -44,7 +44,8 @@ def _output_path(rt, name, rotate):
     path and it actually repaints. Capped at 2 files/output — no junk accumulation, unlike
     a per-tick timestamped file. Stateless across the fresh-process-per-tick model: write
     to whichever buffer is missing/older by mtime; the newest stays displayed until we swap.
-    Native backends (sway/swww/…) read file contents live, so they keep the single name.
+    Native backends (sway/swww/…) re-read the file on every apply, so they keep the single
+    name.
     """
     if not rotate:
         return os.path.join(rt, f"{name}.png")
@@ -363,6 +364,8 @@ def cmd_doctor(args):
         print(f"backend: {name}")
         for o in mod.outputs():
             print(f"  {o['name']}: {o['width']}x{o['height']} scale={o['scale']}")
+        for note in getattr(mod, "notes", list)():
+            print(f"  note: {note}")
     except RuntimeError as e:
         print(f"backend: ERROR — {e}")
     print(

@@ -80,12 +80,21 @@ in
 
     extraPackages = lib.mkOption {
       type = lib.types.listOf lib.types.package;
-      default = if useSwww then [ cfg.swwwPackage ] else [ pkgs.sway ];
-      defaultText = lib.literalExpression "[ pkgs.sway ] (or [ swwwPackage ] when backend = swww)";
+      default =
+        if useSwww then
+          [ cfg.swwwPackage ]
+        else
+          [
+            pkgs.sway
+            pkgs.swaybg
+          ];
+      defaultText = lib.literalExpression "[ pkgs.sway pkgs.swaybg ] (or [ swwwPackage ] for swww)";
       description = ''
         Runtime tools placed on the service PATH (e.g. the compositor's IPC client:
         swaymsg from sway, or swww / hyprland). fontconfig is always added.
-        Hyprland users: set this to [ pkgs.hyprland ].
+        The sway backend also wants swaybg, which it starts itself to swap wallpapers
+        without the black flash `swaymsg output bg` causes; without it, it falls back to
+        `swaymsg output bg`. Hyprland users: set this to [ pkgs.hyprland ].
       '';
     };
 

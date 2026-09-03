@@ -5,6 +5,9 @@ Each backend module exposes:
     outputs()   -> list[dict]           # [{name, width, height, scale}, ...]
     apply(name, png_path) -> None       # set that output's wallpaper
 
+Optionally:
+    notes()     -> list[str]            # environment caveats for `greyline doctor`
+
 Auto-detection order favours the most specific compositor IPC first.
 """
 

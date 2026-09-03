@@ -4,6 +4,37 @@ All notable changes to greyline are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.7.2] — 2026-09-03
+
+### Fixed
+- **No more black flash when the sway wallpaper updates.** `swaymsg output <name> bg`
+  is not a live update: sway destroys the running swaybg client and forks a replacement,
+  so for as long as the new one takes to start and draw its first frame there is no
+  background layer surface and sway paints its default black. Invisible under a
+  fullscreen window, very visible in gaps, borders and around floating windows — once a
+  minute. The sway backend now manages swaybg itself: it starts the new instance, lets it
+  map (layer surfaces stack in creation order, so it covers the old wallpaper), and only
+  then stops the previous one. No frame is ever without a background. On multi-monitor
+  setups this also fixes every output flashing on each per-output update, since sway's
+  respawn tore down *all* backgrounds, not just the one being changed.
+
+  Each swaybg runs in a transient systemd user unit (`greyline-bg-<output>-a`/`-b`) so it
+  survives the oneshot `greyline.service` exiting, or as a detached child with a pidfile
+  where there is no systemd user manager. `swaybg` is therefore a new runtime dependency
+  of the `sway` backend; without it greyline falls back to the old `swaymsg output bg`
+  path and `greyline doctor` says so. The handover delay defaults to 0.5s and is tunable
+  with `GREYLINE_SWAYBG_SETTLE`.
+
+### Changed
+- The **swww** backend now crossfades (`--transition-type fade`, 0.3s) instead of cutting
+  hard. swww is buffered, so the transition costs nothing and reads better at a
+  once-a-minute cadence. `GREYLINE_SWWW_TRANSITION` / `GREYLINE_SWWW_DURATION` override
+  it (`none` restores the previous instant swap).
+- `greyline doctor` prints backend notes when a backend has environment caveats to
+  report (new optional `notes()` hook in the backend contract).
+- Nix: the home-manager module's default `extraPackages` for the sway backend is now
+  `[ pkgs.sway pkgs.swaybg ]`.
+
 ## [0.7.1] — 2026-08-18
 
 ### Added

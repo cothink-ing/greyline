@@ -14,6 +14,11 @@ import re
 import shutil
 import subprocess
 
+TRANSITION_ENV = "GREYLINE_SWWW_TRANSITION"
+DEFAULT_TRANSITION = "fade"
+DURATION_ENV = "GREYLINE_SWWW_DURATION"
+DEFAULT_DURATION = "0.3"
+
 
 def _client():
     return os.environ.get("SWWW") or shutil.which("swww") or shutil.which("awww")
@@ -47,9 +52,24 @@ def outputs():
 
 
 def apply(name, png_path):
+    """Swap this output's wallpaper. A short crossfade by default — swww is buffered, so
+    the transition is free and reads better than a hard cut once a minute. Set
+    GREYLINE_SWWW_TRANSITION=none (and/or GREYLINE_SWWW_DURATION) for an instant swap."""
     cli = _client()
+    transition = os.environ.get(TRANSITION_ENV) or DEFAULT_TRANSITION
+    duration = os.environ.get(DURATION_ENV) or DEFAULT_DURATION
     subprocess.run(
-        [cli, "img", "--outputs", name, "--transition-type", "none", png_path],
+        [
+            cli,
+            "img",
+            "--outputs",
+            name,
+            "--transition-type",
+            transition,
+            "--transition-duration",
+            duration,
+            png_path,
+        ],
         capture_output=True,
         text=True,
         check=True,
