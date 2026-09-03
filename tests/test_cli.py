@@ -1,9 +1,25 @@
 """CLI plumbing: DE recipe detection, systemd unit generation, init, watch loop."""
 
+import os
+import tomllib
+
 import pytest
 
 from worldtime import __main__ as cli
 from worldtime import config, recipes, service
+
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PYPROJECT = os.path.join(ROOT, "pyproject.toml")
+
+
+@pytest.mark.skipif(
+    not os.path.exists(PYPROJECT), reason="pyproject ships with the repo, not the package"
+)
+def test_version_matches_pyproject():
+    """publish.yml gates the release tag on pyproject's version and flake.nix derives
+    from it, so this is the one remaining copy that could drift."""
+    with open(PYPROJECT, "rb") as f:
+        assert cli.__version__ == tomllib.load(f)["project"]["version"]
 
 
 def test_parse_res_valid():

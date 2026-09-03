@@ -17,7 +17,10 @@
         pkgs:
         pkgs.python3Packages.buildPythonApplication {
           pname = "greyline";
-          version = "0.7.1";
+          # Derived, not duplicated: publish.yml gates releases on pyproject's version,
+          # and a hand-maintained copy here silently drifted (0.7.1 while pyproject was
+          # already 0.7.2).
+          version = (pkgs.lib.importTOML ./pyproject.toml).project.version;
           pyproject = true;
           src = ./.;
           build-system = [ pkgs.python3Packages.setuptools ];

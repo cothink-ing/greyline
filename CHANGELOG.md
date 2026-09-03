@@ -4,7 +4,7 @@ All notable changes to greyline are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.7.3] — 2026-09-03
 
 ### Changed
 - **The README is 99 lines instead of 404, and the reference material moved to the
@@ -333,6 +333,7 @@ All notable changes to greyline are documented here. The format is based on
 - Backends: `sway`, `swww`, `hyprpaper`, `x11` (feh/xwallpaper), auto-detected.
 - Nix flake + home-manager module; systemd user timer for once-a-minute rendering.
 
+[0.7.3]: https://github.com/cothink-ing/greyline/releases/tag/v0.7.3
 [0.7.1]: https://github.com/cothink-ing/greyline/releases/tag/v0.7.1
 [0.7.0]: https://github.com/cothink-ing/greyline/releases/tag/v0.7.0
 [0.6.0]: https://github.com/cothink-ing/greyline/releases/tag/v0.6.0
