@@ -36,7 +36,7 @@ The desktop is re-asserting its own wallpaper. On GNOME this is usually the same
 cache: setting `picture-uri` to a path it already holds is a no-op, which is why the
 bundled recipe sets it to the empty string first. If your desktop does something similar,
 the fix belongs in the command, not in a background process. Please
-[report the recipe that worked](https://github.com/cothinking-dev/greyline/issues/new/choose).
+[report the recipe that worked](https://github.com/cothink-ing/greyline/issues/new/choose).
 
 ## The clock is wrong, or a city sits in the wrong place
 
@@ -64,6 +64,6 @@ font file directly.
 
 Open an issue with the output of `greyline doctor` and `greyline --list-outputs`. If it
 concerns GNOME, KDE, XFCE or another desktop that manages its own wallpaper, use the
-[desktop-compatibility template](https://github.com/cothinking-dev/greyline/issues/new/choose):
+[desktop-compatibility template](https://github.com/cothink-ing/greyline/issues/new/choose):
 the maintainer runs sway and cannot reproduce those directly, so those reports are how
 the recipes get fixed.

@@ -3,7 +3,7 @@ name: Publish to PyPI
 # Publishes on every GitHub release. Uses PyPI Trusted Publishing (OIDC) —
 # no API token stored anywhere. Configure the trusted publisher once at
 # https://pypi.org/manage/project/greyline/settings/publishing/ with:
-#   owner=cothinking-dev  repo=greyline  workflow=publish.yml  environment=pypi
+#   owner=cothink-ing  repo=greyline  workflow=publish.yml  environment=pypi
 on:
   release:
     types: [published]

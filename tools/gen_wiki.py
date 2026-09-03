@@ -28,7 +28,7 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, ROOT)
 
 OUT_DIR = os.path.join(ROOT, "docs", "wiki")
-WIKI = "https://github.com/cothinking-dev/greyline/wiki"
+WIKI = "https://github.com/cothink-ing/greyline/wiki"
 
 CONFIGURATION_ADDENDUM = """\
 ## Precedence
@@ -76,7 +76,7 @@ stops.
 
 The recipes above are best-effort and community-verified: the maintainer runs
 sway and cannot test them directly. If yours needs a tweak, please
-[open a desktop-compatibility issue](https://github.com/cothinking-dev/greyline/issues/new/choose).
+[open a desktop-compatibility issue](https://github.com/cothink-ing/greyline/issues/new/choose).
 """
 
 PAGES = [

@@ -7,8 +7,8 @@ All notable changes to greyline are documented here. The format is based on
 ## [Unreleased]
 
 ### Changed
-- **The README is 97 lines instead of 402, and the reference material moved to the
-  [wiki](https://github.com/cothinking-dev/greyline/wiki).** The config-key table, the
+- **The README is 99 lines instead of 404, and the reference material moved to the
+  [wiki](https://github.com/cothink-ing/greyline/wiki).** The config-key table, the
   theme list and the GNOME/KDE/XFCE recipes were maintained by hand in the README *and*
   generated from the code by `helptext.py`, which is the exact duplication that module
   exists to prevent; the README's copies were already the lossier of the two. The wiki's
@@ -28,6 +28,11 @@ All notable changes to greyline are documented here. The format is based on
   of the three documentation surfaces is the source of truth for what.
 
 ### Fixed
+- **The live-demo link worked nowhere.** The GitHub organisation was renamed from
+  `cothinking-dev` to `cothink-ing`. Repository URLs survived on GitHub's redirect, so
+  nobody noticed, but Pages does not redirect across an owner rename and
+  `cothinking-dev.github.io/greyline/` had been answering 404. Every URL in the repo now
+  names the current organisation, the demo page's link back to GitHub included.
 - **`font_family` in `config.toml` was ignored under the home-manager module.** The
   generated unit appended `--font-family "${cfg.fontFamily}"` to `ExecStart`, and a CLI
   flag outranks the config file — so the module option's default won on every tick and
@@ -319,18 +324,18 @@ All notable changes to greyline are documented here. The format is based on
 - Backends: `sway`, `swww`, `hyprpaper`, `x11` (feh/xwallpaper), auto-detected.
 - Nix flake + home-manager module; systemd user timer for once-a-minute rendering.
 
-[0.7.1]: https://github.com/cothinking-dev/greyline/releases/tag/v0.7.1
-[0.7.0]: https://github.com/cothinking-dev/greyline/releases/tag/v0.7.0
-[0.6.0]: https://github.com/cothinking-dev/greyline/releases/tag/v0.6.0
-[0.5.5]: https://github.com/cothinking-dev/greyline/releases/tag/v0.5.5
-[0.5.4]: https://github.com/cothinking-dev/greyline/releases/tag/v0.5.4
-[0.5.3]: https://github.com/cothinking-dev/greyline/releases/tag/v0.5.3
-[0.5.2]: https://github.com/cothinking-dev/greyline/releases/tag/v0.5.2
-[0.5.1]: https://github.com/cothinking-dev/greyline/releases/tag/v0.5.1
-[0.5.0]: https://github.com/cothinking-dev/greyline/releases/tag/v0.5.0
-[0.4.2]: https://github.com/cothinking-dev/greyline/releases/tag/v0.4.2
-[0.4.1]: https://github.com/cothinking-dev/greyline/releases/tag/v0.4.1
-[0.4.0]: https://github.com/cothinking-dev/greyline/releases/tag/v0.4.0
-[0.3.0]: https://github.com/cothinking-dev/greyline/releases/tag/v0.3.0
-[0.2.0]: https://github.com/cothinking-dev/greyline/releases/tag/v0.2.0
-[0.1.0]: https://github.com/cothinking-dev/greyline/releases/tag/v0.1.0
+[0.7.1]: https://github.com/cothink-ing/greyline/releases/tag/v0.7.1
+[0.7.0]: https://github.com/cothink-ing/greyline/releases/tag/v0.7.0
+[0.6.0]: https://github.com/cothink-ing/greyline/releases/tag/v0.6.0
+[0.5.5]: https://github.com/cothink-ing/greyline/releases/tag/v0.5.5
+[0.5.4]: https://github.com/cothink-ing/greyline/releases/tag/v0.5.4
+[0.5.3]: https://github.com/cothink-ing/greyline/releases/tag/v0.5.3
+[0.5.2]: https://github.com/cothink-ing/greyline/releases/tag/v0.5.2
+[0.5.1]: https://github.com/cothink-ing/greyline/releases/tag/v0.5.1
+[0.5.0]: https://github.com/cothink-ing/greyline/releases/tag/v0.5.0
+[0.4.2]: https://github.com/cothink-ing/greyline/releases/tag/v0.4.2
+[0.4.1]: https://github.com/cothink-ing/greyline/releases/tag/v0.4.1
+[0.4.0]: https://github.com/cothink-ing/greyline/releases/tag/v0.4.0
+[0.3.0]: https://github.com/cothink-ing/greyline/releases/tag/v0.3.0
+[0.2.0]: https://github.com/cothink-ing/greyline/releases/tag/v0.2.0
+[0.1.0]: https://github.com/cothink-ing/greyline/releases/tag/v0.1.0

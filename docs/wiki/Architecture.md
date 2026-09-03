@@ -47,5 +47,5 @@ minute, and that is the shape every such fix should take.
 empty-then-set, over a background service or a growing pile of workaround state.
 
 When in doubt, a change should make greyline lighter, not heavier. The
-[Road to v1](https://github.com/cothinking-dev/greyline/issues/10) tracker is where this
+[Road to v1](https://github.com/cothink-ing/greyline/issues/10) tracker is where this
 gets applied to specific work.

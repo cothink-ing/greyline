@@ -11,6 +11,6 @@
 
 ---
 
-- [Live demo](https://cothinking-dev.github.io/greyline/)
-- [Repository](https://github.com/cothinking-dev/greyline)
-- [Changelog](https://github.com/cothinking-dev/greyline/blob/main/CHANGELOG.md)
+- [Live demo](https://cothink-ing.github.io/greyline/)
+- [Repository](https://github.com/cothink-ing/greyline)
+- [Changelog](https://github.com/cothink-ing/greyline/blob/main/CHANGELOG.md)

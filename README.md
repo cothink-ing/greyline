@@ -1,10 +1,10 @@
 # greyline
 
-[![CI](https://github.com/cothinking-dev/greyline/actions/workflows/ci.yml/badge.svg)](https://github.com/cothinking-dev/greyline/actions/workflows/ci.yml)
+[![CI](https://github.com/cothink-ing/greyline/actions/workflows/ci.yml/badge.svg)](https://github.com/cothink-ing/greyline/actions/workflows/ci.yml)
 [![PyPI](https://img.shields.io/pypi/v/greyline.svg)](https://pypi.org/project/greyline/)
-[![License: GPL v2+](https://img.shields.io/badge/License-GPLv2%2B-blue.svg)](https://github.com/cothinking-dev/greyline/blob/main/LICENSE)
+[![License: GPL v2+](https://img.shields.io/badge/License-GPLv2%2B-blue.svg)](https://github.com/cothink-ing/greyline/blob/main/LICENSE)
 
-![greyline on a dark theme: a world map with city clocks and a day/night terminator](https://raw.githubusercontent.com/cothinking-dev/greyline/main/docs/screenshots/hero.png)
+![greyline on a dark theme: a world map with city clocks and a day/night terminator](https://raw.githubusercontent.com/cothink-ing/greyline/main/docs/screenshots/hero.png)
 
 <sub>Shown with the ThinkPad wordmark, which you supply yourself. The bundled logo is Tux.</sub>
 
@@ -12,9 +12,9 @@
 > your cities, your home city marked, and a day/night terminator that tracks the sun.
 > A recreation of the IBM/ThinkPad **World Time** Active Desktop.
 
-[**Try it in your browser**](https://cothinking-dev.github.io/greyline/) ·
-[**Documentation**](https://github.com/cothinking-dev/greyline/wiki) ·
-[**Changelog**](https://github.com/cothinking-dev/greyline/blob/main/CHANGELOG.md)
+[**Try it in your browser**](https://cothink-ing.github.io/greyline/) ·
+[**Documentation**](https://github.com/cothink-ing/greyline/wiki) ·
+[**Changelog**](https://github.com/cothink-ing/greyline/blob/main/CHANGELOG.md)
 
 There is no daemon and no browser behind this. A scheduler runs greyline once a minute:
 it renders a PNG per output, hands each to the wallpaper mechanism you already use, and
@@ -37,9 +37,9 @@ Without systemd, put `greyline watch` in your session autostart instead.
 You need Linux on Wayland or X11, Python 3.11 or newer, and a wallpaper tool for your
 desktop: `swaybg`, `swww`, `hyprpaper`, `feh` or `xwallpaper`, or the one your desktop
 environment already ships. The wiki covers
-[Nix and home-manager](https://github.com/cothinking-dev/greyline/wiki/Installation#nix-with-home-manager)
+[Nix and home-manager](https://github.com/cothink-ing/greyline/wiki/Installation#nix-with-home-manager)
 and the beta
-[Windows and macOS](https://github.com/cothinking-dev/greyline/wiki/Installation#windows-and-macos)
+[Windows and macOS](https://github.com/cothink-ing/greyline/wiki/Installation#windows-and-macos)
 backends.
 
 ## Use
@@ -55,7 +55,7 @@ and terminal already use, so the wallpaper matches them.
 
 | `blue` theme | home city marked | no logo, 12-hour |
 |---|---|---|
-| ![the blue theme, a light map on a deep blue ocean](https://raw.githubusercontent.com/cothinking-dev/greyline/main/docs/screenshots/blue.png) | ![a map with one city accented and its timezone column highlighted](https://raw.githubusercontent.com/cothinking-dev/greyline/main/docs/screenshots/home.png) | ![a minimal map with no corner logo and 12-hour clocks](https://raw.githubusercontent.com/cothinking-dev/greyline/main/docs/screenshots/minimal.png) |
+| ![the blue theme, a light map on a deep blue ocean](https://raw.githubusercontent.com/cothink-ing/greyline/main/docs/screenshots/blue.png) | ![a map with one city accented and its timezone column highlighted](https://raw.githubusercontent.com/cothink-ing/greyline/main/docs/screenshots/home.png) | ![a minimal map with no corner logo and 12-hour clocks](https://raw.githubusercontent.com/cothink-ing/greyline/main/docs/screenshots/minimal.png) |
 
 The full reference is built in. It is generated from the same files the renderer reads,
 so it describes the version you actually have:
@@ -67,11 +67,11 @@ greyline help topics          # themes, backends, desktops
 ```
 
 Those pages are on the web too:
-[Configuration](https://github.com/cothinking-dev/greyline/wiki/Configuration) ·
-[Themes](https://github.com/cothinking-dev/greyline/wiki/Themes) ·
-[Backends](https://github.com/cothinking-dev/greyline/wiki/Backends) ·
-[Desktop environments](https://github.com/cothinking-dev/greyline/wiki/Desktop-environments) ·
-[Troubleshooting](https://github.com/cothinking-dev/greyline/wiki/Troubleshooting)
+[Configuration](https://github.com/cothink-ing/greyline/wiki/Configuration) ·
+[Themes](https://github.com/cothink-ing/greyline/wiki/Themes) ·
+[Backends](https://github.com/cothink-ing/greyline/wiki/Backends) ·
+[Desktop environments](https://github.com/cothink-ing/greyline/wiki/Desktop-environments) ·
+[Troubleshooting](https://github.com/cothink-ing/greyline/wiki/Troubleshooting)
 
 ## How it works
 
@@ -80,14 +80,14 @@ from public-domain Natural Earth GeoJSON. `render.py` composites them and places
 clocks at native resolution. A backend hands the finished PNG to your desktop. Only the
 backends are platform-specific, which is why the same renderer runs in the browser demo.
 The diagram is in
-[Architecture](https://github.com/cothinking-dev/greyline/wiki/Architecture).
+[Architecture](https://github.com/cothink-ing/greyline/wiki/Architecture).
 
 ## Contributing
 
 Bug reports, desktop-compatibility recipes and pull requests are all welcome. The
 maintainer runs sway, so reports from GNOME, KDE and XFCE are the only way those recipes
 get verified. Start at
-[CONTRIBUTING.md](https://github.com/cothinking-dev/greyline/blob/main/CONTRIBUTING.md).
+[CONTRIBUTING.md](https://github.com/cothink-ing/greyline/blob/main/CONTRIBUTING.md).
 
 ## License
 
@@ -95,5 +95,5 @@ GPL-2.0-or-later. greyline descends from Maxim Proskurnya's GPL "World Time Wall
 tribute; the concept and the original artwork are © IBM/Lenovo and are not bundled here.
 The map is public-domain Natural Earth data and the default logo is Tux, by Larry Ewing.
 `map_style = "raster"` and the ThinkPad wordmark need art you supply yourself. See
-[NOTICE](https://github.com/cothinking-dev/greyline/blob/main/NOTICE) and
-[docs/CREDITS.md](https://github.com/cothinking-dev/greyline/blob/main/docs/CREDITS.md).
+[NOTICE](https://github.com/cothink-ing/greyline/blob/main/NOTICE) and
+[docs/CREDITS.md](https://github.com/cothink-ing/greyline/blob/main/docs/CREDITS.md).

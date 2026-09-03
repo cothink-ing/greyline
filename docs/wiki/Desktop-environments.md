@@ -48,4 +48,4 @@ stops.
 
 The recipes above are best-effort and community-verified: the maintainer runs
 sway and cannot test them directly. If yours needs a tweak, please
-[open a desktop-compatibility issue](https://github.com/cothinking-dev/greyline/issues/new/choose).
+[open a desktop-compatibility issue](https://github.com/cothink-ing/greyline/issues/new/choose).
