@@ -38,14 +38,24 @@ _SLOTS = ("a", "b")
 
 
 def _runtime_base():
-    return os.environ.get("XDG_RUNTIME_DIR") or f"/run/user/{os.getuid()}"
+    """$XDG_RUNTIME_DIR, else /run/user/<uid>. Empty where the OS has no uids
+    (Windows), so the lookups below miss and `available()` answers False instead of
+    raising AttributeError at the caller."""
+    d = os.environ.get("XDG_RUNTIME_DIR")
+    if d:
+        return d
+    getuid = getattr(os, "getuid", None)
+    return f"/run/user/{getuid()}" if getuid else ""
 
 
 def _swaysock():
     s = os.environ.get("SWAYSOCK")
     if s and os.path.exists(s):
         return s
-    matches = sorted(glob.glob(os.path.join(_runtime_base(), "sway-ipc.*.sock")))
+    base = _runtime_base()
+    if not base:
+        return None
+    matches = sorted(glob.glob(os.path.join(base, "sway-ipc.*.sock")))
     return matches[0] if matches else None
 
 
@@ -57,9 +67,10 @@ def _wayland_display():
     d = os.environ.get("WAYLAND_DISPLAY")
     if d:
         return d
-    socks = sorted(
-        s for s in glob.glob(os.path.join(_runtime_base(), "wayland-*")) if not s.endswith(".lock")
-    )
+    base = _runtime_base()
+    if not base:
+        return None
+    socks = sorted(s for s in glob.glob(os.path.join(base, "wayland-*")) if not s.endswith(".lock"))
     return os.path.basename(socks[0]) if socks else None
 
 
@@ -113,8 +124,11 @@ def _settle():
 def _has_user_manager():
     """True if a systemd user manager is running for us — the same private socket
     systemctl itself looks for, so this costs no subprocess."""
-    return shutil.which("systemd-run") is not None and os.path.exists(
-        os.path.join(_runtime_base(), "systemd", "private")
+    base = _runtime_base()
+    return (
+        bool(base)
+        and shutil.which("systemd-run") is not None
+        and os.path.exists(os.path.join(base, "systemd", "private"))
     )
 
 
@@ -162,6 +176,15 @@ def _pidfile(name):
     return os.path.join(d, f"swaybg-{name}.pid")
 
 
+def _cmdline(pid):
+    """The process's argv bytes from procfs, or None where procfs is unreadable."""
+    try:
+        with open(f"/proc/{pid}/cmdline", "rb") as f:
+            return f.read()
+    except OSError:
+        return None
+
+
 def _recorded_pid(path):
     """The pid in ``path`` if it is still a live swaybg, else None — pids get reused,
     and greyline is a fresh process per tick so the file is all we carry over."""
@@ -170,15 +193,14 @@ def _recorded_pid(path):
             pid = int(f.read().strip())
     except (OSError, ValueError):
         return None
-    try:
-        with open(f"/proc/{pid}/cmdline", "rb") as f:
-            return pid if b"swaybg" in f.read() else None
-    except OSError:  # no procfs (non-Linux) — a bare liveness check is the best we can do
-        try:
-            os.kill(pid, 0)
-        except OSError:
-            return None
-        return pid
+    argv = _cmdline(pid)
+    if argv is not None:
+        return pid if b"swaybg" in argv else None
+    try:  # no procfs (non-Linux) — a bare liveness check is the best we can do
+        os.kill(pid, 0)
+    except OSError:
+        return None
+    return pid
 
 
 def _write_pid(path, pid):

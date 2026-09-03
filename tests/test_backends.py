@@ -315,9 +315,37 @@ def test_sway_apply_child_does_not_retire_old_when_new_dies(monkeypatch, no_sett
 def test_sway_recorded_pid_rejects_a_reused_pid(monkeypatch, tmp_path):
     pidfile = tmp_path / "swaybg-eDP-1.pid"
     pidfile.write_text("1")
-    monkeypatch.setattr(sway.os, "kill", lambda pid, sig: None)
-    assert sway._recorded_pid(str(pidfile)) is None  # pid 1 is not swaybg
+    monkeypatch.setattr(sway, "_cmdline", lambda pid: b"/sbin/init\x00")
+    assert sway._recorded_pid(str(pidfile)) is None  # live pid, but not swaybg
+    monkeypatch.setattr(sway, "_cmdline", lambda pid: b"swaybg\x00-o\x00eDP-1\x00")
+    assert sway._recorded_pid(str(pidfile)) == 1
     assert sway._recorded_pid(str(tmp_path / "missing.pid")) is None
+
+
+def test_sway_recorded_pid_falls_back_to_liveness_without_procfs(monkeypatch, tmp_path):
+    pidfile = tmp_path / "swaybg-eDP-1.pid"
+    pidfile.write_text("4242")
+    monkeypatch.setattr(sway, "_cmdline", lambda pid: None)
+    monkeypatch.setattr(sway.os, "kill", lambda pid, sig: None)
+    assert sway._recorded_pid(str(pidfile)) == 4242
+
+    def dead(pid, sig):
+        raise ProcessLookupError
+
+    monkeypatch.setattr(sway.os, "kill", dead)
+    assert sway._recorded_pid(str(pidfile)) is None
+
+
+def test_sway_unavailable_without_uids_instead_of_raising(monkeypatch):
+    monkeypatch.delenv("XDG_RUNTIME_DIR", raising=False)
+    monkeypatch.delenv("SWAYSOCK", raising=False)
+    monkeypatch.delattr(sway.os, "getuid", raising=False)
+    assert sway._runtime_base() == ""
+    assert sway._swaysock() is None
+    assert sway.available() is False
+    monkeypatch.delenv("WAYLAND_DISPLAY", raising=False)
+    assert sway._wayland_display() is None
+    assert sway._has_user_manager() is False
 
 
 def test_sway_notes_flags_a_missing_swaybg(monkeypatch):
