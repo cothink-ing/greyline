@@ -113,6 +113,15 @@ def test_coerce_rejects_values_of_the_wrong_type(key, raw):
     "key, value",
     [
         ("label_bg_alpha", 900),
+        # inf and nan survive float() and then crash round() in the renderer.
+        ("font_scale", float("inf")),
+        ("font_scale", float("nan")),
+        ("logo_scale", float("-inf")),
+        ("font_scale", 0.0),
+        ("font_scale", -1.0),
+        ("font_scale", 11.0),
+        ("logo_max_height", 1.5),
+        ("logo_max_height", -0.1),
         ("label_bg_alpha", -1),
         ("bar_height", -5),
         ("format", "48h"),
@@ -141,6 +150,11 @@ def test_validate_rejects_bad_values(key, value):
         ("colors.ocean", "#0b0e14"),
         ("resolution", "2560x1440"),
         ("theme", "gruvbox"),  # an alias, not a file
+        ("font_scale", 0.1),
+        ("font_scale", 10.0),
+        ("font_scale", 1),  # TOML gives an int where a float is fine
+        ("logo_max_height", 0.0),
+        ("logo_max_height", 1.0),
     ],
 )
 def test_validate_accepts_good_values(key, value):
@@ -160,3 +174,23 @@ def test_flatten_leaves_table_keys_whole():
     assert flat["theme"] == "blue"
     assert flat["home.tz"] == "auto"
     assert flat["city"] == [{"name": "X"}]
+
+
+@pytest.mark.parametrize("raw", ["inf", "-inf", "nan", "1e400"])
+def test_non_finite_floats_are_refused_end_to_end(raw):
+    """`float()` happily returns inf/nan, and `1e400` overflows to inf. Each one used
+    to be written out and then crash `round()` in the renderer on every tick — the
+    exact failure this schema was added to stop, for the one input shape it missed."""
+    value = schema.coerce("font_scale", raw)
+    with pytest.raises(ValueError, match="finite"):
+        schema.validate("font_scale", value)
+
+
+def test_every_float_key_is_bounded():
+    """An unbounded float key is one inf away from the bug above."""
+    unbounded = [
+        name
+        for name, key in schema.SCHEMA.items()
+        if key.kind == "float" and (key.minimum is None or key.maximum is None)
+    ]
+    assert not unbounded, f"float keys without bounds: {unbounded}"

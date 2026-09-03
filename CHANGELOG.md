@@ -6,6 +6,28 @@ All notable changes to greyline are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.8.5] — 2026-09-03
+
+Both of these came out of auditing the code the previous five releases added, rather
+than the code they were written to fix.
+
+### Fixed
+- **`font_scale = inf` was accepted and then crashed every render.** The schema added in
+  0.8.0 catches `font_scale = "huge"`, because a string is obviously not a number — but
+  `float()` returns happily for `inf` and `nan`, and `1e400` overflows to `inf` quietly.
+  All three were written to the config and then died in the renderer on `round()`, once
+  a minute, which is the precise failure the schema exists to prevent. Non-finite values
+  are refused now, and every float key carries a range: the scales must be positive, and
+  `logo_max_height` is a fraction of screen height so it stops at 1. A test asserts no
+  float key is left unbounded, because an unbounded one is one `inf` away from this bug.
+- **`greyline disable --purge` ended in a traceback under home-manager.** When the config
+  directory is a symlink into the Nix store — which is what declaring `settings` makes it
+  — `shutil.rmtree` refuses to follow it and raised `OSError` straight out of the command.
+  It now says the directory is managed declaratively and leaves it alone, which is also
+  the correct answer: deleting it would be undone by the next rebuild. Removing
+  `services.greyline` from your Nix config is what retires it. Any other unremovable path
+  is reported the same way, so `--purge` cannot end in a traceback.
+
 ## [0.8.4] — 2026-09-03
 
 ### Changed
@@ -518,6 +540,7 @@ All notable changes to greyline are documented here. The format is based on
 - Backends: `sway`, `swww`, `hyprpaper`, `x11` (feh/xwallpaper), auto-detected.
 - Nix flake + home-manager module; systemd user timer for once-a-minute rendering.
 
+[0.8.5]: https://github.com/cothink-ing/greyline/releases/tag/v0.8.5
 [0.8.4]: https://github.com/cothink-ing/greyline/releases/tag/v0.8.4
 [0.8.3]: https://github.com/cothink-ing/greyline/releases/tag/v0.8.3
 [0.8.2]: https://github.com/cothink-ing/greyline/releases/tag/v0.8.2

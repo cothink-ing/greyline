@@ -129,15 +129,28 @@ def user_state_paths():
 
 
 def purge():
-    """Remove the config and cache directories. Returns the paths it removed."""
+    """Remove the config and cache directories. Returns (removed, [(path, why)]).
+
+    A symlink is left alone and reported. Under home-manager the config is a link into
+    the Nix store: deleting it would either fail (rmtree refuses to follow a symlink) or,
+    worse, be undone on the next rebuild. Removing `services.greyline` from the Nix
+    config is what actually retires it, and saying so beats a traceback.
+    """
     import shutil as _shutil
 
-    removed = []
+    removed, skipped = [], []
     for path in user_state_paths():
-        if os.path.isdir(path):
+        if os.path.islink(path):
+            skipped.append((path, "managed declaratively — remove it from your Nix config"))
+            continue
+        if not os.path.isdir(path):
+            continue
+        try:
             _shutil.rmtree(path)
             removed.append(path)
-    return removed
+        except OSError as e:
+            skipped.append((path, str(e)))
+    return removed, skipped
 
 
 def status():

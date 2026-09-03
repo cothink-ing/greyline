@@ -21,6 +21,7 @@ Strictness deliberately differs by path:
 comments rather than declaring them, so only ten of the ~24 are readable from it.
 """
 
+import math
 from dataclasses import dataclass
 
 _RESOLUTION_HINT = "WxH, e.g. 2560x1440"
@@ -32,13 +33,12 @@ class Key:
 
     kind: str
     choices: frozenset[str] | None = None
-    minimum: int | None = None
-    maximum: int | None = None
+    minimum: float | None = None
+    maximum: float | None = None
 
 
 _B = Key("bool")
 _S = Key("str")
-_F = Key("float")
 _COLOR = Key("color")
 
 
@@ -54,13 +54,13 @@ SCHEMA: dict[str, Key] = {
     "theme": Key("theme"),
     "format": _enum("24h", "12h"),
     "font_family": _S,
-    "font_scale": _F,
+    "font_scale": Key("float", minimum=0.1, maximum=10.0),
     "logo": _B,
     "logo_path": _S,
     "logo_color": _COLOR,
     "logo_invert": _B,
-    "logo_scale": _F,
-    "logo_max_height": _F,
+    "logo_scale": Key("float", minimum=0.1, maximum=10.0),
+    "logo_max_height": Key("float", minimum=0.0, maximum=1.0),
     "bar_height": Key("int", minimum=0),
     "label_bg_alpha": Key("int", minimum=0, maximum=255),
     "label_background": _B,
@@ -149,6 +149,12 @@ def validate(dotted, value):
         raise ValueError(f"{dotted}: {value!r} is not a number")
     if key.kind in ("str", "color", "theme", "tz", "resolution") and not isinstance(value, str):
         raise ValueError(f"{dotted}: {value!r} is not text")
+
+    # inf and nan survive float(): `font_scale = inf` used to be written happily and
+    # then crash every render on `round()`, which is the failure this schema exists to
+    # stop. `1e400` reaches here as inf too.
+    if isinstance(value, float) and not math.isfinite(value):
+        raise ValueError(f"{dotted}: {value} is not a finite number")
 
     if key.minimum is not None and value < key.minimum:
         raise ValueError(f"{dotted}: {value} is below the minimum of {key.minimum}")

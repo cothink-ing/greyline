@@ -187,9 +187,10 @@ def test_purge_removes_config_and_cache(monkeypatch, tmp_path):
         (d / "file").write_text("x")
     monkeypatch.setattr(service, "user_state_paths", lambda: [str(cfg_dir), str(cache_dir)])
 
-    removed = service.purge()
+    removed, skipped = service.purge()
 
     assert sorted(removed) == sorted([str(cfg_dir), str(cache_dir)])
+    assert skipped == []
     assert not cfg_dir.exists() and not cache_dir.exists()
 
 
@@ -372,3 +373,43 @@ def test_theme_lines_flag_a_fallback_and_stay_quiet_otherwise(tmp_path, monkeypa
     lines, ok = cli._theme_lines({"theme": "broken"})
     assert lines[0] == "theme: broken -> modus (built-in)"
     assert "not valid TOML" in lines[1] and not ok
+
+
+def test_purge_leaves_a_declaratively_managed_config_alone(monkeypatch, tmp_path):
+    """Under home-manager the config directory is a symlink into the Nix store.
+    rmtree refuses to follow it, which used to surface as a traceback out of
+    `greyline disable --purge`; and deleting it would be undone on the next rebuild
+    anyway. Report it and move on."""
+    store = tmp_path / "store"
+    store.mkdir()
+    (store / "config.toml").write_text("theme = 'modus'\n")
+    link = tmp_path / "greyline"
+    link.symlink_to(store)
+    cache_dir = tmp_path / "cache"
+    cache_dir.mkdir()
+    monkeypatch.setattr(service, "user_state_paths", lambda: [str(link), str(cache_dir)])
+
+    removed, skipped = service.purge()
+
+    assert removed == [str(cache_dir)]
+    assert [p for p, _ in skipped] == [str(link)]
+    assert "managed declaratively" in skipped[0][1]
+    assert store.is_dir() and (store / "config.toml").exists()
+
+
+def test_purge_reports_a_directory_it_cannot_remove(monkeypatch, tmp_path):
+    """Any other OSError is reported too, so --purge never ends in a traceback."""
+    target = tmp_path / "greyline"
+    target.mkdir()
+    monkeypatch.setattr(service, "user_state_paths", lambda: [str(target)])
+
+    def boom(_path):
+        raise PermissionError(13, "Permission denied")
+
+    import shutil
+
+    monkeypatch.setattr(shutil, "rmtree", boom)
+
+    removed, skipped = service.purge()
+    assert removed == []
+    assert skipped and "Permission denied" in skipped[0][1]

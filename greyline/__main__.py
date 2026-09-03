@@ -391,8 +391,11 @@ def cmd_disable(args):
     if not args.purge:
         print("  kept your config and cache — `greyline disable --purge` removes those too")
         return 0
-    for path in service.purge():
+    removed, skipped = service.purge()
+    for path in removed:
         print(f"  removed {path}")
+    for path, why in skipped:
+        print(f"  kept {path} — {why}")
     return 0
 
 
