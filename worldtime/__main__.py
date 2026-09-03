@@ -11,6 +11,7 @@ plus the `greyline help <topic>` reference pages.
 
 import argparse
 import os
+import platform
 import shutil
 import subprocess
 import sys
@@ -388,7 +389,46 @@ def cmd_status(args):
     return 0
 
 
+def _config_lines(path):
+    """Which config is actually in effect — the first question a 'my setting does
+    nothing' report needs answered."""
+    if not os.path.isfile(path):
+        return [f"config: none at {path} — built-in defaults"]
+    lines = [f"config: {path}"]
+    if os.path.islink(path):
+        lines.append(
+            f"  symlink -> {os.path.realpath(path)} "
+            "(managed declaratively; `greyline config set` cannot edit it)"
+        )
+    return lines
+
+
+def _font_line(args, cfg):
+    """The font asked for, where the request came from, and what fontconfig did with it."""
+    if getattr(args, "font_family", None):
+        family, source = args.font_family, "--font-family"
+    elif cfg.get("font_family"):
+        family, source = cfg["font_family"], "config"
+    else:
+        family, source = DEFAULT_FONT_FAMILY, "built-in default"
+    path, matched = _fc_match(family)
+    if path is None:
+        return f"font: {family} ({source}) — no fc-match on PATH; Pillow picks a fallback"
+    if _is_substitute(family, matched):
+        return (
+            f"font: {family} ({source}) — NOT INSTALLED, "
+            f"fontconfig substituted {matched.split(',')[0]}"
+        )
+    return f"font: {family} ({source}) -> {path}"
+
+
 def cmd_doctor(args):
+    print(
+        f"greyline {__version__} · python {platform.python_version()} · "
+        f"{platform.system()} {platform.release()}"
+    )
+    for line in _config_lines(args.config or config.user_config_path()):
+        print(line)
     print(
         f"session: XDG_CURRENT_DESKTOP={os.environ.get('XDG_CURRENT_DESKTOP', '')!r} "
         f"XDG_SESSION_TYPE={os.environ.get('XDG_SESSION_TYPE', '')!r}"
@@ -399,21 +439,15 @@ def cmd_doctor(args):
         os.environ["GREYLINE_COMMAND"] = args.command or cfg.get("command")
     try:
         name, mod = backends.resolve(backend_name)
-        print(f"backend: {name}")
+        asked = "" if name == backend_name else f" (requested: {backend_name})"
+        print(f"backend: {name}{asked}")
         for o in mod.outputs():
             print(f"  {o['name']}: {o['width']}x{o['height']} scale={o['scale']}")
         for note in getattr(mod, "notes", list)():
             print(f"  note: {note}")
     except RuntimeError as e:
         print(f"backend: ERROR — {e}")
-    family = getattr(args, "font_family", None) or cfg.get("font_family") or DEFAULT_FONT_FAMILY
-    path, matched = _fc_match(family)
-    if path is None:
-        print(f"font: {family} — no fc-match on PATH; Pillow picks a fallback")
-    elif _is_substitute(family, matched):
-        print(f"font: {family} — NOT INSTALLED, fontconfig substituted {matched.split(',')[0]}")
-    else:
-        print(f"font: {family} -> {path}")
+    print(_font_line(args, cfg))
     print(
         "systemd --user: "
         + (

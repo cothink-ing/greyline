@@ -53,10 +53,29 @@ services.greyline = {
 ```
 
 `settings` becomes the generated `config.toml`, so every key on the
-[Configuration](Configuration) page is available there. The module owns two of them:
-`backend` is a module option because the unit is wired from it (the swww daemon,
-`extraPackages`), and `fontFamily` is shorthand for `settings.font_family`. Setting
-`settings.backend`, or both spellings of the font family, is an evaluation error.
+[Configuration](Configuration) page is available there.
+
+One key is not set here: `backend` is a module option, because the unit is wired from it
+(the swww daemon, `extraPackages`, unit ordering). Setting `settings.backend` is an
+evaluation error rather than a silent no-op.
+
+`services.greyline.fontFamily` is **deprecated** as of 0.7.3 — it is renamed to
+`settings.font_family`. Existing configs keep working and emit home-manager's standard
+rename warning; setting both spellings is an evaluation error.
+
+### `settings` and `greyline config set` are mutually exclusive
+
+Declaring anything in `settings` makes home-manager own `~/.config/greyline/config.toml`
+as a read-only symlink into the Nix store. That is the point of declaring it — but it
+means `greyline init` and `greyline config set` can no longer edit that file. Pick one:
+
+- **Declarative** — put every key in `settings`, including `font_family`, and change the
+  wallpaper by rebuilding.
+- **Imperative** — leave `settings = { }` and manage the file with `greyline init` and
+  `greyline config set`. The module still installs the package, the timer and the unit.
+
+`greyline doctor` tells you which of the two you are in: it prints the config file it
+loaded and flags it when the file is a managed symlink.
 
 ## Run it without installing
 

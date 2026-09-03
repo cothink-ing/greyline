@@ -6,10 +6,40 @@ Start here:
 greyline doctor
 ```
 
-It prints the session it detected (`XDG_CURRENT_DESKTOP`, `XDG_SESSION_TYPE`), the
-backend it resolved and the outputs that backend reports, whether the font you asked for
-is the font you got, and whether `systemd --user` is available. Most problems are visible
-in those five lines.
+The output is self-contained — version and platform, the config file actually in effect,
+the detected session, the resolved backend and its outputs, the font you asked for and
+the font you got, and whether `systemd --user` is available:
+
+```
+greyline 0.7.3 · python 3.13.2 · Linux 6.12.4
+config: /home/you/.config/greyline/config.toml
+session: XDG_CURRENT_DESKTOP='sway' XDG_SESSION_TYPE='wayland'
+backend: sway (requested: auto)
+  eDP-1: 1920x1200 scale=1.0
+font: Iosevka Nerd Font (config) -> /usr/share/fonts/.../IosevkaNerdFont-Regular.ttf
+systemd --user: available
+```
+
+Most problems are visible in those lines, and it is the right thing to paste into a bug
+or [compatibility report](https://github.com/cothink-ing/greyline/issues/10).
+
+## I changed a setting and nothing happened
+
+Two things can swallow an edit. `greyline doctor` distinguishes them.
+
+**You edited a file greyline does not read.** The `config:` line names the file actually
+loaded. If it says `none at …`, greyline is running on built-in defaults and your edit
+went somewhere else.
+
+**Something else owns that file.** Under the home-manager module, declaring `settings`
+makes the config a read-only symlink into the Nix store; `doctor` marks it
+`managed declaratively`. Edits belong in your Nix config, not in the file, and
+`greyline config set` cannot write to it. See
+[Installation](Installation#settings-and-greyline-config-set-are-mutually-exclusive).
+
+The `font:` line names where the family came from — `config`, `--font-family`, or
+`built-in default`. If you set `font_family` and it still says `built-in default`,
+greyline never saw your config.
 
 ## The wallpaper never changes
 
@@ -57,8 +87,12 @@ if the forced side would not fit. `font_scale` below 1.0 buys room on a crowded 
 
 `fc-match` always returns something, so a family that is not installed silently resolves
 to a substitute. `greyline doctor` says `NOT INSTALLED, fontconfig substituted …` when
-that happens. Install the family, or set `font_family` to one you have, or point it at a
-font file directly.
+that happens, and greyline warns on stderr on every render — check
+`journalctl --user -u greyline.service` if you are running under the timer. Install the
+family, or set `font_family` to one you have, or point it at a font file directly.
+
+A family+weight name such as `BlexMono Nerd Font Medium` is fine: it is matched against
+the family fontconfig reports (`BlexMono Nerd Font`), so it does not false-alarm.
 
 ## Nothing here matches
 

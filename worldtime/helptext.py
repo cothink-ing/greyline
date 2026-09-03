@@ -89,8 +89,12 @@ Latitude is +N/-S, longitude +E/-W. --home pins the accented home city (otherwis
 it is auto-detected from your system timezone)."""
 
 DOCTOR_DESCRIPTION = """\
-Diagnose a wallpaper that isn't updating: print the detected session, the resolved
-backend and its outputs, and whether the systemd user timer is available."""
+Diagnose a wallpaper that isn't updating, or a setting that seems to do nothing: print
+the version and platform, which config file is actually in effect, the detected session,
+the resolved backend and its outputs, the font you asked for and the font you got, and
+whether the systemd user timer is available.
+
+The output is self-contained — paste it into a bug or compatibility report."""
 
 _BACKENDS = {
     "sway": "sway / SwayFX, via swaymsg IPC and a swaybg client it manages itself",

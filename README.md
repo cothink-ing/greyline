@@ -47,7 +47,7 @@ backends.
 ```sh
 greyline city add "Tokyo" 35.68 139.69 Asia/Tokyo --home
 greyline config set theme gruvbox-dark-hard
-greyline doctor                 # why isn't my wallpaper changing?
+greyline doctor                 # what's in effect, and why isn't it changing?
 ```
 
 Thirty-five themes ship, light and dark. Most are ports of the base16 schemes your editor

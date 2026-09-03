@@ -1,5 +1,6 @@
 """CLI plumbing: DE recipe detection, systemd unit generation, init, watch loop."""
 
+import argparse
 import os
 import tomllib
 
@@ -81,6 +82,45 @@ def test_resolve_fonts_warns_only_when_the_family_was_requested(monkeypatch, cap
 def test_resolve_fonts_falls_back_to_the_family_without_fontconfig(monkeypatch):
     monkeypatch.setattr(cli, "_fc_match", lambda q: (None, None))
     assert cli._resolve_fonts("Iosevka Nerd Font") == ("Iosevka Nerd Font", "Iosevka Nerd Font")
+
+
+def test_config_lines_reports_which_file_is_in_effect(tmp_path):
+    missing = tmp_path / "nope.toml"
+    assert cli._config_lines(str(missing)) == [f"config: none at {missing} — built-in defaults"]
+
+    real = tmp_path / "config.toml"
+    real.write_text("theme = 'dark'\n")
+    assert cli._config_lines(str(real)) == [f"config: {real}"]
+
+    link = tmp_path / "linked.toml"
+    link.symlink_to(real)
+    lines = cli._config_lines(str(link))
+    assert lines[0] == f"config: {link}"
+    assert "managed declaratively" in lines[1] and str(real) in lines[1]
+
+
+def test_font_line_names_where_the_family_came_from(monkeypatch):
+    # Echo the queried family back so nothing looks like a fontconfig substitution.
+    monkeypatch.setattr(cli, "_fc_match", lambda q: ("/fonts/X.ttf", q.split(":")[0]))
+    args = argparse.Namespace(font_family=None)
+    assert cli._font_line(args, {}) == (
+        f"font: {cli.DEFAULT_FONT_FAMILY} (built-in default) -> /fonts/X.ttf"
+    )
+    assert cli._font_line(args, {"font_family": "Iosevka Nerd Font"}) == (
+        "font: Iosevka Nerd Font (config) -> /fonts/X.ttf"
+    )
+    args = argparse.Namespace(font_family="Iosevka Nerd Font")
+    assert cli._font_line(args, {"font_family": "ignored"}) == (
+        "font: Iosevka Nerd Font (--font-family) -> /fonts/X.ttf"
+    )
+
+
+def test_font_line_flags_a_substitution_and_a_missing_fontconfig(monkeypatch):
+    args = argparse.Namespace(font_family="Nope Grotesk")
+    monkeypatch.setattr(cli, "_fc_match", lambda q: ("/fonts/DejaVuSans.ttf", "DejaVu Sans"))
+    assert "NOT INSTALLED, fontconfig substituted DejaVu Sans" in cli._font_line(args, {})
+    monkeypatch.setattr(cli, "_fc_match", lambda q: (None, None))
+    assert "no fc-match on PATH" in cli._font_line(args, {})
 
 
 def test_detect_desktop_matches_case_insensitively():

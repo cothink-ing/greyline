@@ -4,6 +4,26 @@ All notable changes to greyline are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- **`greyline doctor` output is self-contained**, so it can be pasted into a bug or
+  compatibility report as-is. It now leads with the version, Python and platform, and
+  names the config file actually in effect — flagging it when the file is a read-only
+  symlink managed by home-manager, which is the state that made a set-but-ignored key
+  look like a greyline bug ([#16]). The font line says where the family came from
+  (`config`, `--font-family` or `built-in default`), and the backend line shows what was
+  requested when it differs from what was resolved.
+
+### Documentation
+- Troubleshooting gains an **"I changed a setting and nothing happened"** section, and
+  Installation spells out that declaring `settings` in the home-manager module makes it
+  own `~/.config/greyline/config.toml`, so `greyline config set` cannot edit it — pick
+  declarative or imperative, not both. Installation now also records that
+  `services.greyline.fontFamily` is deprecated rather than merely an alias.
+
+[#16]: https://github.com/cothink-ing/greyline/issues/16
+
 ## [0.7.3] — 2026-09-03
 
 ### Changed
