@@ -6,12 +6,16 @@ All notable changes to greyline are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.8.2] — 2026-09-03
+
 ### Fixed
-- **The JavaScript port tests failed on Windows.** They built the module import base
-  by pasting the checkout path after `file://`, so on Windows the backslashes were
-  swallowed as escape sequences by the JavaScript string literal and node was asked
-  for `file://Dagreylineweb`. `Path.as_uri()` produces the URL properly. Tests only —
-  the published package is unaffected, which is why this is not a release of its own.
+- **The JavaScript port tests failed on Windows**, which is how 0.8.1 shipped with a
+  red cross-platform CI leg. The tests built their module import base by pasting the
+  checkout path after `file://`, so on Windows the backslashes were swallowed as escape
+  sequences by the JavaScript string literal and node was asked for
+  `file://Dagreylineweb`. `Path.as_uri()` produces the URL properly. The published
+  package is unaffected — `tests/` is not part of the wheel — so this release exists to
+  give the newest tag a green build, not to change anything you run.
 
 ## [0.8.1] — 2026-09-03
 
@@ -455,6 +459,7 @@ All notable changes to greyline are documented here. The format is based on
 - Backends: `sway`, `swww`, `hyprpaper`, `x11` (feh/xwallpaper), auto-detected.
 - Nix flake + home-manager module; systemd user timer for once-a-minute rendering.
 
+[0.8.2]: https://github.com/cothink-ing/greyline/releases/tag/v0.8.2
 [0.8.1]: https://github.com/cothink-ing/greyline/releases/tag/v0.8.1
 [0.8.0]: https://github.com/cothink-ing/greyline/releases/tag/v0.8.0
 [0.7.3]: https://github.com/cothink-ing/greyline/releases/tag/v0.7.3
