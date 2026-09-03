@@ -24,9 +24,6 @@ TWILIGHT_ELEVATIONS = (0.0, -6.0, -12.0, -18.0)
 
 DARKNESS_ALPHA = {"subtle": 28, "medium": 40, "dramatic": 55}
 
-THEMES = themes.builtin_themes()
-THEMES["dark"] = THEMES["modus"]
-
 FONT_CANDIDATES = [
     "Aporetic Sans",
     "AporeticSans",
@@ -271,15 +268,27 @@ def _overlay_night(base, dt, theme, bands, alpha, proj):
 
 def _recolor_dark(img, light_rgb, thresh=70):
     """Recolour near-black pixels (the wordmark text) to `light_rgb`, keeping coloured
-    parts (the IBM bars) intact — so the logo reads on a dark background."""
-    px = img.load()
-    lr, lg, lb = light_rgb
-    for y in range(img.height):
-        for x in range(img.width):
-            r, g, b, a = px[x, y]
-            if a and max(r, g, b) < thresh:
-                px[x, y] = (lr, lg, lb, a)
-    return img
+    parts (the IBM bars) intact — so the logo reads on a dark background.
+
+    A pixel is "near-black" when its brightest channel is under `thresh` and it is not
+    fully transparent. Expressed in whole-image operations rather than a Python loop
+    over `img.load()`: the logo is ~10% of the wallpaper's width, so at 4K that loop ran
+    a couple of hundred thousand iterations of interpreted code on every tick that had
+    `logo_invert` set — which, now that the map itself is cached, was a visible share of
+    the remaining work.
+
+    Alpha is carried over untouched, so anti-aliased edges survive.
+    """
+    r, g, b, a = img.split()
+    brightest = ImageChops.lighter(ImageChops.lighter(r, g), b)
+    is_dark = brightest.point(lambda v: 255 if v < thresh else 0)
+    mask = ImageChops.multiply(is_dark, a.point(lambda v: 255 if v else 0))
+
+    rgb = img.convert("RGB")
+    rgb.paste(Image.new("RGB", img.size, tuple(light_rgb)), mask=mask)
+    out = rgb.convert("RGBA")
+    out.putalpha(a)
+    return out
 
 
 def _mono_logo(img, rgb):

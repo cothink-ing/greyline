@@ -381,3 +381,41 @@ def test_swww_apply_crossfades_by_default_and_honours_overrides(monkeypatch):
     monkeypatch.setenv(swww.DURATION_ENV, "1")
     swww.apply("DP-1", "/run/greyline/DP-1.png")
     assert "none" in seen[-1] and "1" in seen[-1] and "fade" not in seen[-1]
+
+
+def test_substitute_fills_both_placeholders():
+    filled = command._substitute(
+        "set {output} to {path}", "eDP-1", "/run/user/1000/greyline/eDP-1.png"
+    )
+    assert filled == "set eDP-1 to /run/user/1000/greyline/eDP-1.png"
+
+
+def test_substitute_leaves_the_shipped_recipes_byte_for_byte():
+    """The GNOME recipe wraps {path} in its own quotes, so nothing may be added around
+    the substitution — that is the reason this refuses rather than quoting."""
+    from worldtime import recipes
+
+    path = "/run/user/1000/greyline/eDP-1.png"
+    for key, recipe in recipes.RECIPES.items():
+        assert command._substitute(recipe, "eDP-1", path) == recipe.replace("{path}", path), key
+
+
+@pytest.mark.parametrize(
+    "name, path, placeholder",
+    [
+        ("eDP-1", "/run/user/1000/my dir/x.png", "{path}"),
+        ("eDP-1", "/run/user/1000/g/$(id).png", "{path}"),
+        ("my monitor", "/run/user/1000/g/x.png", "{output}"),
+        ("a;rm -rf ~", "/run/user/1000/g/x.png", "{output}"),
+    ],
+)
+def test_substitute_refuses_values_that_would_reparse_the_command(name, path, placeholder):
+    with pytest.raises(RuntimeError, match="would change how the shell reads"):
+        command._substitute("set {output} to {path}", name, path)
+
+
+def test_substitute_ignores_an_unsafe_value_the_command_never_uses():
+    """A space in the output name is irrelevant to `feh --bg-fill {path}`."""
+    assert command._substitute("feh --bg-fill {path}", "my monitor", "/tmp/x.png") == (
+        "feh --bg-fill /tmp/x.png"
+    )

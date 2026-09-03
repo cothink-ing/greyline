@@ -78,7 +78,7 @@ def test_blue_parity_and_no_optional_keys():
 
 def test_dark_is_a_permanent_alias_for_modus():
     assert themes.load_theme("dark") == themes.load_theme("modus")
-    assert render.THEMES["dark"] is render.THEMES["modus"]
+    assert "dark" in themes.ALIASES
 
 
 def test_user_theme_overrides_builtin_per_key(tmp_path, monkeypatch):

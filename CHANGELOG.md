@@ -6,6 +6,31 @@ All notable changes to greyline are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.8.3] — 2026-09-03
+
+### Changed
+- **`logo_invert` costs 5ms a tick instead of 94ms.** Recolouring a dark logo's
+  near-black pixels walked the image one pixel at a time in Python — a couple of
+  hundred thousand iterations of interpreted code at 4K, on every tick, for a logo that
+  never changes. Expressed as whole-image operations it is 19x faster and produces
+  byte-identical output, which a test asserts against the original loop. It only ever
+  showed up for people who set `logo_invert`, and only became worth fixing once 0.8.0
+  cached the map and left it as a visible share of what remained.
+- **The `command` backend refuses a substitution that would re-parse your command.**
+  `{path}` and `{output}` are pasted into a string that runs through a shell, and the
+  output name comes from your compositor rather than from you. A value containing a
+  space, a quote or a `$` now produces a clear error instead of a command that does
+  something other than what it reads like. Quoting them instead would be worse than
+  useless: it is a no-op on an ordinary path, and the shipped GNOME recipe wraps
+  `{path}` in its own quotes, so in the one case it mattered it would nest quotes and
+  point the wallpaper at a path that does not exist. In practice this only fires for an
+  exotic `$XDG_RUNTIME_DIR` or a monitor with a space in its name.
+
+### Removed
+- **`render.THEMES`.** A dict of all thirty-five palettes, built at import — so parsed
+  on `greyline --version` too — and read by nothing but the test suite. The tests use
+  `themes.load_theme` like everything else now.
+
 ## [0.8.2] — 2026-09-03
 
 ### Fixed
@@ -459,6 +484,7 @@ All notable changes to greyline are documented here. The format is based on
 - Backends: `sway`, `swww`, `hyprpaper`, `x11` (feh/xwallpaper), auto-detected.
 - Nix flake + home-manager module; systemd user timer for once-a-minute rendering.
 
+[0.8.3]: https://github.com/cothink-ing/greyline/releases/tag/v0.8.3
 [0.8.2]: https://github.com/cothink-ing/greyline/releases/tag/v0.8.2
 [0.8.1]: https://github.com/cothink-ing/greyline/releases/tag/v0.8.1
 [0.8.0]: https://github.com/cothink-ing/greyline/releases/tag/v0.8.0

@@ -5,7 +5,7 @@ from datetime import UTC, datetime
 
 import pytest
 
-from worldtime import render
+from worldtime import render, themes
 
 CITIES = [
     {"name": "London", "lat": 51.51, "lon": -0.13, "tz": "Europe/London", "home": True},
@@ -68,7 +68,7 @@ def test_hex_parsing_and_bad_values():
 def test_logo_scale_shrinks_the_logo():
     from PIL import Image
 
-    th = render.THEMES["dark"]
+    th = themes.load_theme("dark")
     full = render._draw_logo(Image.new("RGBA", (1000, 600)), th, render.LOGO_PNG, logo_scale=1.0)
     half = render._draw_logo(Image.new("RGBA", (1000, 600)), th, render.LOGO_PNG, logo_scale=0.5)
     w_full, w_half = full[2] - full[0], half[2] - half[0]
@@ -78,7 +78,7 @@ def test_logo_scale_shrinks_the_logo():
 def test_logo_max_height_caps_tall_logos(tmp_path):
     from PIL import Image
 
-    th = render.THEMES["dark"]
+    th = themes.load_theme("dark")
     canvas = (1000, 600)
     tall = tmp_path / "tall.png"
     Image.new("RGBA", (100, 1000), (255, 0, 0, 255)).save(tall)
@@ -90,3 +90,38 @@ def test_logo_max_height_caps_tall_logos(tmp_path):
     assert h_capped <= 600 * 0.5 + 1 < h_uncapped
     w_capped = capped[2] - capped[0]
     assert abs(w_capped - h_capped / 10) <= 1
+
+
+def test_recolor_dark_matches_a_per_pixel_reference():
+    """The whole-image version has to agree with the obvious loop, pixel for pixel.
+
+    `_recolor_dark` was that loop until it became the expensive part of a tick with
+    `logo_invert` set. The reference below is the behaviour it used to have; this is
+    what makes the rewrite a refactor rather than a rewrite-and-hope.
+    """
+    from PIL import Image
+
+    light = (235, 235, 238)
+    # A spread of dark/light, opaque/transparent, and colours that must be kept.
+    pixels = [
+        (x * 17, y * 17, (x + y) * 8 % 256, 0 if (x + y) % 7 == 0 else 255)
+        for y in range(16)
+        for x in range(16)
+    ]
+    pixels[0] = (69, 69, 69, 255)  # just under the threshold: recoloured
+    pixels[1] = (70, 70, 70, 255)  # exactly on it: left alone
+    pixels[2] = (0, 0, 0, 1)  # barely visible, still recoloured
+    pixels[3] = (0, 0, 0, 0)  # fully transparent: left alone
+
+    def reference(px):
+        r, g, b, a = px
+        return (*light, a) if a and max(r, g, b) < 70 else px
+
+    src = Image.new("RGBA", (16, 16))
+    src.putdata(pixels)
+    expected = Image.new("RGBA", (16, 16))
+    expected.putdata([reference(p) for p in pixels])
+
+    got = render._recolor_dark(src, light)
+    assert got.mode == "RGBA"
+    assert got.tobytes() == expected.tobytes()

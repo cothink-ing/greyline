@@ -21,6 +21,7 @@ desktop, since a single command typically sets every monitor at once; use
 """
 
 import os
+import re
 import subprocess
 
 from . import _util
@@ -57,6 +58,42 @@ def outputs():
     return [{"name": "screen", "width": w, "height": h, "scale": 1.0}]
 
 
+# The character class shlex.quote treats as needing quoting. Values containing any of
+# these change how the shell parses the command once substituted.
+_SHELL_UNSAFE = re.compile(r"[^\w@%+=:,./-]")
+
+
+def _substitute(cmd, name, png_path):
+    """Fill {path} and {output} in, or refuse if a value would break the shell.
+
+    Quoting the values instead would be worse than useless here. `shlex.quote` is a
+    no-op on an ordinary path, so it would buy nothing in the normal case — and the
+    recipes embed the placeholder inside their own quotes (GNOME's ``"file://{path}"``),
+    so in the one case it mattered it would produce quotes nested inside quotes and set
+    the wallpaper to a path that does not exist. greyline cannot know how a
+    user-supplied command quotes its arguments, so it declines rather than guessing.
+
+    In practice this fires only for an exotic ``$XDG_RUNTIME_DIR`` or an output name
+    with a space in it; the point is that it says so instead of running something
+    unintended.
+    """
+    for placeholder, value, what in (
+        ("{path}", png_path, "the render path"),
+        ("{output}", name, "the output name"),
+    ):
+        if placeholder not in cmd:
+            continue
+        bad = _SHELL_UNSAFE.search(value)
+        if bad:
+            raise RuntimeError(
+                f"command backend: {what} ({value!r}) contains {bad.group()!r}, which "
+                f"would change how the shell reads your command. Substituting it into "
+                f"{placeholder} is refused rather than guessed at."
+            )
+        cmd = cmd.replace(placeholder, value)
+    return cmd
+
+
 def apply(name, png_path):
     cmd = _command()
     if not cmd:
@@ -64,5 +101,4 @@ def apply(name, png_path):
             "command backend: no command configured "
             "(set `command` in config or the GREYLINE_COMMAND env var)"
         )
-    filled = cmd.replace("{path}", png_path).replace("{output}", name)
-    subprocess.run(filled, shell=True, check=True)
+    subprocess.run(_substitute(cmd, name, png_path), shell=True, check=True)

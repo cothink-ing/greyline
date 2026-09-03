@@ -113,7 +113,7 @@ def _apply(theme, values):
 
 
 def builtin_themes():
-    """Built-in palettes as render-ready tuple dicts (render.THEMES snapshot)."""
+    """Built-in palettes as render-ready tuple dicts, keyed by name."""
     return {name: _apply({}, _parse(path)) for name, path in _scan(BUILTIN_DIR).items()}
 
 
