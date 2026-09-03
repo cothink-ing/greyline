@@ -6,6 +6,13 @@ All notable changes to greyline are documented here. The format is based on
 
 ## [Unreleased]
 
+### Fixed
+- **The JavaScript port tests failed on Windows.** They built the module import base
+  by pasting the checkout path after `file://`, so on Windows the backslashes were
+  swallowed as escape sequences by the JavaScript string literal and node was asked
+  for `file://Dagreylineweb`. `Path.as_uri()` produces the URL properly. Tests only —
+  the published package is unaffected, which is why this is not a release of its own.
+
 ## [0.8.1] — 2026-09-03
 
 ### Added

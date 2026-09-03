@@ -21,6 +21,7 @@ import os
 import shutil
 import subprocess
 from datetime import UTC, datetime
+from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import pytest
@@ -47,9 +48,15 @@ INSTANTS = [
 
 
 def _node(body):
-    """Evaluate an ES module in web/ and parse the JSON it prints."""
+    """Evaluate an ES module in web/ and parse the JSON it prints.
+
+    The import base is built with `Path.as_uri()`, not by pasting the path after
+    `file://`: on Windows that produces `file://D:\\a\\greyline\\web`, whose
+    backslashes are then eaten as escape sequences by the JavaScript string literal,
+    and node is handed `file://Dagreylineweb`.
+    """
     assert NODE is not None  # guarded by pytestmark; narrows the type for mypy
-    script = f"const W = 'file://{WEB}';\n{body}"
+    script = f"const W = {Path(WEB).as_uri()!r};\n{body}"
     result = subprocess.run(
         [NODE, "--input-type=module", "-e", script],
         capture_output=True,
