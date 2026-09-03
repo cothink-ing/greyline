@@ -3,7 +3,7 @@
 import { makeProjection } from "./geo.js";
 import { loadGeo, buildBase } from "./vectormap.js";
 import { overlayNight, drawClocks } from "./render.js";
-import { THEMES, THEME_LABELS, THEME_ORDER, DARKNESS_ALPHA, CITIES, tzOffsetHours }
+import { THEMES, THEME_LABELS, THEME_ORDER, DARKNESS_ALPHA, CITIES, tzOffsetHours, labelLines }
   from "./config.js";
 
 const canvas = document.getElementById("wt");
@@ -51,6 +51,18 @@ function render() {
     date: now, theme, fmt: state.fmt, cities: CITIES, scale, proj,
     labelBgAlpha: 130, obstacles: [], isHome,
   });
+  describe(now);
+}
+
+// The canvas is the entire page. Its label has to carry what the picture says — the
+// clocks and which one is home — or a screen reader gets a heading and nothing else.
+function describe(now) {
+  const times = CITIES.map((c) => labelLines(c, now, state.fmt).join(" ")).join(", ");
+  canvas.setAttribute(
+    "aria-label",
+    `World map with the day and night terminator. Local times: ${times}. ` +
+    `Your timezone, ${viewerTz}, is highlighted.`,
+  );
 }
 
 function bindControls() {
@@ -70,23 +82,43 @@ function bindControls() {
       const [k, v] = el.dataset.set.split(":");
       state[k] = v === "true" ? true : v === "false" ? false : v;
       const group = el.dataset.group;
-      if (group) document.querySelectorAll(`[data-group="${group}"]`)
-        .forEach((b) => b.classList.toggle("on", b === el));
+      if (group) document.querySelectorAll(`[data-group="${group}"]`).forEach((b) => {
+        b.classList.toggle("on", b === el);
+        b.setAttribute("aria-pressed", String(b === el));
+      });
       base = null;  // theme/darkness change invalidates the cached base
       render();
     });
   });
 }
 
+// A clock accurate to the minute is the contract greyline makes, on the desktop and
+// here — so redraw on the minute boundary rather than every second. Rebuilding the
+// overlay and the clocks 60x more often than the display can change costs battery and
+// buys nothing anyone can read.
+function scheduleTick() {
+  // +50ms of slack so a timer that fires a hair early still lands in the new minute.
+  setTimeout(() => { render(); scheduleTick(); }, 60000 - (Date.now() % 60000) + 50);
+}
+
+// Every resize throws away the cached base and redraws the map, which is ~110ms of
+// main thread. Dragging a window edge fires it continuously, and on a phone so does
+// the URL bar sliding away; wait for it to settle instead.
+let resizePending = null;
+function onResize() {
+  clearTimeout(resizePending);
+  resizePending = setTimeout(resize, 150);
+}
+
 async function start() {
   bindControls();
-  window.addEventListener("resize", resize);
+  window.addEventListener("resize", onResize);
   resize();
   try {
     geo = await loadGeo();
     document.getElementById("loading").remove();
     resize();
-    setInterval(render, 1000);
+    scheduleTick();
   } catch (e) {
     document.getElementById("loading").textContent = "Failed to load map data: " + e.message;
   }

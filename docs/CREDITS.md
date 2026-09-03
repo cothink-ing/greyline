@@ -15,6 +15,13 @@ The default vector map is drawn from Natural Earth data in `worldtime/geodata/`:
 Natural Earth is in the **public domain**. No permission is needed to use it.
 Terms: <https://www.naturalearthdata.com/about/terms-of-use/>
 
+The bundled copies are **not byte-for-byte upstream**. `tools/prep_geodata.py` strips
+the properties greyline never reads (fifteen per timezone feature, of which it uses
+one) and rounds coordinates to 3 decimal places — about 110 m, a hundredth of a pixel
+at 4K. That takes the bundle from 4.57 MB to 2.91 MB, and the browser demo's first
+paint from 1.57 MB to 0.87 MB gzipped. The script's docstring records the reasoning
+and `python tools/prep_geodata.py --check` verifies the shipped files match it.
+
 ## Tux — default corner logo (Larry Ewing)
 
 `worldtime/assets/tux.png` is Tux, the Linux mascot, created by **Larry Ewing**

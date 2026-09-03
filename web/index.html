@@ -35,11 +35,16 @@
     padding: 5px 8px; max-width: 46vw; }
   select option { background: #12151c; }
   button.on { background: rgba(127,176,255,.20); border-color: rgba(127,176,255,.45); color: #eaf1ff; }
-  @media (max-width: 560px) { #top { max-width: 90vw; } .grp { border-right: 0; } }
+  button:focus-visible, select:focus-visible { outline: 2px solid #7fb0ff; outline-offset: 2px; }
+  @media (max-width: 560px) { #top { max-width: 90vw; } .grp { border-right: 0; }
+    /* iOS Safari zooms the page when a control under 16px takes focus. */
+    button, select { font-size: 16px; padding: 8px 12px; } }
 </style>
 </head>
 <body>
-<canvas id="wt"></canvas>
+<!-- The map is the whole content, so it carries the information as its label,
+     refreshed each minute by main.js. -->
+<canvas id="wt" role="img" aria-label="World map with day and night; loading."></canvas>
 <div id="loading">loading the world…</div>
 
 <div id="top" class="panel">
@@ -49,18 +54,18 @@
      <a href="https://github.com/cothink-ing/greyline">GitHub</a></p>
 </div>
 
-<div id="controls" class="panel">
+<div id="controls" class="panel" role="group" aria-label="Display options">
   <div class="grp">
     <!-- Options are filled in by main.js from the generated theme list. -->
-    <select id="theme" aria-label="theme"></select>
+    <select id="theme" aria-label="Colour theme"></select>
   </div>
-  <div class="grp">
-    <button data-set="fmt:24h" data-group="fmt" class="on">24h</button>
-    <button data-set="fmt:12h" data-group="fmt">12h</button>
+  <div class="grp" role="group" aria-label="Clock format">
+    <button data-set="fmt:24h" data-group="fmt" class="on" aria-pressed="true">24h</button>
+    <button data-set="fmt:12h" data-group="fmt" aria-pressed="false">12h</button>
   </div>
-  <div class="grp">
-    <button data-set="bands:true" data-group="bands" class="on">twilight bands</button>
-    <button data-set="bands:false" data-group="bands">terminator only</button>
+  <div class="grp" role="group" aria-label="Twilight rendering">
+    <button data-set="bands:true" data-group="bands" class="on" aria-pressed="true">twilight bands</button>
+    <button data-set="bands:false" data-group="bands" aria-pressed="false">terminator only</button>
   </div>
 </div>
 

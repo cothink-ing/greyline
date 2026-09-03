@@ -6,6 +6,8 @@ All notable changes to greyline are documented here. The format is based on
 
 ## [Unreleased]
 
+## [0.8.1] — 2026-09-03
+
 ### Added
 - **The demo's ported maths are tested against the Python they came from.**
   `web/sun.js`, `web/geo.js` and `web/config.js` reimplement the NOAA declination
@@ -446,6 +448,7 @@ All notable changes to greyline are documented here. The format is based on
 - Backends: `sway`, `swww`, `hyprpaper`, `x11` (feh/xwallpaper), auto-detected.
 - Nix flake + home-manager module; systemd user timer for once-a-minute rendering.
 
+[0.8.1]: https://github.com/cothink-ing/greyline/releases/tag/v0.8.1
 [0.8.0]: https://github.com/cothink-ing/greyline/releases/tag/v0.8.0
 [0.7.3]: https://github.com/cothink-ing/greyline/releases/tag/v0.7.3
 [0.7.1]: https://github.com/cothink-ing/greyline/releases/tag/v0.7.1

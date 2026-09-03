@@ -77,3 +77,12 @@ def _gen_wiki():
     import gen_wiki
 
     return gen_wiki
+
+
+def test_bundled_geodata_is_prepared():
+    """The Natural Earth files are shipped stripped and rounded (see NOTICE and
+    tools/prep_geodata.py). Re-vendoring an upstream file without re-running the
+    script would silently put 1.7 MB back into the wheel."""
+    tool = os.path.join(ROOT, "tools", "prep_geodata.py")
+    rc = subprocess.run([sys.executable, tool, "--check"], capture_output=True, text=True, cwd=ROOT)
+    assert rc.returncode == 0, rc.stderr.strip() or "geodata is not prepared"

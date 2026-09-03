@@ -19,6 +19,10 @@ What is bundled (and its licensing)
 - **Map data** — Natural Earth vector data under `worldtime/geodata/`
   (ne_110m_land, ne_110m_admin_0_countries, ne_10m_time_zones, ne_10m_geographic_lines).
   **Public domain** — https://www.naturalearthdata.com/about/terms-of-use/ .
+  These files are Natural Earth data with unused properties stripped and coordinates
+  rounded to 3 decimal places; `tools/prep_geodata.py` documents and reproduces the
+  transform. Public domain data imposes no conditions on modification; this is noted
+  so nobody assumes the files are byte-for-byte upstream.
   This is the default map (`map_style = "vector"`); it contains no IBM/Lenovo artwork.
 - **Default logo** — Tux, the Linux mascot, by Larry Ewing (created with GIMP).
   See `docs/CREDITS.md` for the attribution.

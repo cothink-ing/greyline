@@ -32,7 +32,13 @@
           # (swaymsg/swww/hyprctl/feh) come from the session PATH or the HM module.
           nativeBuildInputs = [ pkgs.makeWrapper ];
           makeWrapperArgs = [ "--prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.fontconfig ]}" ];
-          nativeCheckInputs = [ pkgs.python3Packages.pytestCheckHook ];
+          # nodejs is a *test* input, not a runtime one: tests/test_js_port.py checks the
+          # browser demo's ported maths against sun.py/geo.py by running both. Without it
+          # those tests skip, silently, and the port can drift again.
+          nativeCheckInputs = [
+            pkgs.python3Packages.pytestCheckHook
+            pkgs.nodejs
+          ];
           pythonImportsCheck = [ "worldtime" ];
           doCheck = true;
           # pythonImportsCheckPhase cd's to $NIX_BUILD_TOP; return to the source so
@@ -89,6 +95,7 @@
               ]))
               pkgs.ruff
               pkgs.fontconfig
+              pkgs.nodejs # tests/test_js_port.py; also runs the demo locally
             ];
           };
         }
