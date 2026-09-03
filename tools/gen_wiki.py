@@ -40,10 +40,19 @@ A colour can be set in three places. The later one wins:
 
 ## Editing
 
-`greyline config set` validates before it writes (a bad theme name or enum is
-refused, not saved) and preserves the file's comments and layout, so the config
-stays readable after the CLI has been through it. Editing the file by hand is
-equally fine.
+`greyline config set` validates before it writes and preserves the file's comments
+and layout, so the config stays readable after the CLI has been through it. A key
+greyline does not read, a value of the wrong type, and a number outside its range
+are all refused rather than saved:
+
+    $ greyline config set them modus
+    error: 'them' is not a greyline config key. Did you mean 'theme'?
+
+Editing the file by hand is equally fine, and is checked on the way in. A key
+greyline does not read is reported by `greyline doctor` and otherwise ignored, so a
+setting left over from another version cannot stop your wallpaper; a key it *does*
+read but cannot use is an error, because the alternative is a renderer that fails
+once a minute without saying why.
 """
 
 THEMES_ADDENDUM = """\

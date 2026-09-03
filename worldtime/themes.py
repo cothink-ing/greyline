@@ -148,3 +148,35 @@ def load_theme(name, overrides=None):
     if isinstance(overrides, dict):
         theme = _apply(theme, overrides)
     return theme
+
+
+def _relative_luminance(rgb):
+    """WCAG 2.x relative luminance of an (r, g, b) colour."""
+
+    def channel(c):
+        c /= 255
+        return c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
+
+    r, g, b = (channel(c) for c in rgb[:3])
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+def contrast_ratio(a, b):
+    """WCAG 2.x contrast ratio between two (r, g, b) colours, 1.0 (same) to 21.0."""
+    la, lb = _relative_luminance(a), _relative_luminance(b)
+    hi, lo = max(la, lb), min(la, lb)
+    return (hi + 0.05) / (lo + 0.05)
+
+
+def label_plate(theme, background, alpha=130):
+    """The colour a clock label's text is actually drawn against.
+
+    render.py fills a rounded `label_bg` rectangle behind every label at
+    `label_bg_alpha`, so the text contrasts against *that* composite, not against the
+    raw map colour underneath. `background` is the map colour the plate sits on (land
+    or ocean). At alpha 0 (`label_background = false`) the plate vanishes and the
+    answer is the map itself, which is why themes are checked at the shipped default.
+    """
+    plate = tuple(theme.get("label_bg", (0, 0, 0))[:3])
+    t = alpha / 255.0
+    return tuple(round(p * t + b * (1 - t)) for p, b in zip(plate, background[:3], strict=True))

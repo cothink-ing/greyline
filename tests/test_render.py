@@ -18,7 +18,7 @@ DT = datetime(2024, 6, 20, 9, 30, tzinfo=UTC)
 def test_render_returns_rgb_at_size(style):
     if style == "raster" and not os.path.isfile(render.BASE_1400):
         pytest.skip("raster map artwork not bundled (IBM/Lenovo art, see NOTICE)")
-    img = render.render(CITIES, dt=DT, out_size=(480, 300), map_style=style)
+    img = render.render(CITIES, render.Options(map_style=style), dt=DT, out_size=(480, 300))
     assert img.size == (480, 300)
     assert img.mode == "RGB"
 
@@ -45,12 +45,12 @@ def test_home_column_uses_standard_offset(monkeypatch, tz, lon, month, expected)
     monkeypatch.setattr(render.vectormap, "build_base", spy)
     cities = [{"name": "Home", "lat": 0.0, "lon": lon, "tz": tz, "home": True}]
     dt = datetime(2026, month, 15, 12, tzinfo=UTC)
-    render.render(cities, dt=dt, out_size=(320, 200), map_style="vector")
+    render.render(cities, render.Options(map_style="vector"), dt=dt, out_size=(320, 200))
     assert captured["home_offset"] == expected
 
 
 def test_unknown_theme_falls_back():
-    img = render.render(CITIES, dt=DT, out_size=(320, 200), theme="does-not-exist")
+    img = render.render(CITIES, render.Options(theme="does-not-exist"), dt=DT, out_size=(320, 200))
     assert img.size == (320, 200)
 
 

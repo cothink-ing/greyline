@@ -34,6 +34,7 @@ backend = "auto"            # auto | sway | swww | hyprpaper | x11 (feh/xwallpap
 #   command = 'xfconf-query -c xfce4-desktop -p /backdrop/screen0/monitor0/workspace0/last-image -s {path}'               # XFCE
 # resolution = "2560x1440"   # optional; size of the single rendered image (else largest xrandr output, else 1920x1080)
 map_style = "vector"        # vector (scalable, themeable) | raster (needs your own map art, see NOTICE)
+# desaturate = false         # grey out the raster map art (map_style = "raster" only)
 theme = "modus"             # modus | blue, or any bundled base16 port (gruvbox-dark-hard,
                             # everforest-light-medium, rose-pine, tokyo-night-storm,
                             # catppuccin-mocha, nord, dracula, …), or your own from
@@ -41,9 +42,12 @@ theme = "modus"             # modus | blue, or any bundled base16 port (gruvbox-
 format = "24h"              # 24h | 12h
 # font_family = "Aporetic Sans"  # label font: a fontconfig family name or a font-file path (default: Aporetic Sans, then system fonts)
 # font_scale = 1.0           # scale all label text (e.g. 1.25 = 25% larger, 0.8 = smaller)
+# label_background = true    # draw a plate behind each clock so labels stay readable over the map
+# label_bg_alpha = 130       # 0-255; opacity of that plate (overrides label_background)
 logo = true                 # draw the bottom-left corner logo (bundled default: Tux)
 # logo_path = "/path/to/your/logo.png"   # swap in your own logo (PNG with transparency)
 # logo_invert = false        # recolour a dark logo's near-black pixels to light (for dark logos)
+# logo_color = "#ffffff"     # recolour the whole logo to one flat colour (a silhouette)
 # logo_scale = 1.0           # size the corner logo (e.g. 0.5 = half; square logos like Tux read large)
 # logo_max_height = 0.0      # cap logo height to this fraction of screen height (0 = no cap; e.g. 0.15 for tall logos)
 bar_height = 0              # px reserved at the bottom for a status bar (lifts the logo)
@@ -77,7 +81,16 @@ A colour can be set in three places. The later one wins:
 
 ## Editing
 
-`greyline config set` validates before it writes (a bad theme name or enum is
-refused, not saved) and preserves the file's comments and layout, so the config
-stays readable after the CLI has been through it. Editing the file by hand is
-equally fine.
+`greyline config set` validates before it writes and preserves the file's comments
+and layout, so the config stays readable after the CLI has been through it. A key
+greyline does not read, a value of the wrong type, and a number outside its range
+are all refused rather than saved:
+
+    $ greyline config set them modus
+    error: 'them' is not a greyline config key. Did you mean 'theme'?
+
+Editing the file by hand is equally fine, and is checked on the way in. A key
+greyline does not read is reported by `greyline doctor` and otherwise ignored, so a
+setting left over from another version cannot stop your wallpaper; a key it *does*
+read but cannot use is an error, because the alternative is a renderer that fails
+once a minute without saying why.

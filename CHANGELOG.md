@@ -6,7 +6,94 @@ All notable changes to greyline are documented here. The format is based on
 
 ## [Unreleased]
 
+### Added
+- **The demo's ported maths are tested against the Python they came from.**
+  `web/sun.js`, `web/geo.js` and `web/config.js` reimplement the NOAA declination
+  series, the equation of time, the boundary-latitude solve and the projection by hand.
+  The palettes had a generator and a drift test; the maths had nothing, so a fix landing
+  in `sun.py` and not in `sun.js` was invisible. Both are now run on the same pinned
+  inputs and compared to 1e-9.
+
 ### Changed
+- **The demo redraws on the minute, not every second.** CONTRIBUTING has said all along
+  that per-second redraws cost battery and buy nothing anyone can read; the demo was
+  rebuilding the terminator and every clock sixty times more often than the display can
+  change. Resizing is debounced too — each resize discards the cached base and spends
+  ~110ms redrawing the map, and a phone fires one continuously as the URL bar slides
+  away.
+- **The demo is usable without sight.** The canvas is the entire page and carried no
+  label at all, so a screen reader got a heading, a paragraph and nothing else. It is
+  now `role="img"` with a label naming every city's local time and the highlighted
+  timezone, refreshed each minute. The toggles report their state with `aria-pressed`
+  instead of a CSS class, the control groups are named, and focus has a visible ring.
+- **Controls no longer zoom the page on iOS.** Safari zooms whenever a control smaller
+  than 16px takes focus, which the 12.5px theme picker did every time it was tapped.
+  Controls grow to 16px and gain bigger hit areas on narrow screens.
+- **The bundled map data is a third smaller.** The Natural Earth files carried fifteen
+  properties per timezone feature, of which greyline reads one, at seven decimal places
+  of coordinate precision — about a hundred times finer than a 4K pixel. Stripping the
+  unused properties and rounding to 3 decimal places takes the wheel from 4.57 MB to
+  2.91 MB and the demo's first paint from 1.57 MB to 0.85 MB gzipped, which was
+  dominated by that one file. `tools/prep_geodata.py` documents and reproduces the
+  transform, a test checks the shipped files still match it, and NOTICE records that
+  the files are not byte-for-byte upstream.
+
+## [0.8.0] — 2026-09-03
+
+### Added
+- **`greyline config set` refuses a key greyline does not read.** A mistyped key used
+  to be written out and then silently ignored, which is the slowest possible way to
+  learn you typed `them` instead of `theme` — the wallpaper simply never changed and
+  nothing anywhere said why. Keys, types and ranges now live in one schema
+  (`worldtime/schema.py`), so `greyline config set bar_height tall` and
+  `greyline config set label_bg_alpha 900` are refused at the moment you make the
+  mistake, with a suggestion when the key is a near miss.
+- **The config file is checked when it is read, too.** `config set` cannot protect a
+  file you edit by hand or one home-manager writes for you, and a value the renderer
+  cannot use — `font_scale = "huge"` — used to reach it and raise a `ValueError`
+  traceback into the journal once a minute, forever. That is now a one-line error and a
+  non-zero exit. A key greyline does *not* read stays non-fatal: `doctor` reports it and
+  the render carries on, because a leftover setting from another version must not take a
+  working wallpaper down.
+- **`greyline doctor` exercises the config instead of trusting it.** It loaded the file
+  but never built the render options from it, so the one failure that stops the
+  wallpaper dead was the one failure it reported as all-clear. It now says what is
+  wrong, carries on against the packaged defaults so the backend and font checks still
+  run, and exits non-zero.
+- **`greyline disable --purge`** removes `~/.config/greyline` and the cache as well.
+
+### Changed
+- **The map is rendered once and reused, not rebuilt every minute.** Ocean, land,
+  borders, the timezone grid and the filled zone columns do not change between ticks —
+  only the terminator and the clocks do — but every tick redrew all of it at 2x
+  supersample. A 4K tick cost 3.2s of CPU and half a gigabyte of peak memory, once a
+  minute, on a project whose stated priorities put battery life second only to
+  compatibility. The base is now cached under `$XDG_CACHE_HOME/greyline`, keyed by size,
+  theme, font and home offset: **1.25s → 0.33s at 1080p and 3.22s → 1.10s at 4K**, with
+  byte-identical output. Bounded at six files and evicted oldest-first, in the same
+  spirit as the two-buffer wallpaper ping-pong. A missing, corrupt or unwritable cache
+  is a slow render, never a broken one.
+- **`greyline disable` removes the unit files it wrote.** `enable` writes
+  `greyline.service` and `greyline.timer`; `disable` only ever removed the enable
+  symlink and left the units to be rediscovered. It now undoes what it did.
+- **An uninstalled greyline no longer leaves a failing timer behind.** No package
+  manager can clean this up — pipx has no post-uninstall hook, and the units were
+  written into your home directory after install — so `pipx uninstall greyline` used to
+  leave an enabled timer firing at a deleted binary every minute. The service unit
+  carries `ConditionFileIsExecutable` now, so systemd skips it silently instead of
+  failing it. `greyline disable` before uninstalling is still the tidy path, and
+  `greyline help disable` spells it out.
+- **Catppuccin Latte's clocks are legible.** Its labels were drawn in Rosewater on a
+  light plate — 2.02:1, well under the 4.5:1 that counts as readable — because the
+  base16 mapping takes clock text from `base06`, which is a light accent in that one
+  scheme out of the thirty-five bundled. The generator now falls back to `base05` when
+  `base06` cannot be read against the plate, which is the colour the city dots already
+  use, and gives 6.10:1. Every theme is checked for this now, so the next scheme with an
+  unusual palette cannot ship unreadable.
+- **`render()` takes an `Options` value rather than twenty-six parameters.** They were
+  fed mechanically from one function and are now a frozen dataclass with typed fields
+  and real defaults, so `Options()` and a config that sets nothing provably agree. This
+  is a breaking change to an undocumented internal API, taken deliberately before 1.0.
 - **`greyline doctor` output is self-contained**, so it can be pasted into a bug or
   compatibility report as-is. It now leads with the version, Python and platform, and
   names the config file actually in effect — flagging it when the file is a read-only
@@ -16,6 +103,12 @@ All notable changes to greyline are documented here. The format is based on
   requested when it differs from what was resolved.
 
 ### Documentation
+- **Four config keys nobody could discover.** `desaturate`, `label_background`,
+  `label_bg_alpha` and `logo_color` were read by the renderer but appeared nowhere in
+  `default-config.toml`, so `greyline help keys` never mentioned them. The schema made
+  the gap countable and a test now keeps it closed.
+- **Installation gains an "Uninstalling" section**, spelling out why the disable step
+  exists and what home-manager users do instead. The README says it in one line.
 - Troubleshooting gains an **"I changed a setting and nothing happened"** section, and
   Installation spells out that declaring `settings` in the home-manager module makes it
   own `~/.config/greyline/config.toml`, so `greyline config set` cannot edit it — pick
@@ -353,6 +446,7 @@ All notable changes to greyline are documented here. The format is based on
 - Backends: `sway`, `swww`, `hyprpaper`, `x11` (feh/xwallpaper), auto-detected.
 - Nix flake + home-manager module; systemd user timer for once-a-minute rendering.
 
+[0.8.0]: https://github.com/cothink-ing/greyline/releases/tag/v0.8.0
 [0.7.3]: https://github.com/cothink-ing/greyline/releases/tag/v0.7.3
 [0.7.1]: https://github.com/cothink-ing/greyline/releases/tag/v0.7.1
 [0.7.0]: https://github.com/cothink-ing/greyline/releases/tag/v0.7.0

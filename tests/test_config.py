@@ -1,6 +1,6 @@
 """Config merge, home-city flagging, and render kwarg mapping."""
 
-from worldtime import config
+from worldtime import config, render
 
 
 def test_deep_merge_is_recursive():
@@ -32,21 +32,28 @@ def test_user_config_overrides_and_replaces_cities(tmp_path):
     assert [c["name"] for c in home] == ["London"]
 
 
-def test_render_kwargs_carries_colors_overrides(tmp_path):
+def test_options_carry_colors_overrides(tmp_path):
     user = tmp_path / "config.toml"
     user.write_text('[colors]\nhome = "#fabd2f"\nnight_alpha = 20\n')
-    rkw = config.render_kwargs(config.load(path=str(user)))
-    assert rkw["theme_overrides"] == {"home": "#fabd2f", "night_alpha": 20}
-    assert (
-        config.render_kwargs(config.load(path="/nonexistent/config.toml"))["theme_overrides"]
-        is None
-    )
+    opts = render.Options.from_config(config.load(path=str(user)))
+    assert opts.theme_overrides == {"home": "#fabd2f", "night_alpha": 20}
+
+    bare = render.Options.from_config(config.load(path="/nonexistent/config.toml"))
+    assert bare.theme_overrides is None
 
 
-def test_render_kwargs_shape():
-    cfg = config.load(path="/nonexistent/config.toml")
-    rkw = config.render_kwargs(cfg)
-    assert rkw["theme"] and rkw["fmt"] in ("24h", "12h")
-    assert rkw["logo_scale"] == 1.0
-    assert rkw["logo_max_height"] == 0.0
-    assert "show_date" not in rkw
+def test_options_from_the_packaged_defaults_match_the_dataclass_defaults():
+    """`Options()` and a config that sets nothing have to mean the same thing —
+    otherwise the documented default and the actual default drift apart."""
+    from_defaults = render.Options.from_config(config.load(path="/nonexistent/config.toml"))
+    assert from_defaults == render.Options()
+
+
+def test_label_background_false_still_means_no_plate(tmp_path):
+    """`label_background` predates `label_bg_alpha` and survives only as its default."""
+    user = tmp_path / "config.toml"
+    user.write_text("label_background = false\n")
+    assert render.Options.from_config(config.load(path=str(user))).label_bg_alpha == 0
+
+    user.write_text("label_background = false\nlabel_bg_alpha = 200\n")
+    assert render.Options.from_config(config.load(path=str(user))).label_bg_alpha == 200

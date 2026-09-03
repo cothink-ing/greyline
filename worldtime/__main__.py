@@ -17,7 +17,7 @@ import subprocess
 import sys
 import tempfile
 
-from . import __version__, backends, config, helptext, recipes, render, service
+from . import __version__, backends, config, helptext, recipes, render, schema, service
 
 DEFAULT_FONT_FAMILY = "Aporetic Sans"
 
@@ -112,8 +112,13 @@ def _parse_res(s):
 def run_apply(args):
     """Render every output and apply it (or write one PNG with --out). Reused by the
     bare invocation and by `watch`."""
-    cfg = config.load(args.config)
-    rkw = config.render_kwargs(cfg)
+    try:
+        cfg = config.load(args.config)
+        opts = render.Options.from_config(cfg)
+    except ValueError as e:
+        print(f"error: {e}", file=sys.stderr)
+        print("  run `greyline doctor` to see the config in effect", file=sys.stderr)
+        return 1
     cities = cfg.get("city", [])
 
     requested = args.font_family or cfg.get("font_family")
@@ -121,7 +126,7 @@ def run_apply(args):
 
     if args.out:
         res = _parse_res(args.res) if args.res else (1920, 1200)
-        img = render.render(cities, out_size=res, font_path=font, font_bold_path=font_bold, **rkw)
+        img = render.render(cities, opts, out_size=res, font_path=font, font_bold_path=font_bold)
         img.save(args.out)
         print(f"wrote {args.out} {img.size}")
         return 0
@@ -161,10 +166,10 @@ def run_apply(args):
         try:
             img = render.render(
                 cities,
+                opts,
                 out_size=(o["width"], o["height"]),
                 font_path=font,
                 font_bold_path=font_bold,
-                **rkw,
             )
             path = _output_path(rt, o["name"], rotate)
             img.save(path)
@@ -373,11 +378,18 @@ def cmd_enable(args):
 
 
 def cmd_disable(args):
-    if not service.systemd_user_available():
+    if service.systemd_user_available():
+        print("disabled greyline.timer")
+        for path in service.disable():
+            print(f"  removed {path}")
+    elif not args.purge:
         print("systemd --user not available.", file=sys.stderr)
         return 1
-    service.disable()
-    print("disabled greyline.timer")
+    if not args.purge:
+        print("  kept your config and cache — `greyline disable --purge` removes those too")
+        return 0
+    for path in service.purge():
+        print(f"  removed {path}")
     return 0
 
 
@@ -422,6 +434,34 @@ def _font_line(args, cfg):
     return f"font: {family} ({source}) -> {path}"
 
 
+def _doctor_config(args):
+    """(config dict, is it usable) — reporting anything wrong with it as we go.
+
+    doctor is the command you reach for when greyline is already broken, so a config
+    it cannot load must not stop it: it says what is wrong, then carries on against
+    the packaged defaults so the backend, output and font checks below still run.
+
+    `Options.from_config` is exercised rather than trusted. It is the mapping the renderer
+    actually consumes, and a key that survives loading but not that mapping used to
+    surface as a traceback once a minute with doctor reporting all-clear.
+    """
+    try:
+        cfg = config.load(args.config)
+    except ValueError as e:
+        print(f"  ERROR — {e}")
+        print("  checks below run against the packaged defaults")
+        return config.defaults(), False
+    usable = True
+    for warning in schema.check_config(cfg):
+        print(f"  warning: {warning}")
+    try:
+        render.Options.from_config(cfg)
+    except ValueError as e:
+        print(f"  ERROR — {e}")
+        usable = False
+    return cfg, usable
+
+
 def cmd_doctor(args):
     print(
         f"greyline {__version__} · python {platform.python_version()} · "
@@ -429,11 +469,11 @@ def cmd_doctor(args):
     )
     for line in _config_lines(args.config or config.user_config_path()):
         print(line)
+    cfg, usable = _doctor_config(args)
     print(
         f"session: XDG_CURRENT_DESKTOP={os.environ.get('XDG_CURRENT_DESKTOP', '')!r} "
         f"XDG_SESSION_TYPE={os.environ.get('XDG_SESSION_TYPE', '')!r}"
     )
-    cfg = config.load(args.config)
     backend_name = args.backend or cfg.get("backend", "auto")
     if backend_name == "command" and (args.command or cfg.get("command")):
         os.environ["GREYLINE_COMMAND"] = args.command or cfg.get("command")
@@ -456,7 +496,7 @@ def cmd_doctor(args):
             else "not available (use `greyline watch`)"
         )
     )
-    return 0
+    return 0 if usable else 1
 
 
 def _subcommands(parser):
@@ -597,7 +637,18 @@ def build_parser():
     ep.add_argument(
         "--interval", default="*:*:00", help="systemd OnCalendar expression (default: each minute)"
     )
-    _add(sub, "disable", "disable the systemd user timer")
+    dp = _add(
+        sub,
+        "disable",
+        "stop and remove the systemd user timer",
+        helptext.DISABLE_DESCRIPTION,
+        helptext.DISABLE_EPILOG,
+    )
+    dp.add_argument(
+        "--purge",
+        action="store_true",
+        help="also delete your config and the render cache",
+    )
     _add(sub, "status", "show the timer status")
     _add(
         sub,

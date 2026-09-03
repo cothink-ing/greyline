@@ -100,6 +100,26 @@ greyline enable     # start again
 `greyline init --interval '*:0/5:00'` sets a different period at setup time; the value is
 a systemd `OnCalendar` expression.
 
+## Uninstalling
+
+Disable before you uninstall:
+
+```sh
+greyline disable            # stops the timer and removes the units init wrote
+greyline disable --purge    # also deletes ~/.config/greyline and the render cache
+pipx uninstall greyline
+```
+
+The order matters only because `greyline disable` needs greyline to still be installed.
+Your package manager cannot do this step for you: the timer, the unit files and your
+config were written into your home directory by `greyline init` *after* installation,
+and pipx has no post-uninstall hook. If you uninstall without disabling, nothing breaks
+— the service unit carries `ConditionFileIsExecutable`, so systemd skips the orphaned
+timer instead of failing it every minute — but the files stay until you remove them.
+
+Under home-manager, drop `services.greyline` from your configuration and rebuild
+instead; it owns the units and the config file and will remove both.
+
 ## Scheduling without systemd
 
 Any init system works. Skip the timer and put greyline in your session autostart:

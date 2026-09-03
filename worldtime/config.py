@@ -9,6 +9,8 @@ import os
 import tomllib
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
+from . import schema
+
 _PKG_DIR = os.path.dirname(__file__)
 DEFAULT_CONFIG = os.path.join(_PKG_DIR, "default-config.toml")
 
@@ -56,13 +58,24 @@ def _deep_merge(base, over):
     return out
 
 
+def defaults():
+    """The packaged defaults alone, with no user config merged."""
+    with open(DEFAULT_CONFIG, "rb") as f:
+        return tomllib.load(f)
+
+
 def load(path=None):
     """Return the merged config dict, with home cities flagged.
 
     `path` overrides the user config location (else the XDG path is used if present).
+
+    Raises ValueError if a key greyline reads holds a value it cannot use — a config
+    file is also written by hand and by home-manager, so this is the only place such a
+    value can be caught before it reaches the renderer as a traceback. Keys greyline
+    does not read are ignored here and reported by `greyline doctor`; a stray key from
+    another version must not take a working wallpaper down.
     """
-    with open(DEFAULT_CONFIG, "rb") as f:
-        cfg = tomllib.load(f)
+    cfg = defaults()
 
     user_path = path or user_config_path()
     if os.path.isfile(user_path):
@@ -73,6 +86,8 @@ def load(path=None):
         if cities is not None:
             cfg["city"] = cities
 
+    schema.check_config(cfg)
+
     home_tz = cfg.get("home", {}).get("tz", "auto")
     if home_tz == "auto":
         home_tz = system_timezone()
@@ -80,31 +95,3 @@ def load(path=None):
         c["home"] = bool(home_tz) and c.get("tz") == home_tz
 
     return cfg
-
-
-def render_kwargs(cfg):
-    """Map a loaded config dict to render.render() keyword arguments."""
-    tw = cfg.get("twilight", {})
-    home = cfg.get("home", {})
-    return {
-        "theme": cfg.get("theme", "modus"),
-        "theme_overrides": cfg.get("colors") or None,
-        "fmt": cfg.get("format", "24h"),
-        "twilight_bands": bool(tw.get("bands", True)),
-        "darkness": tw.get("darkness", "subtle"),
-        "column_highlight": bool(home.get("column_highlight", True)),
-        "home_color": home.get("color"),
-        "font_scale": float(cfg.get("font_scale", 1.0)),
-        "label_bg_alpha": int(
-            cfg.get("label_bg_alpha", 130 if cfg.get("label_background", True) else 0)
-        ),
-        "map_style": cfg.get("map_style", "vector"),
-        "logo": bool(cfg.get("logo", True)),
-        "logo_path": cfg.get("logo_path"),
-        "logo_color": cfg.get("logo_color"),
-        "logo_invert": bool(cfg.get("logo_invert", False)),
-        "logo_scale": float(cfg.get("logo_scale", 1.0)),
-        "logo_max_height": float(cfg.get("logo_max_height", 0.0)),
-        "bar_height": int(cfg.get("bar_height", 0)),
-        "desaturate": bool(cfg.get("desaturate", False)),
-    }

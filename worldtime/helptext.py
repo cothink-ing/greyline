@@ -52,13 +52,33 @@ Examples:
   greyline init --dry-run             show what it would do, change nothing
   greyline init --interval '*:0/5:00' update every 5 minutes instead of every minute"""
 
+DISABLE_DESCRIPTION = """\
+Stop the timer and remove the units `greyline enable` wrote. This is the counterpart
+to `init`/`enable`, and the step to run *before* uninstalling greyline.
+
+Your package manager cannot do this for you. pipx, pacman and apt remove the files
+they installed; the timer, the unit files and your config were written afterwards,
+into your home directory, by greyline itself. If you uninstall without disabling, the
+service unit's ConditionFileIsExecutable means systemd quietly skips the orphaned
+timer rather than failing it every minute — but the files stay until you say
+otherwise."""
+
+DISABLE_EPILOG = """\
+Examples:
+  greyline disable                    stop the timer, remove the units
+  greyline disable --purge            also delete ~/.config/greyline and the cache
+
+Uninstalling completely:
+  greyline disable --purge && pipx uninstall greyline"""
+
 WATCH_DESCRIPTION = """\
 Render and apply in a foreground loop, for systems without systemd --user (other
 init systems, BSD, a bare WM). Put `greyline watch` in your session autostart."""
 
 CONFIG_DESCRIPTION = """\
-Read and write ~/.config/greyline/config.toml. Writes are validated (a bad theme or
-enum is refused, not written) and preserve the file's comments and layout.
+Read and write ~/.config/greyline/config.toml. Writes are validated against the
+config schema — an unknown key, a wrong type or an out-of-range value is refused
+rather than written — and preserve the file's comments and layout.
 `get` reads the *effective* config: your file merged over the packaged defaults."""
 
 CONFIG_EPILOG = """\

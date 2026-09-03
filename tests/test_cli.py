@@ -146,6 +146,55 @@ def test_service_unit_execstart_and_timer(monkeypatch):
     assert "WantedBy=timers.target" in tmr
 
 
+def test_service_unit_skips_itself_when_greyline_is_gone(monkeypatch):
+    """The uninstall-survival guarantee: a package manager cannot remove these units,
+    so an orphaned timer must skip rather than fail once a minute forever."""
+    monkeypatch.setattr(service, "greyline_bin", lambda: "/opt/bin/greyline")
+    assert "ConditionFileIsExecutable=/opt/bin/greyline" in service.service_unit()
+
+
+def test_disable_removes_the_units_enable_wrote(monkeypatch, tmp_path):
+    """`enable` writes two files; `disable` has to remove the same two."""
+    calls = []
+    monkeypatch.setattr(service, "UNIT_DIR", str(tmp_path))
+    monkeypatch.setattr(service, "_systemctl", lambda *a: calls.append(a))
+    for name in ("greyline.service", "greyline.timer"):
+        (tmp_path / name).write_text("[Unit]\n")
+
+    removed = service.disable()
+
+    assert sorted(os.path.basename(p) for p in removed) == ["greyline.service", "greyline.timer"]
+    assert not list(tmp_path.glob("greyline.*"))
+    assert ("disable", "--now", "greyline.timer") in calls
+    assert ("daemon-reload",) in calls
+
+
+def test_disable_is_safe_when_the_units_are_already_gone(monkeypatch, tmp_path):
+    monkeypatch.setattr(service, "UNIT_DIR", str(tmp_path))
+    monkeypatch.setattr(service, "_systemctl", lambda *a: None)
+    assert service.disable() == []
+
+
+def test_purge_removes_config_and_cache(monkeypatch, tmp_path):
+    cfg_dir, cache_dir = tmp_path / "config" / "greyline", tmp_path / "cache" / "greyline"
+    for d in (cfg_dir, cache_dir):
+        d.mkdir(parents=True)
+        (d / "file").write_text("x")
+    monkeypatch.setattr(service, "user_state_paths", lambda: [str(cfg_dir), str(cache_dir)])
+
+    removed = service.purge()
+
+    assert sorted(removed) == sorted([str(cfg_dir), str(cache_dir)])
+    assert not cfg_dir.exists() and not cache_dir.exists()
+
+
+def test_purge_names_the_config_and_cache_directories():
+    """Guards the paths themselves — `--purge` deletes what this returns."""
+    paths = service.user_state_paths()
+    assert any(p.endswith("greyline") for p in paths)
+    assert len(paths) == 2
+
+
 def test_install_and_enable_dry_run_lists_actions_without_writing(monkeypatch, tmp_path):
     monkeypatch.setattr(service, "UNIT_DIR", str(tmp_path / "systemd"))
     actions = service.install_and_enable(interval="*:*:00", dry_run=True)

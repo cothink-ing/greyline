@@ -23,10 +23,22 @@ def greyline_bin():
 
 
 def service_unit():
+    """The oneshot unit the timer fires.
+
+    `ConditionFileIsExecutable` is what makes an uninstall survivable. No package
+    manager can remove these units — greyline wrote them into the user's home after
+    install, and pipx has no post-uninstall hook — so `pipx uninstall greyline` leaves
+    an enabled timer pointing at a binary that is gone. Without the condition that is a
+    *failed* unit every single minute, forever. With it, systemd sees the missing
+    executable and skips the unit instead, which is silent and harmless. Cleaning up
+    properly is still `greyline disable`; this is what happens when nobody does.
+    """
     return f"""[Unit]
 Description=Render the greyline world-time wallpaper
 After=graphical-session.target
 PartOf=graphical-session.target
+# Skip (not fail) if greyline has been uninstalled from under us.
+ConditionFileIsExecutable={greyline_bin()}
 
 [Service]
 Type=oneshot
@@ -88,7 +100,44 @@ def install_and_enable(interval="*:*:00", dry_run=False):
 
 
 def disable():
+    """Undo install_and_enable completely — including the unit files it wrote.
+
+    `enable` writes two files and creates an enable symlink; `disable` used to remove
+    only the symlink, leaving the units behind to be rediscovered later. Removing what
+    we wrote is the other half of owning it, and it is what makes
+    `greyline disable && pipx uninstall greyline` a clean removal.
+
+    Returns the paths it removed.
+    """
     _systemctl("disable", "--now", "greyline.timer")
+    removed = []
+    for name in ("greyline.timer", "greyline.service"):
+        path = os.path.join(UNIT_DIR, name)
+        if os.path.isfile(path):
+            os.remove(path)
+            removed.append(path)
+    if removed:
+        _systemctl("daemon-reload")
+    return removed
+
+
+def user_state_paths():
+    """Everything greyline writes outside its own package, for `disable --purge`."""
+    from . import cache, config
+
+    return [os.path.dirname(config.user_config_path()), cache.cache_dir()]
+
+
+def purge():
+    """Remove the config and cache directories. Returns the paths it removed."""
+    import shutil as _shutil
+
+    removed = []
+    for path in user_state_paths():
+        if os.path.isdir(path):
+            _shutil.rmtree(path)
+            removed.append(path)
+    return removed
 
 
 def status():

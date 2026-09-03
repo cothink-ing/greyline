@@ -52,7 +52,9 @@ Per-second redraws would cost battery and buy nothing you can read.
 
 **No unbounded files or caches.** Artifacts are bounded and self-managing. The KDE
 refresh fix ping-pongs two fixed buffers rather than writing a new timestamped file every
-minute, and that is the shape such a fix should take.
+minute, and that is the shape such a fix should take. The map-base cache is the same
+shape: a fixed number of entries, oldest evicted on write, and a miss or a corrupt file
+costs a rebuild rather than a failure.
 
 **Desktop quirks get solved at the edge.** Prefer a recipe or a command tweak, like
 GNOME's empty-then-set, over a background service or a growing pile of workaround state.

@@ -19,7 +19,7 @@ day_wash = "#eff1f510"     # base00
 night_alpha = 44
 
 # Clocks
-text = "#dc8a78"           # base06
+text = "#4c4f69"           # base05 — base06 fails contrast on the plate
 text_stroke = "#eff1f5dc"
 dot = "#4c4f69"            # base05
 dot_outline = "#eff1f5d2"

@@ -14,23 +14,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import tomlkit
 
-from . import config, themes
-
-_ENUMS = {
-    "format": {"24h", "12h"},
-    "map_style": {"vector", "raster"},
-    "backend": {"auto", "sway", "swww", "hyprpaper", "x11", "windows", "macos", "command"},
-    "twilight.darkness": {"subtle", "medium", "dramatic"},
-}
-
-
-def _is_color_key(dotted):
-    """Hex-colour keys — kept as strings (never numerically coerced, so "990000"
-    stays a colour, not the int 990000) and validated as #rrggbb(aa) / #rgb.
-    Covers the whole [colors] theme-override table except its one int key."""
-    if dotted in ("home.color", "logo_color"):
-        return True
-    return dotted.startswith("colors.") and dotted != "colors.night_alpha"
+from . import config, schema
 
 
 def ensure_config(path=None):
@@ -60,54 +44,27 @@ def _save(path, doc):
         raise
 
 
-def _coerce(value):
-    """Coerce a CLI string to bool/int/float/str, matching the config schema's types."""
-    low = value.lower()
-    if low in ("true", "false"):
-        return low == "true"
-    try:
-        return int(value)
-    except ValueError:
-        pass
-    try:
-        return float(value)
-    except ValueError:
-        pass
-    return value
+def _suggest(dotted):
+    """' Did you mean X?' for a near-miss key, or ''. Typos are the common case here."""
+    import difflib
 
-
-def _is_hex_color(value):
-    s = value.lstrip("#") if isinstance(value, str) else ""
-    if len(s) not in (3, 6, 8):
-        return False
-    try:
-        int(s, 16)
-        return True
-    except ValueError:
-        return False
-
-
-def _validate(dotted, value):
-    if dotted in _ENUMS and value not in _ENUMS[dotted]:
-        choices = ", ".join(sorted(_ENUMS[dotted]))
-        raise ValueError(f"{dotted}: {value!r} is not one of: {choices}")
-    if dotted == "theme":
-        allowed = set(themes.available_themes()) | set(themes.ALIASES)
-        if value not in allowed:
-            raise ValueError(f"theme: {value!r} is not one of: {', '.join(sorted(allowed))}")
-    if dotted == "home.tz" and value != "auto":
-        try:
-            ZoneInfo(value)
-        except (ZoneInfoNotFoundError, ValueError):
-            raise ValueError(f"home.tz: {value!r} is not a valid IANA timezone") from None
-    if _is_color_key(dotted) and not _is_hex_color(value):
-        raise ValueError(f"{dotted}: {value!r} is not a hex colour (e.g. #e64553)")
+    close = difflib.get_close_matches(dotted, sorted(schema.known_keys()), n=1)
+    return f" Did you mean {close[0]!r}?" if close else ""
 
 
 def set_key(path, dotted, raw_value):
-    """Set a (possibly nested) dotted key, e.g. 'twilight.darkness' -> 'medium'."""
-    value = raw_value if _is_color_key(dotted) else _coerce(raw_value)
-    _validate(dotted, value)
+    """Set a (possibly nested) dotted key, e.g. 'twilight.darkness' -> 'medium'.
+
+    Unknown keys are refused rather than written: a key greyline never reads is
+    always a mistake, and writing it silently is how "I set it and nothing
+    happened" starts.
+    """
+    if dotted in schema.TABLE_KEYS:
+        raise ValueError(f"{dotted!r} is managed by `greyline {dotted}` — see `greyline help city`")
+    if schema.lookup(dotted) is None:
+        raise ValueError(f"{dotted!r} is not a greyline config key.{_suggest(dotted)}")
+    value = schema.coerce(dotted, raw_value)
+    schema.validate(dotted, value)
     doc = _load(path)
     parts = dotted.split(".")
     node = doc

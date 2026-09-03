@@ -34,6 +34,9 @@ greyline init
 fires every minute. On GNOME, KDE and XFCE it fills in the wallpaper command for you.
 Without systemd, put `greyline watch` in your session autostart instead.
 
+To remove it, `greyline disable` first (that stops the timer and removes the units
+`init` wrote), then uninstall the package — `--purge` also deletes your config.
+
 You need Linux on Wayland or X11, Python 3.11 or newer, and a wallpaper tool for your
 desktop: `swaybg`, `swww`, `hyprpaper`, `feh` or `xwallpaper`, or the one your desktop
 environment already ships. The wiki covers

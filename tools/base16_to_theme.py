@@ -24,7 +24,9 @@ within a shade):
     border      base03                      country outlines
     grid_label  base04                      bottom-edge UTC-offset labels
     dot         base05                      city dots
-    text/logo   base06                      clock labels
+    text        base06, or base05 where base06 cannot be read against the label
+                plate (see `_text_slot`)    clock labels
+    logo        base06                      tint for logo_invert
     idl         reddest accent              International Date Line
     gmt         greenest accent             UTC+0 column fill
     home        warmest accent (~amber),    home city dot + label
@@ -46,6 +48,10 @@ import colorsys
 import os
 import re
 import sys
+
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from worldtime.themes import contrast_ratio
 
 CURATED = [
     "gruvbox-dark-hard",
@@ -99,6 +105,10 @@ _OVERRIDE = {
 _ACCENT_SLOTS = [f"base0{c}" for c in "89ABCDEF"]
 _SURFACE_SLOTS = ["base01", "base02"]
 _MIN_CONTRAST = 18
+
+_ALL_SLOTS = [f"base0{c}" for c in "0123456789ABCDEF"]
+_TEXT_MIN_CONTRAST = 4.5  # WCAG 2.2 AA for body-size text
+_PLATE_ALPHA = 130  # render.py's default label_bg_alpha
 
 _POLARITY = {
     "dark": {
@@ -221,12 +231,45 @@ def _land(palette, light):
     return _mix(palette["base02"], palette["base03"])
 
 
+def _over(fg, bg, alpha):
+    """`fg` at `alpha` (0-255) composited over `bg`, both hex."""
+    t = alpha / 255.0
+    return _hex(f * t + b * (1 - t) for f, b in zip(_rgb(fg), _rgb(bg), strict=True))
+
+
+def _text_slot(palette, light, land):
+    """The slot for clock labels: base06, or base05 where base06 cannot be read.
+
+    base06 is the scheme's brightest foreground and is the right answer for 34 of the
+    35 bundled schemes. Catppuccin Latte breaks the assumption — its base06 is
+    Rosewater, a *light* accent, which lands at 2.02:1 on that theme's light label
+    plate, well under AA. base05 is the natural fallback: it is already the colour of
+    the city dots, so the theme stays inside its own ramp, and it gives Latte 6.10:1.
+
+    Contrast is measured against the plate render.py actually draws (`label_bg` at
+    `_PLATE_ALPHA` over land and over ocean), not the bare map, and the worst of the
+    two backdrops wins. The final `max` is a floor, not an expected path: it means no
+    generated theme can ship labels that cannot be read, whatever a future scheme does.
+    """
+    plate = palette["base00"] if light else "#000000"
+    backdrops = [_over(plate, bg, _PLATE_ALPHA) for bg in (land, palette["base00"])]
+
+    def worst(slot):
+        return min(contrast_ratio(_rgb(palette[slot]), _rgb(b)) for b in backdrops)
+
+    for slot in ("base06", "base05"):
+        if worst(slot) >= _TEXT_MIN_CONTRAST:
+            return slot
+    return max(_ALL_SLOTS, key=worst)
+
+
 def build_theme(meta, palette, slug):
     """Return the theme as (key, value, comment) rows, in file order."""
     light = meta.get("variant", "dark").lower() == "light"
     p = _POLARITY["light" if light else "dark"]
 
     land = _land(palette, light)
+    text = _text_slot(palette, light, land)
     over = _OVERRIDE.get(slug, {})
     idl = over.get("idl") or _nearest_hue(palette, 0, cap=20)
     gmt = over.get("gmt") or _nearest_hue(palette, 120, cap=80, exclude={idl})
@@ -258,7 +301,11 @@ def build_theme(meta, palette, slug):
         ("night_alpha", p["night_alpha"], None),
         ("", None, None),
         ("# Clocks", None, None),
-        ("text", palette["base06"], "base06"),
+        (
+            "text",
+            palette[text],
+            text if text == "base06" else f"{text} — base06 fails contrast on the plate",
+        ),
         ("text_stroke", stroke + "dc", None),
         ("dot", palette["base05"], "base05"),
         ("dot_outline", stroke + "d2", None),

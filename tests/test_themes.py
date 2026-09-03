@@ -20,8 +20,42 @@ def test_every_builtin_theme_is_complete_and_renders(name):
     assert not missing, f"{name}: missing {sorted(missing)}"
     for key in themes.COLOR_KEYS:
         assert len(th[key]) in (3, 4), f"{name}.{key}: {th[key]!r}"
-    img = render.render(CITIES, dt=DT, out_size=(320, 200), theme=name)
+    img = render.render(CITIES, render.Options(theme=name), dt=DT, out_size=(320, 200))
     assert img.size == (320, 200) and img.mode == "RGB"
+
+
+@pytest.mark.parametrize("name", sorted(themes.builtin_themes()))
+def test_every_builtin_theme_has_readable_labels(name):
+    """Clock labels must clear WCAG AA against the plate they are drawn on.
+
+    A wallpaper nobody can read the time off is a broken wallpaper, and the
+    base16 slot mapping cannot guarantee this on its own: `text` comes from
+    base06, which is a *light* accent in Catppuccin Latte and landed at 2.02:1
+    there until the generator learned to fall back to base05. This is the check
+    that catches the next scheme whose palette breaks the same assumption.
+
+    Measured at the shipped `label_bg_alpha` (130) against both backdrops the
+    plate can sit on. Setting `label_background = false` removes the plate and is
+    the user's call to make.
+    """
+    th = themes.load_theme(name)
+    for surface in ("land", "ocean"):
+        plate = themes.label_plate(th, th[surface])
+        ratio = themes.contrast_ratio(th["text"], plate)
+        assert ratio >= 4.5, f"{name}: text on the plate over {surface} is {ratio:.2f}:1"
+
+
+def test_contrast_ratio_matches_wcag_reference_values():
+    """Anchors the formula itself, so the threshold above means what it says."""
+    assert themes.contrast_ratio((0, 0, 0), (255, 255, 255)) == pytest.approx(21.0)
+    assert themes.contrast_ratio((255, 255, 255), (255, 255, 255)) == pytest.approx(1.0)
+    assert themes.contrast_ratio((119, 119, 119), (255, 255, 255)) == pytest.approx(4.48, abs=0.01)
+
+
+def test_label_plate_composites_toward_the_backdrop_at_low_alpha():
+    th = themes.load_theme("modus")
+    assert themes.label_plate(th, th["ocean"], alpha=0) == tuple(th["ocean"][:3])
+    assert themes.label_plate(th, th["ocean"], alpha=255) == (0, 0, 0)
 
 
 def test_modus_parity_with_pre_060_dark():
@@ -66,7 +100,7 @@ def test_new_user_theme_falls_back_to_modus_for_missing_keys(tmp_path, monkeypat
     assert th["ocean"] == (16, 32, 48)
     assert th["land"] == (30, 34, 43)
     assert "night_alpha" not in th and "logo" not in th
-    img = render.render(CITIES, dt=DT, out_size=(320, 200), theme="mytheme")
+    img = render.render(CITIES, render.Options(theme="mytheme"), dt=DT, out_size=(320, 200))
     assert img.size == (320, 200)
 
 
@@ -145,5 +179,7 @@ def test_dark_themes_leave_the_label_plate_black():
 
 
 def test_label_bg_reaches_the_render():
-    img = render.render(CITIES, dt=DT, out_size=(320, 200), theme="gruvbox-light-medium")
+    img = render.render(
+        CITIES, render.Options(theme="gruvbox-light-medium"), dt=DT, out_size=(320, 200)
+    )
     assert img.size == (320, 200) and img.mode == "RGB"
