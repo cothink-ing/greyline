@@ -46,6 +46,15 @@ All notable changes to greyline are documented here. The format is based on
   no-op.
 - **A font that isn't installed now says so**, on stderr at render time and in
   `greyline doctor`, which also reports the resolved font file.
+- **The sway backend no longer crashes on platforms without uids or procfs.**
+  `_runtime_base()` fell back to `/run/user/{os.getuid()}`, which does not exist on
+  Windows; auto-detection swallowed the AttributeError, but an explicit
+  `--backend sway` raised it instead of reporting the backend as unavailable. The pid
+  check that stops greyline retiring a reused pid read `/proc/<pid>/cmdline` with a
+  liveness-check fallback, and its test asserted the procfs behaviour while running on
+  runners that have no procfs — so it was testing the host, not the code. Both branches
+  are now driven explicitly and covered on every platform. `cross-platform` CI is green
+  again.
 
 ### Deprecated
 - `services.greyline.fontFamily` is renamed to `services.greyline.settings.font_family`.
